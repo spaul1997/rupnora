@@ -74,13 +74,7 @@ class StorefrontCatalog
             return self::mapCategory($model);
         }
 
-        $virtual = Catalog::category($slug);
-
-        if ($virtual && in_array($slug, ['new-arrivals', 'best-sellers', 'gold', 'diamond', 'silver', 'mens', 'bridal'], true)) {
-            return $virtual;
-        }
-
-        return null;
+        return Catalog::category($slug);
     }
 
     public static function collections(): array
@@ -181,7 +175,9 @@ class StorefrontCatalog
         $category = self::findCategoryModel($slug);
 
         if (! $category) {
-            return [];
+            return Catalog::category($slug)
+                ? self::products(self::queryForCategoryFallback($slug)->latest())
+                : [];
         }
 
         $ids = collect([$category->id])
@@ -283,6 +279,7 @@ class StorefrontCatalog
             'slug' => $slug,
             'name' => $category->name,
             'art' => $fallback['art'] ?? self::artFor($category->name.' '.$category->slug),
+            'image' => $category->image ? asset('storage/'.$category->image) : null,
             'blurb' => $category->description ?: ($fallback['blurb'] ?? 'Explore our '.$category->name.' collection.'),
             'count' => $category->products_count ?? $category->products()->active()->count(),
             'show_in_header' => (bool) ($category->show_in_header ?? true),
@@ -378,6 +375,24 @@ class StorefrontCatalog
             'silver' => $query->where('metal_type', 'like', '%Silver%'),
             default => $query->whereRaw('1 = 0'),
         };
+    }
+
+    protected static function queryForCategoryFallback(string $slug): Builder
+    {
+        $terms = $slug === 'mens' ? ["men's", 'mens'] : [Str::singular($slug)];
+
+        return self::baseProductQuery()->where(function (Builder $products) use ($terms) {
+            foreach ($terms as $term) {
+                $pattern = '%'.$term.'%';
+
+                $products->orWhere('name', 'like', $pattern)
+                    ->orWhere('jewellery_type', 'like', $pattern)
+                    ->orWhereHas('category', function (Builder $category) use ($pattern) {
+                        $category->where('name', 'like', $pattern)
+                            ->orWhere('slug', 'like', $pattern);
+                    });
+            }
+        });
     }
 
     protected static function queryForCollectionFallback(string $slug): Builder

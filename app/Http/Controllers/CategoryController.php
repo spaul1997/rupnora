@@ -8,6 +8,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CategoryController extends Controller
 {
+    public function index()
+    {
+        return view('pages.categories', [
+            'title' => 'Categories',
+            'categories' => StorefrontCatalog::categories(),
+        ]);
+    }
+
     public function show(Request $request, string $slug)
     {
         $special = [

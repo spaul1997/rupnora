@@ -3,24 +3,6 @@
     {{-- A. Hero Banner --}}
     <x-ui.hero-slider :slides="$heroSlides" />
 
-    {{-- B. Shop By Category --}}
-    <section class="section-pad-sm">
-        <div class="container-luxe">
-            <div class="mb-5 flex items-end justify-between">
-                <div>
-                    <span class="eyebrow">Explore</span>
-                    <h2 class="font-display mt-1.5 text-2xl text-charcoal sm:text-3xl">Shop by Category</h2>
-                </div>
-                <a href="{{ route('collections.index') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
-            </div>
-            <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
-                @foreach (array_slice($categories, 0, 8) as $cat)
-                    <x-ui.category-card :category="$cat" />
-                @endforeach
-            </div>
-        </div>
-    </section>
-
     {{-- C. Featured Collections --}}
     <section class="section-pad-sm bg-ivory-soft">
         <div class="container-luxe">
@@ -29,9 +11,27 @@
                 <h2 class="font-display mt-1.5 text-2xl text-charcoal sm:text-3xl">Featured Collections</h2>
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">Thoughtfully curated edits, from everyday essentials to once-in-a-lifetime pieces.</p>
             </div>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 @foreach ($collections as $collection)
                     <x-ui.collection-card :collection="$collection" />
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    {{-- B. Shop By Category --}}
+    <section class="section-pad-sm">
+        <div class="container-luxe">
+            <div class="mb-5 flex items-end justify-between">
+                <div>
+                    <span class="eyebrow">Explore</span>
+                    <h2 class="font-display mt-1.5 text-2xl text-charcoal sm:text-3xl">Shop by Category</h2>
+                </div>
+                <a href="{{ route('categories.index') }}" class="link-underline text-sm font-medium text-charcoal">View All</a>
+            </div>
+            <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
+                @foreach (array_slice($categories, 0, 8) as $cat)
+                    <x-ui.category-card :category="$cat" />
                 @endforeach
             </div>
         </div>

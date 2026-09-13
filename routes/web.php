@@ -24,6 +24,7 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
 Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('collection.show');
 
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 
 Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
