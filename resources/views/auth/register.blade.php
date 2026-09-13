@@ -61,7 +61,7 @@
                         </div>
                         <label class="flex items-start gap-2.5 text-sm text-charcoal-soft">
                             <input type="checkbox" required class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-line text-champagne-dark focus:ring-champagne-dark/40">
-                            <span>I agree to the <a href="#" class="font-medium text-champagne-dark hover:underline">Terms &amp; Conditions</a> and <a href="#" class="font-medium text-champagne-dark hover:underline">Privacy Policy</a>.</span>
+                            <span>I agree to the <a href="{{ route('terms-of-service') }}" class="font-medium text-champagne-dark hover:underline">Terms of Service</a> and <a href="{{ route('privacy-policy') }}" class="font-medium text-champagne-dark hover:underline">Privacy Policy</a>.</span>
                         </label>
                         <button type="submit" class="btn-primary w-full">Create Account</button>
                     </form>

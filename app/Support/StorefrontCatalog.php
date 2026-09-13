@@ -40,6 +40,25 @@ class StorefrontCatalog
             ->all();
     }
 
+    public static function topLevelCategories(): array
+    {
+        $categories = Category::query()
+            ->active()
+            ->parents()
+            ->withCount(['products as products_count' => fn (Builder $query) => $query->active()])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $category) => self::mapCategory($category))
+            ->values();
+
+        if ($categories->isNotEmpty()) {
+            return $categories->all();
+        }
+
+        return Catalog::categories();
+    }
+
     public static function headerCategories(): array
     {
         if (! Schema::hasColumn('categories', 'show_in_header')) {

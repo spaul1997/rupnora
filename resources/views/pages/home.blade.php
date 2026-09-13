@@ -29,10 +29,12 @@
                 </div>
                 <a href="{{ route('categories.index') }}" class="link-underline text-sm font-medium text-charcoal">View All</a>
             </div>
-            <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
-                @foreach (array_slice($categories, 0, 8) as $cat)
-                    <x-ui.category-card :category="$cat" />
-                @endforeach
+            <div class="-mx-5 px-5 sm:mx-0 sm:px-0" style="overflow-x: auto;">
+                <div style="display: grid; min-width: {{ max(count($parentCategories), 1) * 132 }}px; grid-template-columns: repeat({{ max(count($parentCategories), 1) }}, minmax(0, 1fr)); gap: 0.625rem;">
+                    @foreach ($parentCategories as $cat)
+                        <x-ui.category-card :category="$cat" />
+                    @endforeach
+                </div>
             </div>
         </div>
     </section>

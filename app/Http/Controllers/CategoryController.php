@@ -12,7 +12,7 @@ class CategoryController extends Controller
     {
         return view('pages.categories', [
             'title' => 'Categories',
-            'categories' => StorefrontCatalog::categories(),
+            'categories' => StorefrontCatalog::topLevelCategories(),
         ]);
     }
 

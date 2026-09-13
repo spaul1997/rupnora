@@ -11,12 +11,33 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/clear-cache', function () {
+    Artisan::call('optimize:clear');
+
+    return redirect()
+        ->back()
+        ->with('success', 'Application cache cleared successfully.');
+})->name('clear-cache');
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('/about', function () {
     return view('pages.about', ['title' => 'Our Story']);
 })->name('about');
+
+Route::get('/privacy-policy', function () {
+    return view('pages.privacy-policy', ['title' => 'Privacy Policy']);
+})->name('privacy-policy');
+
+Route::get('/terms-of-service', function () {
+    return view('pages.terms-of-service', ['title' => 'Terms of Service']);
+})->name('terms-of-service');
+
+Route::get('/refund-policy', function () {
+    return view('pages.refund-policy', ['title' => 'Refund Policy']);
+})->name('refund-policy');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');

@@ -30,6 +30,7 @@ class HomeController extends Controller
         return view('pages.home', [
             'title' => null,
             'heroSlides' => $heroSlides ?: $this->defaultHeroSlides(),
+            'parentCategories' => StorefrontCatalog::topLevelCategories(),
             'categories' => StorefrontCatalog::categories(),
             'collections' => StorefrontCatalog::collections(),
             'newArrivals' => StorefrontCatalog::newArrivals(),

@@ -258,7 +258,7 @@
                                     Store separately in a soft pouch away from moisture and direct sunlight. Avoid contact with perfume, lotion and chlorinated water. Clean gently with a soft lint-free cloth after each wear.
                                     @break
                                 @case('shipping')
-                                    Free insured shipping on orders above ₹2,999. Orders are dispatched within 24&ndash;48 hours and typically arrive within 4&ndash;7 business days. A 15-day easy return window applies from the date of delivery.
+                                    Free insured shipping on orders above ₹2,999. Orders are dispatched within 24&ndash;48 hours and typically arrive within 4&ndash;7 business days. Return requests must be made within 3 days from delivery as per our <a href="{{ route('refund-policy') }}" class="font-medium text-champagne-dark hover:underline">Refund Policy</a>.
                                     @break
                                 @case('certification')
                                     This piece is accompanied by a certificate of authenticity{{ $product['diamond'] ? ' and an IGI diamond certification' : '' }}, along with BIS hallmarking for gold purity where applicable.

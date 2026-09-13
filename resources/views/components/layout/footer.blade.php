@@ -31,7 +31,7 @@
                 <ul class="mt-4 space-y-2.5 text-sm text-ivory/65">
                     <li><a href="{{ route('contact') }}" class="hover:text-ivory">Contact Us</a></li>
                     <li><a href="{{ route('contact') }}#shipping" class="hover:text-ivory">Shipping</a></li>
-                    <li><a href="{{ route('contact') }}#returns" class="hover:text-ivory">Returns</a></li>
+                    <li><a href="{{ route('refund-policy') }}" class="hover:text-ivory">Returns</a></li>
                     <li><a href="#" class="hover:text-ivory">Size Guide</a></li>
                     <li><a href="{{ route('contact') }}#faq" class="hover:text-ivory">FAQ</a></li>
                 </ul>
@@ -42,9 +42,9 @@
                 <ul class="mt-4 space-y-2.5 text-sm text-ivory/65">
                     <li><a href="{{ route('about') }}" class="hover:text-ivory">Our Story</a></li>
                     <li><a href="#" class="hover:text-ivory">Careers</a></li>
-                    <li><a href="#" class="hover:text-ivory">Privacy Policy</a></li>
-                    <li><a href="#" class="hover:text-ivory">Terms of Service</a></li>
-                    <li><a href="#" class="hover:text-ivory">Refund Policy</a></li>
+                    <li><a href="{{ route('privacy-policy') }}" class="hover:text-ivory">Privacy Policy</a></li>
+                    <li><a href="{{ route('terms-of-service') }}" class="hover:text-ivory">Terms of Service</a></li>
+                    <li><a href="{{ route('refund-policy') }}" class="hover:text-ivory">Refund Policy</a></li>
                 </ul>
             </div>
 
@@ -73,7 +73,7 @@
         </div>
 
         <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pt-8 text-xs text-ivory/50 sm:flex-row">
-            <p>&copy; {{ date('Y') }} Aurelle Jewellery. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Rupnora Jewellery. All rights reserved.</p>
             <div class="flex items-center gap-3">
                 <span class="rounded border border-ivory/20 px-2 py-1">VISA</span>
                 <span class="rounded border border-ivory/20 px-2 py-1">Mastercard</span>

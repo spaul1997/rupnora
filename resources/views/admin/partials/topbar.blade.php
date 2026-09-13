@@ -39,6 +39,7 @@
                 <p class="truncate px-3 py-2 text-xs text-gray-400">{{ auth()->user()?->email }}</p>
                 <div class="my-1 border-t border-gray-100"></div>
                 <a href="{{ route('admin.settings.edit') }}" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Admin Profile</a>
+                <a href="{{ route('admin.clear-cache') }}" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Clear Cache</a>
                 <a href="{{ route('home') }}" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" target="_blank">View Storefront</a>
                 <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf

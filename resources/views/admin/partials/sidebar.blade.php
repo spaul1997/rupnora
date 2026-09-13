@@ -119,6 +119,10 @@
             <svg class="h-4.5 w-4.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round" /></svg>
             Admin Profile
         </a>
+        <a href="{{ route('admin.clear-cache') }}" class="admin-sidebar-link">
+            <svg class="h-4.5 w-4.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4v5h5M20 20v-5h-5M5.6 15.5A7 7 0 0018.4 18M18.4 8.5A7 7 0 005.6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            Clear Cache
+        </a>
         <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <button type="submit" class="admin-sidebar-link w-full text-left text-red-300 hover:bg-red-500/10 hover:text-red-200">
