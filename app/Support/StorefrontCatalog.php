@@ -299,6 +299,7 @@ class StorefrontCatalog
             'name' => $category->name,
             'art' => $fallback['art'] ?? self::artFor($category->name.' '.$category->slug),
             'image' => $category->image ? asset('storage/'.$category->image) : null,
+            'banner' => $category->banner ? asset('storage/'.$category->banner) : null,
             'blurb' => $category->description ?: ($fallback['blurb'] ?? 'Explore our '.$category->name.' collection.'),
             'count' => $category->products_count ?? $category->products()->active()->count(),
             'show_in_header' => (bool) ($category->show_in_header ?? true),

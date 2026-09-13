@@ -4,7 +4,7 @@
     </div>
 
     <section class="container-luxe py-10 sm:py-14">
-        <div class="mx-auto max-w-3xl">
+        <div class="mx-auto max-w-5xl my-2">
             <span class="eyebrow">Rupnora Policies</span>
             <h1 class="font-display mt-2 text-4xl text-charcoal sm:text-5xl">Terms of Service</h1>
             <p class="mt-3 text-sm text-muted">Last updated: September 13, 2026</p>

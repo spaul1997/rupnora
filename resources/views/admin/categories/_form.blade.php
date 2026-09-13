@@ -35,10 +35,10 @@
             <div>
                 <label class="admin-label">Banner Image</label>
                 @if (! empty($category?->banner))
-                    <x-ui.optimized-image :src="asset('storage/'.$category->banner)" alt="" sizes="320px" class="mb-2 h-16 w-full rounded-lg border border-gray-200 object-cover" />
+                    <x-ui.optimized-image :src="asset('storage/'.$category->banner)" alt="" sizes="96px" class="mb-2 h-24 w-24 rounded-lg border border-gray-200 object-cover" />
                 @endif
                 <input type="file" name="banner" accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
-                <p class="mt-1 text-xs text-gray-400">JPG, PNG, WebP or AVIF. Max 5MB. Wide images work best.</p>
+                <p class="mt-1 text-xs text-gray-400">JPG, PNG, WebP or AVIF. Max 5MB. Optimized to responsive AVIF/WebP files.</p>
             </div>
         </div>
 

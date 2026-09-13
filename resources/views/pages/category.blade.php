@@ -53,7 +53,11 @@
 
         {{-- Category banner --}}
         <div class="relative mt-5 overflow-hidden">
-            <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
+            @if (! empty($category['banner']))
+                <x-ui.optimized-image :src="$category['banner']" alt="" sizes="100vw" class="aspect-[16/6] w-full object-cover sm:aspect-[16/4]" />
+            @else
+                <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
+            @endif
             <div class="absolute inset-0 bg-gradient-to-r from-charcoal/55 via-charcoal/25 to-transparent"></div>
             <div class="absolute inset-0 flex items-center">
                 <div class="container-luxe">
