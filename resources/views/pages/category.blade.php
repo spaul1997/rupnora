@@ -52,9 +52,13 @@
         </div>
 
         {{-- Category banner --}}
+        @php
+            $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
+            $categoryHeroFit = ! empty($category['banner']) ? 'object-cover' : 'object-contain bg-paper';
+        @endphp
         <div class="relative mt-5 overflow-hidden">
-            @if (! empty($category['banner']))
-                <x-ui.optimized-image :src="$category['banner']" alt="" sizes="100vw" class="aspect-[16/6] w-full object-cover sm:aspect-[16/4]" />
+            @if ($categoryHeroImage)
+                <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full {{ $categoryHeroFit }} sm:aspect-[16/4]" />
             @else
                 <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
             @endif
