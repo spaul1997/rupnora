@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect old /public URLs to clean URL
+    RewriteCond %{THE_REQUEST} \s/+ecommerce/public(?:[/?\s]|$) [NC]
+    RewriteRule ^public/?(.*)$ /ecommerce/$1 [R=301,L,NE]
+
+    # Internally send everything to Laravel public folder
+    RewriteCond %{REQUEST_URI} !^/ecommerce/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Protect sensitive Laravel files
+<FilesMatch "^(\.env|artisan|composer\.(json|lock)|package\.json|vite\.config\.js)$">
+    Require all denied
+</FilesMatch>
