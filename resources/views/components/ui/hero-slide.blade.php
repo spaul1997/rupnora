@@ -23,7 +23,6 @@
 <div class="relative overflow-hidden bg-gradient-to-br {{ $bg }}">
     @if ($image)
         <x-ui.optimized-image :src="$image" :mobile-src="$mobileImage" alt="" sizes="100vw" loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" />
-        <div class="absolute inset-0 bg-gradient-to-r from-paper/95 via-paper/70 to-paper/20"></div>
     @else
         <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 22px 22px; color: var(--color-charcoal);"></div>
 
@@ -37,24 +36,26 @@
     @endif
 
     <div class="container-luxe relative flex min-h-[68vh] flex-col justify-center py-20 sm:min-h-[76vh]">
-        <div class="max-w-xl" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 80)">
-            <span class="eyebrow inline-block" :class="shown && 'animate-fade-up'">{{ $eyebrow }}</span>
-            <h1 class="font-display mt-4 text-[2.4rem] leading-[1.08] text-charcoal sm:text-6xl lg:text-[4rem]" :class="shown && 'animate-fade-up'" style="animation-delay: 80ms">
-                {{ $heading }}
-            </h1>
-            <p class="mt-5 max-w-md text-[15px] leading-relaxed text-muted sm:text-base" :class="shown && 'animate-fade-up'" style="animation-delay: 160ms">
-                {{ $subheading }}
-            </p>
-            @if (($primaryLabel && $primaryUrl) || ($secondaryLabel && $secondaryUrl))
-                <div class="mt-9 flex flex-wrap gap-4" :class="shown && 'animate-fade-up'" style="animation-delay: 240ms">
-                    @if ($primaryLabel && $primaryUrl)
-                        <a href="{{ $primaryUrl }}" class="btn-primary">{{ $primaryLabel }}</a>
-                    @endif
-                    @if ($secondaryLabel && $secondaryUrl)
-                        <a href="{{ $secondaryUrl }}" class="btn-ghost">{{ $secondaryLabel }}</a>
-                    @endif
-                </div>
-            @endif
-        </div>
+        @unless ($image)
+            <div class="max-w-xl" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 80)">
+                <span class="eyebrow inline-block" :class="shown && 'animate-fade-up'">{{ $eyebrow }}</span>
+                <h1 class="font-display mt-4 text-[2.4rem] leading-[1.08] text-charcoal sm:text-6xl lg:text-[4rem]" :class="shown && 'animate-fade-up'" style="animation-delay: 80ms">
+                    {{ $heading }}
+                </h1>
+                <p class="mt-5 max-w-md text-[15px] leading-relaxed text-muted sm:text-base" :class="shown && 'animate-fade-up'" style="animation-delay: 160ms">
+                    {{ $subheading }}
+                </p>
+                @if (($primaryLabel && $primaryUrl) || ($secondaryLabel && $secondaryUrl))
+                    <div class="mt-9 flex flex-wrap gap-4" :class="shown && 'animate-fade-up'" style="animation-delay: 240ms">
+                        @if ($primaryLabel && $primaryUrl)
+                            <a href="{{ $primaryUrl }}" class="btn-primary">{{ $primaryLabel }}</a>
+                        @endif
+                        @if ($secondaryLabel && $secondaryUrl)
+                            <a href="{{ $secondaryUrl }}" class="btn-ghost">{{ $secondaryLabel }}</a>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        @endunless
     </div>
 </div>

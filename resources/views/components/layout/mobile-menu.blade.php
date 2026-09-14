@@ -72,6 +72,7 @@
         <a href="{{ route('account.orders') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">My Orders</a>
         <a href="{{ route('account.wishlist') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Wishlist</a>
         <a href="{{ route('about') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Our Story</a>
+        <a href="{{ route('careers') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Careers</a>
         <a href="{{ route('contact') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Contact Us</a>
     </nav>
 </div>

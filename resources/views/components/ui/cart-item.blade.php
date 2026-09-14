@@ -1,9 +1,12 @@
 @props(['item'])
 
-@php($product = $item['product'])
+@php
+    $product = $item['product'];
+    $productUrlKey = $product['slug'] ?? $product['id'];
+@endphp
 
 <div class="flex gap-4 py-6 sm:gap-5">
-    <a href="{{ route('product.show', $product['id']) }}" class="flex-shrink-0">
+    <a href="{{ route('product.show', $productUrlKey) }}" class="flex-shrink-0">
         @if (! empty($product['image']))
             <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="112px" class="h-24 w-24 rounded-xl object-cover sm:h-28 sm:w-28" />
         @else
@@ -14,7 +17,7 @@
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <p class="text-[11px] uppercase tracking-wider text-muted">{{ $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category'])) }}</p>
-                <a href="{{ route('product.show', $product['id']) }}" class="mt-0.5 block truncate font-display text-[16px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
+                <a href="{{ route('product.show', $productUrlKey) }}" class="mt-0.5 block truncate font-display text-[16px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
                 <p class="mt-1 text-xs text-muted">
                     {{ $product['metal'] }}@if($product['purity']) &middot; {{ $product['purity'] }} @endif
                     @if ($item['size']) &middot; Size: {{ $item['size'] }} @endif

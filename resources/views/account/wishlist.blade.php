@@ -10,8 +10,9 @@
         @else
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 @foreach ($products as $product)
+                    @php($productUrlKey = $product['slug'] ?? $product['id'])
                     <div class="card-luxe overflow-hidden" x-data="{ removed: false }" x-show="!removed">
-                        <a href="{{ route('product.show', $product['id']) }}" class="block">
+                        <a href="{{ route('product.show', $productUrlKey) }}" class="block">
                             @if (! empty($product['image']))
                                 <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw" class="aspect-square w-full object-cover" />
                             @else
@@ -20,7 +21,7 @@
                         </a>
                         <div class="p-2.5">
                             <p class="text-[9.5px] uppercase tracking-wide text-muted">{{ $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category'])) }}</p>
-                            <a href="{{ route('product.show', $product['id']) }}" class="mt-0.5 block truncate font-display text-[12.5px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
+                            <a href="{{ route('product.show', $productUrlKey) }}" class="mt-0.5 block truncate font-display text-[12.5px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
                             <div class="mt-1"><x-ui.price :price="$product['price']" :mrp="$product['mrp']" size="xs" /></div>
                             <p class="mt-1 flex items-center gap-1.5 text-[10.5px] {{ $product['in_stock'] ? 'text-success' : 'text-error' }}">
                                 <span class="h-1.5 w-1.5 rounded-full {{ $product['in_stock'] ? 'bg-success' : 'bg-error' }}"></span>

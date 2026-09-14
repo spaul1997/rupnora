@@ -5,7 +5,7 @@
 
 @php
     $searchProducts = collect(\App\Support\StorefrontCatalog::products())->map(fn ($p) => [
-        'id' => $p['id'], 'name' => $p['name'], 'category' => $p['category'], 'art' => $p['art'], 'price' => $p['price'],
+        'id' => $p['id'], 'slug' => $p['slug'] ?? $p['id'], 'name' => $p['name'], 'category' => $p['category'], 'art' => $p['art'], 'price' => $p['price'],
     ])->values()->all();
     $searchCategories = collect(\App\Support\StorefrontCatalog::categories())->map(fn ($c) => ['slug' => $c['slug'], 'name' => $c['name']])->values()->all();
 @endphp
@@ -82,7 +82,7 @@
                 <div x-show="results.length > 0">
                     <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Products</p>
                     <template x-for="p in results" :key="p.id">
-                        <a :href="'/product/' + p.id" class="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-ivory-soft">
+                        <a :href="'/product/' + p.slug" class="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-ivory-soft">
                             <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-beige text-champagne-dark">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8" /></svg>
                             </span>

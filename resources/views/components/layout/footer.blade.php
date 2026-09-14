@@ -41,7 +41,7 @@
                 <p class="text-xs font-semibold uppercase tracking-wider text-champagne-light">About</p>
                 <ul class="mt-4 space-y-2.5 text-sm text-ivory/65">
                     <li><a href="{{ route('about') }}" class="hover:text-ivory">Our Story</a></li>
-                    <li><a href="#" class="hover:text-ivory">Careers</a></li>
+                    <li><a href="{{ route('careers') }}" class="hover:text-ivory">Careers</a></li>
                     <li><a href="{{ route('privacy-policy') }}" class="hover:text-ivory">Privacy Policy</a></li>
                     <li><a href="{{ route('terms-of-service') }}" class="hover:text-ivory">Terms of Service</a></li>
                     <li><a href="{{ route('refund-policy') }}" class="hover:text-ivory">Refund Policy</a></li>

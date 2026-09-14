@@ -25,11 +25,14 @@
             <h2 class="font-display text-lg text-charcoal">Items in this Order</h2>
             <div class="mt-3 divide-y divide-line">
                 @foreach ($order['items'] as $item)
-                    @php($product = $item['product'])
+                    @php
+                        $product = $item['product'];
+                        $productUrlKey = $product['slug'] ?? $product['id'];
+                    @endphp
                     <div class="flex items-center gap-4 py-4">
                         <x-ui.product-art :art="$product['art']" class="h-16 w-16 flex-shrink-0 rounded-lg" />
                         <div class="min-w-0 flex-1">
-                            <a href="{{ route('product.show', $product['id']) }}" class="block truncate font-display text-[15px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
+                            <a href="{{ route('product.show', $productUrlKey) }}" class="block truncate font-display text-[15px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
                             <p class="mt-0.5 text-xs text-muted">SKU: {{ $product['sku'] }} &middot; Qty: {{ $item['qty'] }}@if($item['size']) &middot; Size: {{ $item['size'] }}@endif</p>
                         </div>
                         <p class="flex-shrink-0 text-sm font-semibold text-charcoal">₹{{ number_format($product['price'] * $item['qty']) }}</p>

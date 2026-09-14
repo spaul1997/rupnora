@@ -151,8 +151,14 @@ class StorefrontCatalog
     {
         $query = self::baseProductQuery()
             ->where(function (Builder $query) use ($id) {
-                $query->where('id', $id)
-                    ->orWhere('slug', $id);
+                if (is_numeric($id)) {
+                    $query->where('id', $id)
+                        ->orWhere('slug', $id);
+
+                    return;
+                }
+
+                $query->where('slug', $id);
             });
 
         $product = self::hydrateForStorefront($query)->first();

@@ -4,10 +4,11 @@
 
 @php
     $categoryLabel = $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category']));
+    $productUrlKey = $product['slug'] ?? $product['id'];
 @endphp
 
 <div class="group relative" x-data="{ quickView: false }">
-    <a href="{{ route('product.show', $product['id']) }}" class="block">
+    <a href="{{ route('product.show', $productUrlKey) }}" class="block">
         <div class="relative overflow-hidden rounded-lg border border-line">
             <div class="relative aspect-square">
                 @if (! empty($product['image']))
@@ -50,7 +51,7 @@
 
     <div class="mt-2 space-y-0.5">
         <p class="text-[9.5px] uppercase tracking-wide text-muted">{{ $categoryLabel }}</p>
-        <a href="{{ route('product.show', $product['id']) }}" class="block font-display text-[12.5px] leading-tight text-charcoal hover:text-champagne-dark transition-colors line-clamp-2">
+        <a href="{{ route('product.show', $productUrlKey) }}" class="block font-display text-[12.5px] leading-tight text-charcoal hover:text-champagne-dark transition-colors line-clamp-2">
             {{ $product['name'] }}
         </a>
         <x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" size="xs" />
@@ -92,7 +93,7 @@
                         @endif
                     </div>
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-                        <a href="{{ route('product.show', $product['id']) }}" class="btn-secondary flex-1">View Full Details</a>
+                        <a href="{{ route('product.show', $productUrlKey) }}" class="btn-secondary flex-1">View Full Details</a>
                         <button @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})" class="btn-primary flex-1">Add to Cart</button>
                     </div>
                 </div>

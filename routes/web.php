@@ -27,6 +27,10 @@ Route::get('/about', function () {
     return view('pages.about', ['title' => 'Our Story']);
 })->name('about');
 
+Route::get('/careers', function () {
+    return view('pages.careers', ['title' => 'Careers']);
+})->name('careers');
+
 Route::get('/privacy-policy', function () {
     return view('pages.privacy-policy', ['title' => 'Privacy Policy']);
 })->name('privacy-policy');
@@ -48,7 +52,7 @@ Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 
-Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 

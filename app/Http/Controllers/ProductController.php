@@ -8,11 +8,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
-    public function show(string $id)
+    public function show(string $slug)
     {
-        $product = StorefrontCatalog::product($id);
+        $product = StorefrontCatalog::product($slug);
 
         abort_if(! $product, Response::HTTP_NOT_FOUND);
+
+        if (($product['slug'] ?? $product['id']) !== $slug) {
+            return redirect()->route('product.show', $product['slug'] ?? $product['id']);
+        }
 
         return view('pages.product', [
             'title' => $product['name'],
