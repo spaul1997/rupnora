@@ -63,8 +63,8 @@
         </div>
 
         <a href="{{ route('collections.index') }}" class="block rounded-lg px-3 py-3 text-[15px] font-medium text-charcoal hover:bg-ivory-soft">Collections</a>
-        <a href="{{ route('category.show', 'new-arrivals') }}" class="block rounded-lg px-3 py-3 text-[15px] font-medium text-charcoal hover:bg-ivory-soft">New Arrivals</a>
-        <a href="{{ route('category.show', 'best-sellers') }}" class="block rounded-lg px-3 py-3 text-[15px] font-medium text-charcoal hover:bg-ivory-soft">Best Sellers</a>
+        <a href="{{ route('new-arrivals') }}" class="block rounded-lg px-3 py-3 text-[15px] font-medium text-charcoal hover:bg-ivory-soft">New Arrivals</a>
+        <a href="{{ route('best-sellers') }}" class="block rounded-lg px-3 py-3 text-[15px] font-medium text-charcoal hover:bg-ivory-soft">Best Sellers</a>
 
         <div class="my-2 border-t border-line"></div>
 

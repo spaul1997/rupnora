@@ -6,6 +6,7 @@
         'is_new' => $p['is_new'], 'is_bestseller' => $p['is_bestseller'],
         'discount' => $p['mrp'] > $p['price'] ? round((($p['mrp'] - $p['price']) / $p['mrp']) * 100) : 0,
     ])->values();
+    $showBanner = $showBanner ?? true;
 @endphp
 
 <x-layouts.app :title="$title">
@@ -51,17 +52,19 @@
             <x-ui.breadcrumb :trail="[['label' => 'Jewellery', 'url' => route('collections.index')], ['label' => $category['name']]]" />
         </div>
 
-        {{-- Category banner --}}
-        @php
-            $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
-        @endphp
-        <div class="relative mt-5 h-56 overflow-hidden">
-            @if ($categoryHeroImage)
-                <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="h-full w-full object-contain" />
-            @else
-                <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
-            @endif
-        </div>
+        @if ($showBanner)
+            {{-- Category banner --}}
+            @php
+                $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
+            @endphp
+            <div class="relative mt-5 h-56 overflow-hidden">
+                @if ($categoryHeroImage)
+                    <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="h-full w-full object-contain" />
+                @else
+                    <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
+                @endif
+            </div>
+        @endif
 
         <div class="container-luxe py-8 sm:py-10">
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">

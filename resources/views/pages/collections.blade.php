@@ -10,12 +10,16 @@
     </div>
 
     <div class="container-luxe pb-20">
-        <div class="flex flex-wrap justify-center gap-4">
-            @foreach ($collections as $collection)
-                <div class="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
-                    <x-ui.collection-card :collection="$collection" />
-                </div>
-            @endforeach
-        </div>
+        @if (count($collections) === 0)
+            <x-ui.empty-state icon="box" title="No collections are live yet" description="Collections added in admin will appear here once they are marked active." action-label="Explore Categories" :action-url="route('categories.index')" />
+        @else
+            <div class="flex flex-wrap justify-center gap-4">
+                @foreach ($collections as $collection)
+                    <div class="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+                        <x-ui.collection-card :collection="$collection" />
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 </x-layouts.app>

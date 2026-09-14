@@ -22,7 +22,7 @@
                 <x-admin.form.input label="Primary Button Label" name="primary_label" :value="$banner?->primary_label" placeholder="Shop Collection" />
                 <x-admin.form.input label="Primary Button URL" name="primary_url" :value="$banner?->primary_url" placeholder="/collections" />
                 <x-admin.form.input label="Secondary Button Label" name="secondary_label" :value="$banner?->secondary_label" placeholder="New Arrivals" />
-                <x-admin.form.input label="Secondary Button URL" name="secondary_url" :value="$banner?->secondary_url" placeholder="/category/new-arrivals" />
+                <x-admin.form.input label="Secondary Button URL" name="secondary_url" :value="$banner?->secondary_url" placeholder="/new-arrivals" />
             </div>
         </div>
     </div>

@@ -47,7 +47,7 @@
                     <span class="eyebrow">Just In</span>
                     <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">New Arrivals</h2>
                 </div>
-                <a href="{{ route('category.show', 'new-arrivals') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
+                <a href="{{ route('new-arrivals') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
             </div>
             <div x-data="{}" class="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
                 @foreach ($newArrivals as $product)
@@ -56,7 +56,7 @@
                     </div>
                 @endforeach
             </div>
-            <a href="{{ route('category.show', 'new-arrivals') }}" class="btn-secondary mt-8 flex w-full justify-center sm:hidden">View All New Arrivals</a>
+            <a href="{{ route('new-arrivals') }}" class="btn-secondary mt-8 flex w-full justify-center sm:hidden">View All New Arrivals</a>
         </div>
     </section>
 
@@ -86,7 +86,7 @@
                     <span class="eyebrow">Loved By Many</span>
                     <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Best Sellers</h2>
                 </div>
-                <a href="{{ route('category.show', 'best-sellers') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
+                <a href="{{ route('best-sellers') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
                 @foreach (array_slice($bestSellers, 0, 10) as $product)
@@ -103,7 +103,7 @@
             <span class="eyebrow text-champagne-light">Limited Time</span>
             <h2 class="font-display mt-3 text-4xl text-ivory sm:text-5xl">Celebrate Every Moment</h2>
             <p class="mt-4 text-lg text-champagne-light">Up to 20% Off Selected Designs</p>
-            <a href="{{ route('category.show', 'best-sellers') }}" class="btn-light mt-8 inline-flex">Shop the Offer</a>
+            <a href="{{ route('best-sellers') }}" class="btn-light mt-8 inline-flex">Shop the Offer</a>
         </div>
     </section>
 

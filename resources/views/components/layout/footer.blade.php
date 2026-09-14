@@ -22,7 +22,7 @@
                     <li><a href="{{ route('category.show', 'earrings') }}" class="hover:text-ivory">Earrings</a></li>
                     <li><a href="{{ route('category.show', 'necklaces') }}" class="hover:text-ivory">Necklaces</a></li>
                     <li><a href="{{ route('category.show', 'bangles') }}" class="hover:text-ivory">Bangles</a></li>
-                    <li><a href="{{ route('category.show', 'new-arrivals') }}" class="hover:text-ivory">New Arrivals</a></li>
+                    <li><a href="{{ route('new-arrivals') }}" class="hover:text-ivory">New Arrivals</a></li>
                 </ul>
             </div>
 

@@ -11,8 +11,8 @@
         ]))
         ->merge([
             ['label' => 'Collections', 'url' => route('collections.index'), 'children' => []],
-            ['label' => 'New Arrivals', 'url' => route('category.show', 'new-arrivals'), 'children' => []],
-            ['label' => 'Best Sellers', 'url' => route('category.show', 'best-sellers'), 'children' => []],
+            ['label' => 'New Arrivals', 'url' => route('new-arrivals'), 'children' => []],
+            ['label' => 'Best Sellers', 'url' => route('best-sellers'), 'children' => []],
         ])
         ->values()
         ->all();
