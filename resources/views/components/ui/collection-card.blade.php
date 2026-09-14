@@ -6,11 +6,11 @@
     $logo = $collection['logo'] ?? $collection['image'] ?? null;
 @endphp
 
-<a href="{{ route('collection.show', $collection['slug']) }}" class="group relative block aspect-square w-full overflow-hidden rounded-lg border border-line bg-white">
+<a href="{{ route('collection.show', $collection['slug']) }}" class="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg border border-line bg-white">
     @if ($logo)
-        <x-ui.optimized-image :src="$logo" alt="{{ $collection['name'] }}" sizes="(min-width: 1024px) 16vw, (min-width: 640px) 25vw, 45vw" class="absolute inset-0 h-full w-full object-contain p-4 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-5" />
+        <x-ui.optimized-image :src="$logo" alt="{{ $collection['name'] }}" sizes="(min-width: 1024px) 16vw, (min-width: 640px) 25vw, 45vw" class="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105" />
     @else
-        <x-ui.product-art :art="$collection['art']" class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+        <x-ui.product-art :art="$collection['art']" class="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105" />
     @endif
     <div class="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
     <div class="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
