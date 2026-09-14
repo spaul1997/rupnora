@@ -52,6 +52,7 @@ Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/new-arrivals', [CategoryController::class, 'newArrivals'])->name('new-arrivals');
 Route::get('/best-sellers', [CategoryController::class, 'bestSellers'])->name('best-sellers');
+Route::get('/jewellery-type/{slug}', [CategoryController::class, 'jewelleryType'])->name('jewellery-type.show');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');

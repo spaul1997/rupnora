@@ -68,10 +68,11 @@
                 <h2 class="font-display mt-2 text-3xl text-ivory sm:text-4xl">Shop by Jewellery Type</h2>
             </div>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                @foreach ([$categories[8], $categories[9], $categories[10], $categories[11], $categories[7]] as $cat)
-                    <a href="{{ route('category.show', $cat['slug']) }}" class="group flex flex-col items-center gap-4 rounded-2xl border border-ivory/10 bg-ivory/5 p-6 text-center transition-colors hover:border-champagne-light/40 hover:bg-ivory/10">
-                        <x-ui.product-art :art="$cat['art']" class="h-16 w-16 rounded-full" />
-                        <span class="font-display text-sm text-ivory sm:text-base">{{ $cat['name'] }}</span>
+                @foreach ($jewelleryTypes as $type)
+                    <a href="{{ route('jewellery-type.show', $type['slug']) }}" class="group flex flex-col items-center gap-4 rounded-2xl border border-ivory/10 bg-ivory/5 p-6 text-center transition-colors hover:border-champagne-light/40 hover:bg-ivory/10">
+                        <x-ui.product-art :art="$type['art']" class="h-16 w-16 rounded-full" />
+                        <span class="font-display text-sm text-ivory sm:text-base">{{ $type['name'] }}</span>
+                        <span class="text-xs text-ivory/60">{{ $type['tag'] }}</span>
                     </a>
                 @endforeach
             </div>
@@ -107,23 +108,30 @@
         </div>
     </section>
 
-    {{-- H. Shop By Occasion --}}
-    <section class="section-pad">
-        <div class="container-luxe">
-            <div class="mb-10 text-center">
-                <span class="eyebrow">Gifting Made Easy</span>
-                <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Shop by Occasion</h2>
+    {{-- H. Popular Subcategories --}}
+    @if (count($topSubcategories) > 0)
+        <section class="section-pad">
+            <div class="container-luxe">
+                <div class="mb-10 text-center">
+                    <span class="eyebrow">Popular Picks</span>
+                    <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Shop by Subcategory</h2>
+                </div>
+                <div class="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4">
+                    @foreach ($topSubcategories as $cat)
+                        <a href="{{ route('category.show', $cat['slug']) }}" class="group flex flex-col items-center gap-3 text-center">
+                            @if (! empty($cat['image']))
+                                <x-ui.optimized-image :src="$cat['image']" :alt="$cat['name']" sizes="96px" class="h-20 w-20 rounded-full border border-line object-cover transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" />
+                            @else
+                                <x-ui.product-art :art="$cat['art']" class="h-20 w-20 rounded-full border border-line transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" />
+                            @endif
+                            <span class="text-xs font-medium text-charcoal-soft sm:text-sm">{{ $cat['name'] }}</span>
+                            <span class="text-[10px] text-muted">{{ $cat['count'] }} {{ \Illuminate\Support\Str::plural('Product', $cat['count']) }}</span>
+                        </a>
+                    @endforeach
+                </div>
             </div>
-            <div class="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4">
-                @foreach ($occasions as $occ)
-                    <a href="{{ route('category.show', 'rings') }}?occasion={{ $occ['slug'] }}" class="group flex flex-col items-center gap-3 text-center">
-                        <x-ui.product-art :art="$occ['art']" class="h-20 w-20 rounded-full border border-line transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" />
-                        <span class="text-xs font-medium text-charcoal-soft sm:text-sm">{{ $occ['name'] }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     {{-- I. Shop By Recipient --}}
     <section class="section-pad bg-ivory-soft">
@@ -205,28 +213,36 @@
         </div>
     </section>
 
-    {{-- L. Instagram / Jewellery Gallery --}}
-    <section class="section-pad">
-        <div class="container-luxe">
-            <div class="mb-10 text-center">
-                <span class="eyebrow">@aurelle.jewellery</span>
-                <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Styled By You</h2>
+    {{-- L. Random Available Products --}}
+    @if (count($randomInStockProducts) > 0)
+        <section class="section-pad">
+            <div class="container-luxe">
+                <div class="mb-10 text-center">
+                    <span class="eyebrow">@rupnora.jewellery</span>
+                    <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Styled By You</h2>
+                </div>
+                <div class="grid grid-cols-3 gap-2 sm:gap-4 lg:grid-cols-6">
+                    @foreach ($randomInStockProducts as $product)
+                        @php($productUrlKey = $product['slug'] ?? $product['id'])
+                        <a href="{{ route('product.show', $productUrlKey) }}" class="group relative block overflow-hidden rounded-xl border border-line">
+                            @if (! empty($product['image']))
+                                <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 33vw" class="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                            @else
+                                <x-ui.product-art :art="$product['art']" class="aspect-square transition-transform duration-500 group-hover:scale-110" />
+                            @endif
+                            <div class="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent opacity-90"></div>
+                            <div class="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                                <span class="line-clamp-2 font-display text-[11px] leading-tight text-ivory sm:text-sm">{{ $product['name'] }}</span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 sm:gap-4 lg:grid-cols-6">
-                @foreach (['ring', 'necklace', 'earring', 'bangle', 'pendant', 'bracelet'] as $art)
-                    <a href="#" class="group relative block overflow-hidden rounded-xl">
-                        <x-ui.product-art :art="$art" class="aspect-square transition-transform duration-500 group-hover:scale-110" />
-                        <div class="absolute inset-0 flex items-center justify-center bg-charcoal/0 transition-colors group-hover:bg-charcoal/30">
-                            <svg class="h-6 w-6 text-ivory opacity-0 transition-opacity group-hover:opacity-100" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.7 0 3 0 4.1.06 1.1.05 1.8.22 2.5.47.7.27 1.2.6 1.8 1.16.6.6.9 1.1 1.16 1.8.25.7.42 1.4.47 2.5.06 1.1.06 1.4.06 4.1s0 3-.06 4.1c-.05 1.1-.22 1.8-.47 2.5a5 5 0 01-1.16 1.8 5 5 0 01-1.8 1.16c-.7.25-1.4.42-2.5.47-1.1.06-1.4.06-4.1.06s-3 0-4.1-.06c-1.1-.05-1.8-.22-2.5-.47a5 5 0 01-1.8-1.16 5 5 0 01-1.16-1.8c-.25-.7-.42-1.4-.47-2.5C2 15 2 14.7 2 12s0-3 .06-4.1c.05-1.1.22-1.8.47-2.5.27-.7.6-1.2 1.16-1.8.6-.6 1.1-.9 1.8-1.16.7-.25 1.4-.42 2.5-.47C9 2 9.3 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10z" /></svg>
-                        </div>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     {{-- M. Newsletter --}}
-    <section class="relative overflow-hidden bg-beige py-20">
+    <!-- <section class="relative overflow-hidden bg-beige py-20">
         <div class="container-luxe relative text-center">
             <span class="eyebrow">Stay Connected</span>
             <h2 class="font-display mt-3 text-3xl text-charcoal sm:text-4xl">Join Our World of Jewellery</h2>
@@ -236,6 +252,6 @@
                 <button type="submit" class="btn-primary flex-shrink-0">Subscribe</button>
             </form>
         </div>
-    </section>
+    </section> -->
 
 </x-layouts.app>

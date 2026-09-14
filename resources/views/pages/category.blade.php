@@ -64,9 +64,17 @@
                     <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
                 @endif
             </div>
+        @else
+            <div class="container-luxe py-8 text-center sm:py-10">
+                <span class="eyebrow">Explore</span>
+                <h1 class="font-display mt-2 text-4xl text-charcoal sm:text-5xl">{{ $category['name'] }}</h1>
+                @if (! empty($category['blurb']))
+                    <p class="mx-auto mt-3 max-w-xl text-sm text-muted sm:text-base">{{ $category['blurb'] }}</p>
+                @endif
+            </div>
         @endif
 
-        <div class="container-luxe py-8 sm:py-10">
+        <div class="container-luxe {{ $showBanner ? 'py-8 sm:py-10' : 'pb-8 sm:pb-10' }}">
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
                 <p class="text-sm text-muted">
                     <span x-text="visibleCount" class="font-semibold text-charcoal"></span> Products

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Category;
 use App\Models\JewelleryCollection;
+use App\Models\JewelleryType;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
@@ -57,6 +58,24 @@ class StorefrontCatalog
         }
 
         return Catalog::categories();
+    }
+
+    public static function topSubcategories(int $limit = 6): array
+    {
+        return Category::query()
+            ->active()
+            ->whereNotNull('parent_id')
+            ->with('parent')
+            ->withCount(['products as products_count' => fn (Builder $query) => $query->active()])
+            ->orderByDesc('products_count')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (Category $category) => (int) $category->products_count > 0)
+            ->take($limit)
+            ->map(fn (Category $category) => self::mapCategory($category))
+            ->values()
+            ->all();
     }
 
     public static function headerCategories(): array
@@ -137,6 +156,89 @@ class StorefrontCatalog
             ->all();
     }
 
+    public static function topJewelleryTypes(int $limit = 5): array
+    {
+        return Product::query()
+            ->active()
+            ->select('jewellery_type')
+            ->selectRaw('count(*) as products_count')
+            ->whereNotNull('jewellery_type')
+            ->groupBy('jewellery_type')
+            ->orderByDesc('products_count')
+            ->orderBy('jewellery_type')
+            ->limit($limit)
+            ->get()
+            ->map(function ($row) {
+                $type = JewelleryType::query()
+                    ->active()
+                    ->where(function (Builder $query) use ($row) {
+                        $query->where('slug', Str::slug($row->jewellery_type))
+                            ->orWhere('name', $row->jewellery_type);
+                    })
+                    ->first();
+
+                $name = $type?->name ?? $row->jewellery_type;
+                $slug = $type?->slug ?? Str::slug($row->jewellery_type);
+
+                return [
+                    'slug' => $slug,
+                    'name' => $name,
+                    'art' => self::artFor($name),
+                    'blurb' => $type?->description ?: 'Explore '.$name.' designs.',
+                    'count' => (int) $row->products_count,
+                    'tag' => $row->products_count.' '.Str::plural('Design', (int) $row->products_count),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public static function jewelleryType(string $slug): ?array
+    {
+        $type = JewelleryType::query()
+            ->active()
+            ->where('slug', $slug)
+            ->first();
+
+        if ($type) {
+            $count = self::baseProductQuery()
+                ->where('jewellery_type', $type->name)
+                ->count();
+
+            return [
+                'slug' => $type->slug,
+                'name' => $type->name,
+                'art' => self::artFor($type->name),
+                'blurb' => $type->description ?: 'Explore '.$type->name.' designs.',
+                'count' => $count,
+                'tag' => $count.' '.Str::plural('Design', $count),
+            ];
+        }
+
+        $row = Product::query()
+            ->active()
+            ->whereNotNull('jewellery_type')
+            ->get(['jewellery_type'])
+            ->first(fn (Product $product) => Str::slug($product->jewellery_type) === $slug);
+
+        if (! $row) {
+            return null;
+        }
+
+        $count = self::baseProductQuery()
+            ->where('jewellery_type', $row->jewellery_type)
+            ->count();
+
+        return [
+            'slug' => $slug,
+            'name' => $row->jewellery_type,
+            'art' => self::artFor($row->jewellery_type),
+            'blurb' => 'Explore '.$row->jewellery_type.' designs.',
+            'count' => $count,
+            'tag' => $count.' '.Str::plural('Design', $count),
+        ];
+    }
+
     public static function products(?Builder $query = null): array
     {
         $query ??= self::baseProductQuery();
@@ -186,6 +288,16 @@ class StorefrontCatalog
         );
     }
 
+    public static function randomInStockProducts(int $limit = 6): array
+    {
+        return self::products(
+            self::baseProductQuery()
+                ->where('stock_quantity', '>', 0)
+                ->inRandomOrder()
+                ->limit($limit)
+        );
+    }
+
     public static function byCategory(string $slug): array
     {
         if ($slug === 'new-arrivals') {
@@ -228,6 +340,21 @@ class StorefrontCatalog
         }
 
         return self::products($query);
+    }
+
+    public static function byJewelleryType(string $slug): array
+    {
+        $type = self::jewelleryType($slug);
+
+        if (! $type) {
+            return [];
+        }
+
+        return self::products(
+            self::baseProductQuery()
+                ->where('jewellery_type', $type['name'])
+                ->latest()
+        );
     }
 
     public static function search(string $query): array
@@ -302,13 +429,15 @@ class StorefrontCatalog
     {
         $slug = self::normalizeCategorySlug($category);
         $fallback = Catalog::category($slug) ?? [];
+        $bannerCategory = $category->parent ?: $category;
+        $banner = $bannerCategory->banner ?: $category->banner;
 
         return [
             'slug' => $slug,
             'name' => $category->name,
             'art' => $fallback['art'] ?? self::artFor($category->name.' '.$category->slug),
             'image' => $category->image ? asset('storage/'.$category->image) : null,
-            'banner' => $category->banner ? asset('storage/'.$category->banner) : null,
+            'banner' => $banner ? asset('storage/'.$banner) : null,
             'blurb' => $category->description ?: ($fallback['blurb'] ?? 'Explore our '.$category->name.' collection.'),
             'count' => $category->products_count ?? $category->products()->active()->count(),
             'show_in_header' => (bool) ($category->show_in_header ?? true),

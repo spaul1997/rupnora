@@ -52,6 +52,21 @@ class CategoryController extends Controller
         ], false);
     }
 
+    public function jewelleryType(string $slug)
+    {
+        $type = StorefrontCatalog::jewelleryType($slug);
+
+        abort_if(! $type, Response::HTTP_NOT_FOUND);
+
+        return view('pages.category', [
+            'title' => $type['name'],
+            'slug' => $slug,
+            'category' => $type,
+            'products' => StorefrontCatalog::byJewelleryType($slug),
+            'showBanner' => false,
+        ]);
+    }
+
     protected function categoryView(string $slug, array $category, bool $showBanner = true)
     {
         $products = StorefrontCatalog::byCategory($slug);
