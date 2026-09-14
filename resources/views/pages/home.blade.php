@@ -230,9 +230,9 @@
                             @else
                                 <x-ui.product-art :art="$product['art']" class="aspect-square transition-transform duration-500 group-hover:scale-110" />
                             @endif
-                            <div class="absolute inset-0 bg-gradient-to-t from-charcoal/75 via-charcoal/5 to-transparent opacity-90"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-paper/95 via-paper/20 to-transparent opacity-95"></div>
                             <div class="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
-                                <span class="line-clamp-2 font-display text-[11px] leading-tight text-ivory sm:text-sm">{{ $product['name'] }}</span>
+                                <span class="block truncate font-display text-[11px] leading-tight text-charcoal sm:text-sm">{{ $product['name'] }}</span>
                             </div>
                         </a>
                     @endforeach
