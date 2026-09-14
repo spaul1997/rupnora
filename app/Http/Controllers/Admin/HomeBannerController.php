@@ -29,12 +29,16 @@ class HomeBannerController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedData($request);
-        unset($data['image']);
+        unset($data['image'], $data['mobile_image']);
         $data['is_active'] = $request->boolean('is_active');
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         if ($request->hasFile('image')) {
             $data['image_path'] = ProductImageOptimizer::store($request->file('image'), 'banners');
+        }
+
+        if ($request->hasFile('mobile_image')) {
+            $data['mobile_image_path'] = ProductImageOptimizer::store($request->file('mobile_image'), 'banners/mobile');
         }
 
         HomeBanner::create($data);
@@ -50,13 +54,18 @@ class HomeBannerController extends Controller
     public function update(Request $request, HomeBanner $homeBanner): RedirectResponse
     {
         $data = $this->validatedData($request);
-        unset($data['image']);
+        unset($data['image'], $data['mobile_image']);
         $data['is_active'] = $request->boolean('is_active');
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
         if ($request->hasFile('image')) {
             ProductImageOptimizer::delete($homeBanner->image_path);
             $data['image_path'] = ProductImageOptimizer::store($request->file('image'), 'banners');
+        }
+
+        if ($request->hasFile('mobile_image')) {
+            ProductImageOptimizer::delete($homeBanner->mobile_image_path);
+            $data['mobile_image_path'] = ProductImageOptimizer::store($request->file('mobile_image'), 'banners/mobile');
         }
 
         $homeBanner->update($data);
@@ -67,6 +76,7 @@ class HomeBannerController extends Controller
     public function destroy(HomeBanner $homeBanner): RedirectResponse
     {
         ProductImageOptimizer::delete($homeBanner->image_path);
+        ProductImageOptimizer::delete($homeBanner->mobile_image_path);
         $homeBanner->delete();
 
         return redirect()->route('admin.home-banners.index')->with('success', 'Home banner deleted successfully.');
@@ -86,6 +96,7 @@ class HomeBannerController extends Controller
             'heading' => ['required', 'string', 'max:255'],
             'subheading' => ['nullable', 'string', 'max:500'],
             'image' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
+            'mobile_image' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
             'primary_label' => ['nullable', 'string', 'max:100'],
             'primary_url' => ['nullable', 'string', 'max:255'],
             'secondary_label' => ['nullable', 'string', 'max:100'],

@@ -54,21 +54,13 @@
         {{-- Category banner --}}
         @php
             $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
-            $categoryHeroFit = ! empty($category['banner']) ? 'object-cover' : 'object-contain bg-paper';
         @endphp
-        <div class="relative mt-5 overflow-hidden">
+        <div class="relative mt-5 h-56 overflow-hidden">
             @if ($categoryHeroImage)
-                <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full {{ $categoryHeroFit }} sm:aspect-[16/4]" />
+                <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="h-full w-full object-contain" />
             @else
                 <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
             @endif
-            <div class="absolute inset-0 bg-gradient-to-r from-charcoal/55 via-charcoal/25 to-transparent"></div>
-            <div class="absolute inset-0 flex items-center">
-                <div class="container-luxe">
-                    <h1 class="font-display text-3xl text-ivory sm:text-5xl">{{ $category['name'] }}</h1>
-                    <p class="mt-2 max-w-md text-sm text-ivory/85 sm:text-base">{{ $category['blurb'] }}</p>
-                </div>
-            </div>
         </div>
 
         <div class="container-luxe py-8 sm:py-10">

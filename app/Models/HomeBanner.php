@@ -13,6 +13,7 @@ class HomeBanner extends Model
         'heading',
         'subheading',
         'image_path',
+        'mobile_image_path',
         'primary_label',
         'primary_url',
         'secondary_label',
@@ -37,5 +38,10 @@ class HomeBanner extends Model
     public function getImageUrlAttribute(): ?string
     {
         return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
+    }
+
+    public function getMobileImageUrlAttribute(): ?string
+    {
+        return $this->mobile_image_path ? Storage::disk('public')->url($this->mobile_image_path) : null;
     }
 }

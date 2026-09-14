@@ -29,14 +29,32 @@
 
     <div class="space-y-6">
         <div class="admin-card space-y-5 p-6">
-            <h3 class="text-sm font-semibold text-gray-900">Banner Image</h3>
+            <h3 class="text-sm font-semibold text-gray-900">Banner Images</h3>
+
             @if ($banner?->image_url)
-                <x-ui.optimized-image :src="$banner->image_url" alt="" sizes="320px" class="aspect-video w-full rounded-lg border border-gray-200 object-cover" />
+                <div>
+                    <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">Desktop</p>
+                    <x-ui.optimized-image :src="$banner->image_url" alt="" sizes="320px" class="aspect-video w-full rounded-lg border border-gray-200 object-cover" />
+                </div>
             @endif
+
             <div>
-                <label class="admin-label">Upload Image</label>
+                <label class="admin-label">Desktop Banner</label>
                 <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
                 <p class="mt-1 text-xs text-gray-400">JPG, PNG, WebP or AVIF. Max 5MB. Wide images work best.</p>
+            </div>
+
+            @if ($banner?->mobile_image_url)
+                <div>
+                    <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">Mobile</p>
+                    <x-ui.optimized-image :src="$banner->mobile_image_url" alt="" sizes="180px" class="mx-auto aspect-[9/16] max-h-80 w-auto rounded-lg border border-gray-200 object-cover" />
+                </div>
+            @endif
+
+            <div>
+                <label class="admin-label">Mobile Banner</label>
+                <input type="file" name="mobile_image" accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
+                <p class="mt-1 text-xs text-gray-400">Optional portrait image for phones. Desktop image is used when empty.</p>
             </div>
         </div>
 

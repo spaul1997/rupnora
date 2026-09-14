@@ -23,7 +23,8 @@ class HomeController extends Controller
                 'primaryUrl' => $banner->primary_url,
                 'secondaryLabel' => $banner->secondary_label,
                 'secondaryUrl' => $banner->secondary_url,
-                'image' => $banner->image_url,
+                'image' => $banner->image_url ?: $banner->mobile_image_url,
+                'mobileImage' => $banner->mobile_image_url,
             ])
             ->all();
 
@@ -53,6 +54,7 @@ class HomeController extends Controller
                 'secondaryLabel' => 'Explore New Arrivals',
                 'secondaryUrl' => route('category.show', 'new-arrivals'),
                 'image' => null,
+                'mobileImage' => null,
             ],
             [
                 'eyebrow' => 'Bridal 2026',
@@ -63,6 +65,7 @@ class HomeController extends Controller
                 'secondaryLabel' => 'View Wedding Collection',
                 'secondaryUrl' => route('collection.show', 'wedding-wear'),
                 'image' => null,
+                'mobileImage' => null,
             ],
             [
                 'eyebrow' => 'Certified Brilliance',
@@ -73,6 +76,7 @@ class HomeController extends Controller
                 'secondaryLabel' => 'Shop Best Sellers',
                 'secondaryUrl' => route('category.show', 'best-sellers'),
                 'image' => null,
+                'mobileImage' => null,
             ],
         ];
     }

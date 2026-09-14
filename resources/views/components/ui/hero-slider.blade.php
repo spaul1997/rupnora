@@ -9,7 +9,7 @@
     <div class="relative">
         @foreach ($slides as $i => $slide)
             <div x-show="active === {{ $i }}" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" @if($i > 0) x-cloak @endif>
-                <x-ui.hero-slide :tone="$i + 1" :eyebrow="$slide['eyebrow']" :heading="$slide['heading']" :subheading="$slide['subheading']" :primary-label="$slide['primaryLabel']" :primary-url="$slide['primaryUrl']" :secondary-label="$slide['secondaryLabel']" :secondary-url="$slide['secondaryUrl']" :image="$slide['image'] ?? null" />
+                <x-ui.hero-slide :tone="$i + 1" :eyebrow="$slide['eyebrow']" :heading="$slide['heading']" :subheading="$slide['subheading']" :primary-label="$slide['primaryLabel']" :primary-url="$slide['primaryUrl']" :secondary-label="$slide['secondaryLabel']" :secondary-url="$slide['secondaryUrl']" :image="$slide['image'] ?? null" :mobile-image="$slide['mobileImage'] ?? null" />
             </div>
         @endforeach
     </div>

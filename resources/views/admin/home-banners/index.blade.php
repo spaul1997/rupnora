@@ -23,15 +23,24 @@
             @foreach ($banners as $banner)
                 <tr>
                     <td>
+                        @php
+                            $imageStatus = match (true) {
+                                (bool) $banner->image_url && (bool) $banner->mobile_image_url => 'Desktop + mobile images',
+                                (bool) $banner->mobile_image_url => 'Mobile image only',
+                                (bool) $banner->image_url => 'Desktop image only',
+                                default => 'No banner image',
+                            };
+                        @endphp
                         <div class="flex items-center gap-3">
-                            @if ($banner->image_url)
-                                <x-ui.optimized-image :src="$banner->image_url" alt="" sizes="64px" class="h-12 w-16 rounded-lg object-cover" />
+                            @if ($banner->image_url || $banner->mobile_image_url)
+                                <x-ui.optimized-image :src="$banner->image_url ?: $banner->mobile_image_url" alt="" sizes="64px" class="h-12 w-16 rounded-lg object-cover" />
                             @else
                                 <span class="flex h-12 w-16 items-center justify-center rounded-lg bg-beige text-xs text-champagne-dark">Hero</span>
                             @endif
                             <div>
                                 <p class="font-medium text-gray-900">{{ $banner->heading }}</p>
                                 <p class="text-xs text-gray-400">{{ $banner->eyebrow ?: 'No eyebrow' }}</p>
+                                <p class="text-xs text-gray-400">{{ $imageStatus }}</p>
                             </div>
                         </div>
                     </td>

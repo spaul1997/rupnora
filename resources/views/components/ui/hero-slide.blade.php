@@ -7,6 +7,7 @@
     'secondaryLabel' => 'Explore New Arrivals',
     'secondaryUrl' => '#',
     'image' => null,
+    'mobileImage' => null,
     'tone' => 1,
 ])
 
@@ -21,7 +22,7 @@
 
 <div class="relative overflow-hidden bg-gradient-to-br {{ $bg }}">
     @if ($image)
-        <x-ui.optimized-image :src="$image" alt="" sizes="100vw" loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" />
+        <x-ui.optimized-image :src="$image" :mobile-src="$mobileImage" alt="" sizes="100vw" loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" />
         <div class="absolute inset-0 bg-gradient-to-r from-paper/95 via-paper/70 to-paper/20"></div>
     @else
         <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 22px 22px; color: var(--color-charcoal);"></div>
