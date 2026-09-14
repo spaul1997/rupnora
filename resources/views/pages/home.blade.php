@@ -11,7 +11,7 @@
                 <h2 class="font-display mt-1.5 text-2xl text-charcoal sm:text-3xl">Featured Collections</h2>
                 <p class="mx-auto mt-2 max-w-xl text-sm text-muted">Thoughtfully curated edits, from everyday essentials to once-in-a-lifetime pieces.</p>
             </div>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
                 @foreach ($collections as $collection)
                     <x-ui.collection-card :collection="$collection" />
                 @endforeach

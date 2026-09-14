@@ -10,9 +10,11 @@
     </div>
 
     <div class="container-luxe pb-20">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="flex flex-wrap justify-center gap-4">
             @foreach ($collections as $collection)
-                <x-ui.collection-card :collection="$collection" />
+                <div class="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+                    <x-ui.collection-card :collection="$collection" />
+                </div>
             @endforeach
         </div>
     </div>

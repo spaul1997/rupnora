@@ -114,6 +114,7 @@ class StorefrontCatalog
                     'name' => $first->name,
                     'art' => $fallback['art'] ?? self::artFor($first->name),
                     'blurb' => $first->description ?: ($fallback['blurb'] ?? 'Explore the '.$first->name.'.'),
+                    'logo' => $first->logo ? asset('storage/'.$first->logo) : null,
                     'image' => $first->logo ? asset('storage/'.$first->logo) : null,
                     'banner' => $first->banner ? asset('storage/'.$first->banner) : null,
                     'tag' => $count.' '.Str::plural('Design', $count),
