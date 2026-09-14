@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JewelleryCollection;
 use App\Models\Product;
+use App\Support\ProductImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -36,7 +37,17 @@ class JewelleryCollectionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        JewelleryCollection::create($this->validatedData($request));
+        $data = $this->validatedData($request);
+
+        if ($request->hasFile('logo')) {
+            $data['logo'] = ProductImageOptimizer::store($request->file('logo'), 'collections');
+        }
+
+        if ($request->hasFile('banner')) {
+            $data['banner'] = ProductImageOptimizer::store($request->file('banner'), 'collections');
+        }
+
+        JewelleryCollection::create($data);
 
         return redirect()->route('admin.jewellery-collections.index')->with('success', 'Collection created successfully.');
     }
@@ -50,7 +61,19 @@ class JewelleryCollectionController extends Controller
 
     public function update(Request $request, JewelleryCollection $jewelleryCollection): RedirectResponse
     {
-        $jewelleryCollection->update($this->validatedData($request, $jewelleryCollection));
+        $data = $this->validatedData($request, $jewelleryCollection);
+
+        if ($request->hasFile('logo')) {
+            ProductImageOptimizer::delete($jewelleryCollection->logo);
+            $data['logo'] = ProductImageOptimizer::store($request->file('logo'), 'collections');
+        }
+
+        if ($request->hasFile('banner')) {
+            ProductImageOptimizer::delete($jewelleryCollection->banner);
+            $data['banner'] = ProductImageOptimizer::store($request->file('banner'), 'collections');
+        }
+
+        $jewelleryCollection->update($data);
 
         return redirect()->route('admin.jewellery-collections.index')->with('success', 'Collection updated successfully.');
     }
@@ -64,6 +87,9 @@ class JewelleryCollectionController extends Controller
         if ($hasProducts) {
             return back()->with('error', 'Cannot delete a collection assigned to products.');
         }
+
+        ProductImageOptimizer::delete($jewelleryCollection->logo);
+        ProductImageOptimizer::delete($jewelleryCollection->banner);
 
         $jewelleryCollection->delete();
 
@@ -88,9 +114,13 @@ class JewelleryCollectionController extends Controller
                 Rule::unique('jewellery_collections', 'slug')->ignore($collection),
             ],
             'description' => ['nullable', 'string'],
+            'logo' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
+            'banner' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
         ]);
+
+        unset($data['logo'], $data['banner']);
 
         $data['slug'] = $data['slug'] ?? '' ?: Str::slug($data['name']);
         $data['is_active'] = $request->boolean('is_active');

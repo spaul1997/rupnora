@@ -3,7 +3,11 @@
 ])
 
 <a href="{{ route('collection.show', $collection['slug']) }}" class="group relative block overflow-hidden rounded-lg border border-line">
-    <x-ui.product-art :art="$collection['art']" class="aspect-[4/3] transition-transform duration-700 ease-out group-hover:scale-105" />
+    @if (! empty($collection['banner']))
+        <x-ui.optimized-image :src="$collection['banner']" alt="" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw" class="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+    @else
+        <x-ui.product-art :art="$collection['art']" class="aspect-[4/3] transition-transform duration-700 ease-out group-hover:scale-105" />
+    @endif
     <div class="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
     <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
         <span class="text-[9.5px] font-semibold uppercase tracking-wide text-champagne-light">{{ $collection['tag'] }}</span>

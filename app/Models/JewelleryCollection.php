@@ -11,7 +11,7 @@ class JewelleryCollection extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'description', 'sort_order', 'is_active',
+        'name', 'slug', 'description', 'logo', 'banner', 'sort_order', 'is_active',
     ];
 
     protected function casts(): array

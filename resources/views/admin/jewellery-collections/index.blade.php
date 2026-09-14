@@ -31,8 +31,19 @@
             @foreach ($collections as $collection)
                 <tr>
                     <td>
-                        <p class="font-medium text-gray-900">{{ $collection->name }}</p>
-                        <p class="text-xs text-gray-400">{{ $collection->slug }}</p>
+                        <div class="flex items-center gap-3">
+                            @if ($collection->logo)
+                                <x-ui.optimized-image :src="asset('storage/'.$collection->logo)" alt="" sizes="36px" class="h-9 w-9 rounded-lg border border-gray-200 object-contain p-1" />
+                            @else
+                                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-beige text-champagne-dark">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+                                </span>
+                            @endif
+                            <div>
+                                <p class="font-medium text-gray-900">{{ $collection->name }}</p>
+                                <p class="text-xs text-gray-400">{{ $collection->slug }}</p>
+                            </div>
+                        </div>
                     </td>
                     <td>{{ $collection->products_count }}</td>
                     <td>{{ $collection->sort_order }}</td>

@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#231535">
-    <title>@yield('title', 'Dashboard') — Aurelle Admin</title>
-
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <title>@yield('title', 'Dashboard') — Rupnora Admin</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="{{ asset('favicon.png') }}" sizes="any">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=playfair-display:500,600,700|inter:400,500,600,700" rel="stylesheet">
 
@@ -64,7 +64,7 @@
             </main>
 
             <footer class="flex-shrink-0 border-t border-gray-200 bg-white px-6 py-3 text-center text-xs text-gray-400">
-                &copy; {{ date('Y') }} Aurelle Jewellery Admin. All rights reserved.
+                &copy; {{ date('Y') }} Rupnora Admin. All rights reserved.
             </footer>
         </div>
     </div>

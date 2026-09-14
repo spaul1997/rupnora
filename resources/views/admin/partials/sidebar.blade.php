@@ -75,8 +75,8 @@
 
 <div x-data="{ open: {{ $openGroup ? "'".$openGroup."'" : 'null' }} }" class="flex h-full flex-col bg-charcoal">
     <div class="flex h-16 flex-shrink-0 items-center gap-2 px-5">
-        <span class="font-display text-xl text-ivory">Aurelle</span>
-        <span class="rounded bg-champagne-dark/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-champagne-light">Admin</span>
+        <img src="{{ asset('logo-w.png') }}" alt="Rupnora" class="h-10 w-auto object-contain">
+        <span class="max-w-28 truncate rounded bg-champagne-dark/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-champagne-light">{{ auth()->user()?->email ?? 'Admin' }}</span>
     </div>
 
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
