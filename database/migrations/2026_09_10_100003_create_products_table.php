@@ -53,7 +53,7 @@ return new class extends Migration
             $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
             $table->decimal('discount_value', 12, 2)->nullable();
             $table->decimal('making_charge', 12, 2)->default(0);
-            $table->decimal('gst_percentage', 5, 2)->default(3.00);
+            $table->decimal('gst_percentage', 5, 2)->default(0);
             $table->decimal('final_price', 12, 2);
 
             // Inventory

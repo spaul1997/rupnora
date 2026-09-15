@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -27,6 +28,11 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         $product = $this->route('product');
+        $metalTypeRule = Rule::exists('metal_types', 'name');
+
+        if ($this->input('metal_type') !== $product->metal_type) {
+            $metalTypeRule->where(fn ($query) => $query->where('is_active', true));
+        }
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -61,7 +67,13 @@ class UpdateProductRequest extends FormRequest
                 Rule::exists('jewellery_types', 'name')
                     ->where(fn ($query) => $query->where('is_active', true)),
             ],
-            'metal_type' => ['required', 'string', 'max:100'],
+            'metal_type' => [
+                'required',
+                'string',
+                'max:255',
+                $metalTypeRule,
+            ],
+            'finish_plating' => ['nullable', 'string', 'max:100'],
             'metal_colour' => ['nullable', 'string', 'max:100'],
             'purity' => ['nullable', 'string', 'max:20'],
             'gross_weight' => ['nullable', 'numeric', 'min:0'],
@@ -80,6 +92,12 @@ class UpdateProductRequest extends FormRequest
             'gemstone_type' => ['nullable', 'string', 'max:100'],
             'gemstone_weight' => ['nullable', 'numeric', 'min:0'],
             'gemstone_colour' => ['nullable', 'string', 'max:50'],
+            'occasion' => ['nullable', 'string', Rule::in(array_keys(Product::OCCASIONS))],
+            'gender' => ['nullable', 'string', Rule::in(array_keys(Product::GENDERS))],
+            'is_adjustable' => ['boolean'],
+            'is_water_resistant' => ['boolean'],
+            'is_return_available' => ['boolean'],
+            'is_refund_available' => ['boolean'],
 
             'mrp' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],

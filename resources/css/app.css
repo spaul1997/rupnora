@@ -192,6 +192,80 @@
         @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide;
     }
 
+    .product-jewellery-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem 1.25rem;
+    }
+
+    .product-jewellery-fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .product-jewellery-toggles {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .product-details-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-champagne-dark) transparent;
+    }
+
+    .product-details-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .product-details-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .product-details-scrollbar::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background-color: var(--color-champagne-dark);
+    }
+
+    @media (min-width: 640px) {
+        .product-jewellery-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .product-jewellery-toggles {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 768px) {
+        .product-jewellery-grid {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+
+        .product-jewellery-type {
+            grid-column: span 4 / span 4;
+        }
+
+        .product-jewellery-collection {
+            grid-column: span 8 / span 8;
+        }
+
+        .product-jewellery-fields {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .product-jewellery-fields {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .product-jewellery-toggles {
+            grid-column: 1 / -1;
+        }
+    }
+
     .admin-table {
         @apply min-w-full divide-y divide-gray-200 text-sm;
     }

@@ -7,8 +7,8 @@ use App\Models\JewelleryCollection;
 use App\Models\JewelleryType;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class StorefrontCatalog
@@ -485,16 +485,27 @@ class StorefrontCatalog
             'id' => $product->id,
             'slug' => $product->slug,
             'sku' => $product->sku,
+            'barcode' => $product->barcode,
             'name' => $product->name,
+            'brand' => $product->brand,
             'category' => $categorySlug,
             'category_name' => $categoryName,
             'type' => $product->jewellery_type,
             'metal' => $product->metal_type,
+            'finish_plating' => $product->finish_plating,
+            'colour' => $product->metal_colour,
             'purity' => $product->purity,
             'gender' => self::genderFor($product),
             'occasion' => self::occasionsFor($product),
             'collection' => $product->collectionSlugs()[0] ?? self::collectionFor($product),
             'collections' => $product->collectionSlugs(),
+            'collection_names' => self::collectionNamesFor($product),
+            'stone_type' => $product->gemstone_type,
+            'stone_colour' => $product->gemstone_colour,
+            'is_adjustable' => (bool) $product->is_adjustable,
+            'is_water_resistant' => (bool) $product->is_water_resistant,
+            'is_return_available' => (bool) $product->is_return_available,
+            'is_refund_available' => (bool) $product->is_refund_available,
             'art' => self::artFor($product->jewellery_type.' '.$categoryName.' '.$product->metal_type),
             'image' => $primaryImage ? asset('storage/'.$primaryImage->image_path) : null,
             'gallery' => $product->images->map(fn ($image) => asset('storage/'.$image->image_path))->values()->all(),
@@ -506,21 +517,65 @@ class StorefrontCatalog
             'is_new' => (bool) $product->is_new_arrival,
             'is_bestseller' => (bool) $product->is_best_seller,
             'in_stock' => $product->stock_quantity > 0,
+            'stock_quantity' => (int) $product->stock_quantity,
+            'stock_status' => $product->stock_status,
             'short_desc' => $product->short_description ?: Str::limit(strip_tags((string) $product->description), 120),
             'description' => $product->description ?: $product->short_description,
+            'metal_options' => $product->variants->pluck('metal')->filter()->unique()->values()->all() ?: null,
             'sizes' => $product->variants->pluck('size')->filter()->unique()->values()->all() ?: null,
+            'variants' => $product->variants
+                ->map(fn ($variant) => [
+                    'sku' => $variant->sku,
+                    'size' => $variant->size,
+                    'metal' => $variant->metal,
+                    'purity' => $variant->purity,
+                    'colour' => $variant->colour,
+                    'price' => $variant->offer_price ?: $variant->price,
+                    'stock_quantity' => (int) $variant->stock_quantity,
+                    'status' => $variant->status,
+                ])
+                ->values()
+                ->all(),
             'weight' => [
                 'gross' => self::weight($product->gross_weight),
                 'net' => self::weight($product->net_weight),
+                'metal' => self::weight($product->metal_weight),
                 'stone' => self::weight($product->gemstone_weight ?: $product->diamond_carat),
             ],
+            'has_diamond' => (bool) $product->has_diamond,
+            'has_gemstone' => (bool) $product->has_gemstone,
             'diamond' => $product->has_diamond ? [
                 'carat' => self::diamondCarat($product->diamond_carat),
                 'colour' => $product->diamond_colour,
                 'clarity' => $product->diamond_clarity,
+                'cut' => $product->diamond_cut,
                 'shape' => $product->diamond_shape,
+                'count' => $product->diamond_count,
+            ] : null,
+            'gemstone' => $product->has_gemstone ? [
+                'type' => $product->gemstone_type,
+                'colour' => $product->gemstone_colour,
+                'weight' => self::diamondCarat($product->gemstone_weight),
             ] : null,
         ];
+    }
+
+    protected static function collectionNamesFor(Product $product): array
+    {
+        $slugs = $product->collectionSlugs();
+
+        if ($slugs === []) {
+            return [];
+        }
+
+        $names = JewelleryCollection::query()
+            ->whereIn('slug', $slugs)
+            ->pluck('name', 'slug');
+
+        return collect($slugs)
+            ->map(fn (string $slug) => $names[$slug] ?? Str::headline(str_replace('-', ' ', $slug)))
+            ->values()
+            ->all();
     }
 
     protected static function queryForVirtualCategory(string $slug): Builder
@@ -618,6 +673,10 @@ class StorefrontCatalog
 
     protected static function genderFor(Product $product): string
     {
+        if ($product->gender) {
+            return $product->gender;
+        }
+
         $text = Str::lower(($product->category?->name ?? '').' '.$product->name);
 
         if (str_contains($text, 'men')) {
@@ -629,6 +688,10 @@ class StorefrontCatalog
 
     protected static function occasionsFor(Product $product): array
     {
+        if ($product->occasion) {
+            return [$product->occasion];
+        }
+
         $text = Str::lower(($product->category?->name ?? '').' '.$product->name.' '.$product->jewellery_type);
         $occasions = ['everyday'];
 

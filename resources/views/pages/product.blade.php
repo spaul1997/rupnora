@@ -1,11 +1,26 @@
 @php
     $categoryLabel = $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category']));
     $discount = $product['mrp'] > $product['price'] ? round((($product['mrp'] - $product['price']) / $product['mrp']) * 100) : 0;
-    $metalOptions = collect([$product['metal'], 'Gold', 'Rose Gold', 'White Gold'])->unique()->take(3)->values();
+    $metalOptions = collect($product['metal_options'] ?? [])->filter()->unique()->values();
+    $selectedMetal = $metalOptions->first() ?? $product['metal'];
     $bestSellersCross = $bestSellersCross ?? [];
     $gallery = collect($product['gallery'] ?? [])->filter()->take(4)->values()->all();
     $gallery = count($gallery) > 0 ? $gallery : [null, null, null, null];
     $galleryCount = count($gallery);
+    $shareUrl = route('product.show', $product['slug'] ?? $product['id']);
+    $whatsappShareText = rawurlencode($product['name'].' - '.$shareUrl);
+    $sizeOptions = collect($product['sizes'] ?? [])->filter()->values();
+    $variantRows = collect($product['variants'] ?? [])
+        ->filter(fn ($variant) => collect($variant)->except(['stock_quantity', 'status'])->filter()->isNotEmpty())
+        ->values();
+    $formatProductValue = function ($value, string $fallback = 'Not specified') {
+        if (is_array($value)) {
+            $value = collect($value)->filter()->implode(', ');
+        }
+
+        return filled($value) ? $value : $fallback;
+    };
+    $formatStockStatus = fn ($value) => $value ? ucfirst(str_replace('_', ' ', $value)) : 'Not specified';
 @endphp
 
 <x-layouts.app :title="$product['name']" :description="$product['short_desc']">
@@ -17,7 +32,7 @@
             zoomActive: false, zoomX: 50, zoomY: 50,
             qty: 1,
             diamondTier: 0,
-            selectedMetal: {{ Illuminate\Support\Js::from($product['metal']) }},
+            selectedMetal: {{ Illuminate\Support\Js::from($selectedMetal) }},
             @if($product['purity']) selectedPurity: {{ Illuminate\Support\Js::from($product['purity']) }}, @endif
             @if($product['sizes']) selectedSize: {{ Illuminate\Support\Js::from($product['sizes'][0]) }}, @endif
             pin: '', pinStatus: null, pinLoading: false,
@@ -35,10 +50,10 @@
             ]" />
         </div>
 
-        <div class="container-luxe grid grid-cols-1 gap-10 py-8 lg:grid-cols-2 lg:gap-14">
+        <div class="container-luxe grid grid-cols-1 gap-10 py-8 lg:grid-cols-2 lg:items-start lg:gap-14">
 
             {{-- Gallery --}}
-            <div>
+            <div class="lg:sticky lg:top-24 lg:self-start">
                 <div class="relative overflow-hidden rounded-2xl border border-line">
                     <div
                         class="relative aspect-square cursor-zoom-in overflow-hidden"
@@ -81,18 +96,22 @@
             </div>
 
             {{-- Info --}}
-            <div>
+            <div class="product-details-scrollbar lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
                 <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
                 <div class="mt-1.5 flex items-start justify-between gap-4">
                     <h1 class="font-display text-[28px] leading-tight text-charcoal sm:text-[32px]">{{ $product['name'] }}</h1>
                     <div class="flex flex-shrink-0 items-center gap-1">
                         <x-ui.wishlist-button :id="$product['id']" />
+                        <a href="https://wa.me/?text={{ $whatsappShareText }}" target="_blank" rel="noopener noreferrer" class="icon-btn text-success" aria-label="Share on WhatsApp">
+                            <svg class="h-5 w-5" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+                                <path d="M16.04 3.2c-7.06 0-12.8 5.72-12.8 12.77 0 2.25.59 4.45 1.71 6.39L3.14 29l6.8-1.78a12.75 12.75 0 006.1 1.55h.01c7.05 0 12.79-5.73 12.79-12.78 0-3.41-1.33-6.62-3.75-9.03a12.68 12.68 0 00-9.05-3.76zm0 23.41h-.01c-1.94 0-3.84-.52-5.5-1.5l-.39-.23-4.03 1.06 1.08-3.93-.26-.4a10.56 10.56 0 01-1.62-5.64c0-5.9 4.81-10.69 10.73-10.69 2.86 0 5.55 1.11 7.57 3.14a10.62 10.62 0 013.14 7.57c0 5.9-4.81 10.7-10.71 10.7zm5.87-8.01c-.32-.16-1.9-.94-2.19-1.04-.29-.11-.5-.16-.72.16-.21.32-.83 1.04-1.02 1.25-.19.21-.38.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.61-1.91-1.8-2.23-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.48 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.39.19-1.53-.08-.13-.29-.21-.61-.37z" />
+                            </svg>
+                        </a>
                         <button class="icon-btn" aria-label="Share" @click="navigator.share ? navigator.share({title: {{ Illuminate\Support\Js::from($product['name']) }}, url: window.location.href}) : $store.ui.notify('Link copied to clipboard')">
                             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6" /></svg>
                         </button>
                     </div>
                 </div>
-                <p class="mt-1 text-xs text-muted-light">SKU: {{ $product['sku'] }}</p>
 
                 <div class="mt-3">
                     <x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" size="lg" />
@@ -106,15 +125,17 @@
                     @endif
                 </div>
 
-                {{-- Metal --}}
-                <div class="mt-6">
-                    <p class="label-luxe">Metal</p>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ($metalOptions as $metal)
-                            <button @click="selectedMetal = {{ Illuminate\Support\Js::from($metal) }}" class="rounded-full border px-4 py-2 text-sm transition-colors" :class="selectedMetal === {{ Illuminate\Support\Js::from($metal) }} ? 'border-charcoal bg-charcoal text-ivory' : 'border-line text-charcoal hover:border-charcoal/40'">{{ $metal }}</button>
-                        @endforeach
+                @if ($metalOptions->isNotEmpty())
+                    {{-- Metal --}}
+                    <div class="mt-6">
+                        <p class="label-luxe">Metal</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($metalOptions as $metal)
+                                <button @click="selectedMetal = {{ Illuminate\Support\Js::from($metal) }}" class="rounded-full border px-4 py-2 text-sm transition-colors" :class="selectedMetal === {{ Illuminate\Support\Js::from($metal) }} ? 'border-charcoal bg-charcoal text-ivory' : 'border-line text-charcoal hover:border-charcoal/40'">{{ $metal }}</button>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
 
                 @if ($product['purity'])
                     <div class="mt-5">
@@ -152,31 +173,33 @@
                     </div>
                 @endif
 
-                <div class="mt-6">
-                    <p class="label-luxe">Quantity</p>
-                    <x-ui.quantity-selector model="qty" :max="5" />
+                <div class="mt-6 flex flex-col gap-3 lg:flex-row lg:items-end">
+                    <div class="lg:w-36 lg:flex-shrink-0">
+                        <p class="label-luxe">Quantity</p>
+                        <x-ui.quantity-selector model="qty" :max="5" />
+                    </div>
+
+                    {{-- Delivery check --}}
+                    <div class="rounded-xl border border-line px-4 py-3 lg:flex-1">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <p class="shrink-0 text-sm font-medium text-charcoal">Delivery Availability</p>
+                            <input type="text" x-model="pin" maxlength="6" placeholder="Enter PIN code" class="input-luxe !py-2 text-sm" @keydown.enter="checkPin()">
+                            <button @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px]" :disabled="pinLoading">
+                                <span x-show="!pinLoading">Check</span>
+                                <span x-show="pinLoading" x-cloak>...</span>
+                            </button>
+                        </div>
+                        <p x-show="pinStatus === 'invalid'" x-cloak class="mt-2 text-xs text-error">Please enter a valid 6-digit PIN code.</p>
+                        <p x-show="pinStatus === 'available'" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-success">
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            Delivery available. Estimated by <strong>{{ now()->addDays(6)->format('d M Y') }}</strong>.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="mt-7 flex flex-col gap-3 sm:flex-row">
                     <button @click="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})" class="btn-primary flex-1">Add to Cart</button>
                     <a href="{{ route('checkout') }}" class="btn-secondary flex-1">Buy Now</a>
-                </div>
-
-                {{-- Delivery check --}}
-                <div class="mt-7 rounded-xl border border-line p-4">
-                    <p class="text-sm font-medium text-charcoal">Check Delivery Availability</p>
-                    <div class="mt-2.5 flex gap-2">
-                        <input type="text" x-model="pin" maxlength="6" placeholder="Enter PIN code" class="input-luxe !py-2.5 text-sm" @keydown.enter="checkPin()">
-                        <button @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2.5 text-[11px]" :disabled="pinLoading">
-                            <span x-show="!pinLoading">Check</span>
-                            <span x-show="pinLoading" x-cloak>...</span>
-                        </button>
-                    </div>
-                    <p x-show="pinStatus === 'invalid'" x-cloak class="mt-2 text-xs text-error">Please enter a valid 6-digit PIN code.</p>
-                    <p x-show="pinStatus === 'available'" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-success">
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        Delivery available. Estimated by <strong>{{ now()->addDays(6)->format('d M Y') }}</strong>.
-                    </p>
                 </div>
 
                 {{-- Trust badges --}}
@@ -193,80 +216,206 @@
                         </div>
                     @endforeach
                 </div>
-            </div>
-        </div>
 
-        {{-- Info accordion --}}
-        <div class="container-luxe pb-16">
-            <div class="mx-auto max-w-3xl divide-y divide-line rounded-2xl border border-line" x-data="{ open: 'description' }">
-                @php
-                    $sections = [
-                        'description' => ['label' => 'Description', 'content' => 'text'],
-                        'details' => ['label' => 'Product Details', 'content' => 'details'],
-                        'metal' => ['label' => 'Metal Details', 'content' => 'metal'],
-                        'diamond' => ['label' => 'Diamond Details', 'content' => 'diamond', 'show' => (bool) $product['diamond']],
-                        'dimensions' => ['label' => 'Dimensions', 'content' => 'dimensions'],
-                        'care' => ['label' => 'Care Instructions', 'content' => 'care'],
-                        'shipping' => ['label' => 'Shipping & Returns', 'content' => 'shipping'],
-                        'certification' => ['label' => 'Certification', 'content' => 'certification'],
-                    ];
-                @endphp
-                @foreach ($sections as $key => $section)
-                    @continue(isset($section['show']) && ! $section['show'])
-                    <div>
-                        <button @click="open = open === '{{ $key }}' ? null : '{{ $key }}'" class="flex w-full items-center justify-between px-5 py-4 text-left sm:px-6">
-                            <span class="font-display text-base text-charcoal">{{ $section['label'] }}</span>
-                            <svg class="h-4 w-4 flex-shrink-0 text-muted transition-transform" :class="open === '{{ $key }}' && 'rotate-45'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round" /></svg>
-                        </button>
-                        <div x-cloak x-show="open === '{{ $key }}'" x-collapse class="px-5 pb-5 text-sm leading-relaxed text-muted sm:px-6">
-                            @switch($section['content'])
-                                @case('text')
-                                    <div class="space-y-3 text-sm leading-relaxed text-muted [&_a]:text-champagne-dark [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-champagne [&_blockquote]:pl-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-charcoal [&_ul]:list-disc [&_ul]:pl-5">
-                                        {!! $product['description'] !!}
-                                    </div>
-                                    @break
-                                @case('details')
-                                    <ul class="space-y-1.5">
-                                        <li>Type: <span class="text-charcoal">{{ $product['type'] }}</span></li>
-                                        <li>Gender: <span class="text-charcoal">{{ $product['gender'] }}</span></li>
-                                        <li>SKU: <span class="text-charcoal">{{ $product['sku'] }}</span></li>
-                                        <li>Occasion: <span class="text-charcoal">{{ collect($product['occasion'])->map(fn($o) => ucfirst($o))->implode(', ') }}</span></li>
-                                    </ul>
-                                    @break
-                                @case('metal')
-                                    <ul class="space-y-1.5">
-                                        <li>Metal: <span class="text-charcoal">{{ $product['metal'] }}@if($product['purity']) &middot; {{ $product['purity'] }}@endif</span></li>
-                                        <li>Gross Weight: <span class="text-charcoal">{{ $product['weight']['gross'] }}</span></li>
-                                        <li>Net Weight: <span class="text-charcoal">{{ $product['weight']['net'] }}</span></li>
-                                        <li>Stone Weight: <span class="text-charcoal">{{ $product['weight']['stone'] }}</span></li>
-                                    </ul>
-                                    @break
-                                @case('diamond')
-                                    @if ($product['diamond'])
-                                        <ul class="space-y-1.5">
-                                            <li>Diamond Carat: <span class="text-charcoal">{{ $product['diamond']['carat'] }}</span></li>
-                                            <li>Diamond Colour: <span class="text-charcoal">{{ $product['diamond']['colour'] }}</span></li>
-                                            <li>Diamond Clarity: <span class="text-charcoal">{{ $product['diamond']['clarity'] }}</span></li>
-                                            <li>Diamond Shape: <span class="text-charcoal">{{ $product['diamond']['shape'] }}</span></li>
+                {{-- Info accordion --}}
+                <div class="mt-6 divide-y divide-line rounded-2xl border border-line" x-data="{ open: 'description' }">
+                    @php
+                        $sections = [
+                            'description' => ['label' => 'Description', 'content' => 'text'],
+                            'details' => ['label' => 'Product Details', 'content' => 'details'],
+                            'metal' => ['label' => 'Metal Details', 'content' => 'metal'],
+                            'diamond' => ['label' => 'Diamond Details', 'content' => 'diamond', 'show' => (bool) $product['diamond']],
+                            'gemstone' => ['label' => 'Gemstone Details', 'content' => 'gemstone', 'show' => (bool) ($product['gemstone'] ?? null)],
+                            'dimensions' => ['label' => 'Dimensions', 'content' => 'dimensions'],
+                            'care' => ['label' => 'Care Instructions', 'content' => 'care'],
+                            'shipping' => ['label' => 'Shipping & Returns', 'content' => 'shipping'],
+                            'certification' => ['label' => 'Certification', 'content' => 'certification'],
+                        ];
+                    @endphp
+                    @foreach ($sections as $key => $section)
+                        @continue(isset($section['show']) && ! $section['show'])
+                        <div>
+                            <button @click="open = open === '{{ $key }}' ? null : '{{ $key }}'" class="flex w-full items-center justify-between px-5 py-4 text-left sm:px-6">
+                                <span class="font-display text-base text-charcoal">{{ $section['label'] }}</span>
+                                <svg class="h-4 w-4 flex-shrink-0 text-muted transition-transform" :class="open === '{{ $key }}' && 'rotate-45'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round" /></svg>
+                            </button>
+                            <div x-cloak x-show="open === '{{ $key }}'" x-collapse class="px-5 pb-5 text-sm leading-relaxed text-muted sm:px-6">
+                                @switch($section['content'])
+                                    @case('text')
+                                        <div class="space-y-3 text-sm leading-relaxed text-muted [&_a]:text-champagne-dark [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-champagne [&_blockquote]:pl-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-charcoal [&_ul]:list-disc [&_ul]:pl-5">
+                                            {!! $product['description'] !!}
+                                        </div>
+                                        @break
+                                    @case('details')
+                                        <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                            @foreach ([
+                                                'Product Name' => $product['name'],
+                                                'SKU' => $product['sku'],
+                                                'Barcode' => $product['barcode'] ?? null,
+                                                'Brand' => $product['brand'] ?? null,
+                                                'Category' => $product['category_name'],
+                                                'Collection' => $product['collection_names'] ?? [],
+                                                'Jewellery Type' => $product['type'],
+                                                'Occasion' => collect($product['occasion'])->map(fn($occasion) => ucfirst($occasion))->all(),
+                                                'Gender' => $product['gender'],
+                                                'Stock Status' => $formatStockStatus($product['stock_status'] ?? null),
+                                                'Available Quantity' => $product['stock_quantity'] ?? null,
+                                            ] as $label => $value)
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                    <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                        @break
+                                    @case('metal')
+                                        <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                            @foreach ([
+                                                'Material' => $product['metal'],
+                                                'Finish / Plating' => $product['finish_plating'] ?? null,
+                                                'Colour' => $product['colour'] ?? null,
+                                                'Purity' => $product['purity'] ?? null,
+                                                'Stone Type' => $product['stone_type'] ?? null,
+                                                'Stone Colour' => $product['stone_colour'] ?? null,
+                                                'Gross Weight' => $product['weight']['gross'],
+                                                'Net Weight' => $product['weight']['net'],
+                                                'Metal Weight' => $product['weight']['metal'],
+                                                'Stone Weight' => $product['weight']['stone'],
+                                                'Adjustable' => $product['is_adjustable'] ? 'Yes' : 'No',
+                                                'Water Resistant' => $product['is_water_resistant'] ? 'Yes' : 'No',
+                                                'Return Available' => $product['is_return_available'] ? 'Yes' : 'No',
+                                                'Refund Available' => $product['is_refund_available'] ? 'Yes' : 'No',
+                                            ] as $label => $value)
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                    <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                        @break
+                                    @case('diamond')
+                                        @if ($product['diamond'])
+                                            <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                                @foreach ([
+                                                    'Diamond Carat' => $product['diamond']['carat'] ?? null,
+                                                    'Diamond Colour' => $product['diamond']['colour'] ?? null,
+                                                    'Diamond Clarity' => $product['diamond']['clarity'] ?? null,
+                                                    'Diamond Cut' => $product['diamond']['cut'] ?? null,
+                                                    'Diamond Shape' => $product['diamond']['shape'] ?? null,
+                                                    'Diamond Count' => $product['diamond']['count'] ?? null,
+                                                ] as $label => $value)
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                        <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                    </div>
+                                                @endforeach
+                                            </dl>
+                                        @endif
+                                        @break
+                                    @case('gemstone')
+                                        @if ($product['gemstone'])
+                                            <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                                @foreach ([
+                                                    'Gemstone Type' => $product['gemstone']['type'] ?? null,
+                                                    'Gemstone Colour' => $product['gemstone']['colour'] ?? null,
+                                                    'Gemstone Weight' => $product['gemstone']['weight'] ?? null,
+                                                ] as $label => $value)
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                        <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                    </div>
+                                                @endforeach
+                                            </dl>
+                                        @endif
+                                        @break
+                                    @case('dimensions')
+                                        <div class="space-y-4">
+                                            <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                                @foreach ([
+                                                    'Available Sizes' => $sizeOptions->all(),
+                                                    'Adjustable' => ($product['is_adjustable'] ?? false) ? 'Yes' : 'No',
+                                                    'Gross Weight' => $product['weight']['gross'] ?? null,
+                                                    'Net Weight' => $product['weight']['net'] ?? null,
+                                                    'Metal Weight' => $product['weight']['metal'] ?? null,
+                                                    'Stone Weight' => $product['weight']['stone'] ?? null,
+                                                ] as $label => $value)
+                                                    <div>
+                                                        <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                        <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                    </div>
+                                                @endforeach
+                                            </dl>
+
+                                            @if ($variantRows->isNotEmpty())
+                                                <div class="overflow-x-auto rounded-xl border border-line">
+                                                    <table class="w-full min-w-[520px] text-left text-xs">
+                                                        <thead class="bg-ivory-soft text-muted">
+                                                            <tr>
+                                                                <th class="px-3 py-2 font-medium">SKU</th>
+                                                                <th class="px-3 py-2 font-medium">Size</th>
+                                                                <th class="px-3 py-2 font-medium">Metal</th>
+                                                                <th class="px-3 py-2 font-medium">Colour</th>
+                                                                <th class="px-3 py-2 font-medium">Stock</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-line">
+                                                            @foreach ($variantRows as $variant)
+                                                                <tr>
+                                                                    <td class="px-3 py-2 text-charcoal">{{ $formatProductValue($variant['sku'] ?? null, '—') }}</td>
+                                                                    <td class="px-3 py-2 text-charcoal">{{ $formatProductValue($variant['size'] ?? null, '—') }}</td>
+                                                                    <td class="px-3 py-2 text-charcoal">{{ $formatProductValue($variant['metal'] ?? null, '—') }}@if(! empty($variant['purity'])) · {{ $variant['purity'] }}@endif</td>
+                                                                    <td class="px-3 py-2 text-charcoal">{{ $formatProductValue($variant['colour'] ?? null, '—') }}</td>
+                                                                    <td class="px-3 py-2 text-charcoal">{{ $formatProductValue($variant['stock_quantity'] ?? null, '—') }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        @break
+                                    @case('care')
+                                        <ul class="list-disc space-y-2 pl-5">
+                                            <li>Store this {{ $formatProductValue($product['metal'] ?? null, 'jewellery') }} piece separately in a soft pouch to avoid scratches.</li>
+                                            @if (! empty($product['finish_plating']))
+                                                <li>Protect the {{ $product['finish_plating'] }} finish from perfume, lotion and harsh cleaners.</li>
+                                            @endif
+                                            <li>{{ ($product['is_water_resistant'] ?? false) ? 'Light water contact is acceptable, but dry the piece gently after wear.' : 'Keep away from moisture and chlorinated water to preserve the finish.' }}</li>
+                                            @if (($product['has_diamond'] ?? false) || ($product['has_gemstone'] ?? false))
+                                                <li>Clean stones gently with a soft lint-free cloth; avoid abrasive brushes.</li>
+                                            @endif
                                         </ul>
-                                    @endif
-                                    @break
-                                @case('dimensions')
-                                    Dimensions vary slightly by size selection. Standard fitting measurements are available in our Size Guide, and our stylists are happy to help you confirm fit before you order.
-                                    @break
-                                @case('care')
-                                    Store separately in a soft pouch away from moisture and direct sunlight. Avoid contact with perfume, lotion and chlorinated water. Clean gently with a soft lint-free cloth after each wear.
-                                    @break
-                                @case('shipping')
-                                    Free insured shipping on orders above ₹2,999. Orders are dispatched within 24&ndash;48 hours and typically arrive within 4&ndash;7 business days. Return requests must be made within 3 days from delivery as per our <a href="{{ route('refund-policy') }}" class="font-medium text-champagne-dark hover:underline">Refund Policy</a>.
-                                    @break
-                                @case('certification')
-                                    This piece is accompanied by a certificate of authenticity{{ $product['diamond'] ? ' and an IGI diamond certification' : '' }}, along with BIS hallmarking for gold purity where applicable.
-                                    @break
-                            @endswitch
+                                        @break
+                                    @case('shipping')
+                                        <ul class="list-disc space-y-2 pl-5">
+                                            <li>Stock status: <span class="font-medium text-charcoal">{{ $formatStockStatus($product['stock_status'] ?? null) }}</span>.</li>
+                                            <li>{{ ($product['in_stock'] ?? false) ? 'Orders are dispatched after confirmation and usually arrive within 4–7 business days.' : 'This product is currently out of stock. Delivery will be available once stock is updated.' }}</li>
+                                            <li>Return: <span class="font-medium text-charcoal">{{ ($product['is_return_available'] ?? false) ? 'Available' : 'Not available' }}</span>.</li>
+                                            <li>Refund: <span class="font-medium text-charcoal">{{ ($product['is_refund_available'] ?? false) ? 'Available' : 'Not available' }}</span>. See our <a href="{{ route('refund-policy') }}" class="font-medium text-champagne-dark hover:underline">Refund Policy</a>.</li>
+                                        </ul>
+                                        @break
+                                    @case('certification')
+                                        <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                            @foreach ([
+                                                'SKU' => $product['sku'] ?? null,
+                                                'Barcode' => $product['barcode'] ?? null,
+                                                'Material' => $product['metal'] ?? null,
+                                                'Purity' => $product['purity'] ?? null,
+                                                'Diamond Certified' => ($product['has_diamond'] ?? false) ? 'Yes' : 'No',
+                                                'Gemstone Included' => ($product['has_gemstone'] ?? false) ? 'Yes' : 'No',
+                                            ] as $label => $value)
+                                                <div>
+                                                    <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                    <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                        @break
+                                @endswitch
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
 

@@ -1,12 +1,93 @@
 @php
     $meta = collect($products)->map(fn ($p, $i) => [
-        'i' => $i, 'category' => $p['category'], 'metal' => $p['metal'], 'purity' => $p['purity'],
+        'i' => $i, 'category' => $p['category'], 'type' => $p['type'], 'metal' => $p['metal'], 'purity' => $p['purity'],
         'gender' => $p['gender'], 'occasion' => $p['occasion'], 'price' => $p['price'],
         'rating' => $p['rating'], 'reviews' => $p['reviews_count'], 'in_stock' => $p['in_stock'],
         'is_new' => $p['is_new'], 'is_bestseller' => $p['is_bestseller'],
         'discount' => $p['mrp'] > $p['price'] ? round((($p['mrp'] - $p['price']) / $p['mrp']) * 100) : 0,
     ])->values();
     $showBanner = $showBanner ?? true;
+    $productCollection = collect($products);
+    $priceMin = max(0, (int) floor($productCollection->min('price') ?? 0));
+    $priceMax = max(1000, (int) ceil($productCollection->max('price') ?? 500000));
+    $categoryOptions = \App\Models\Category::query()
+        ->active()
+        ->parents()
+        ->with([
+            'children' => fn ($query) => $query
+                ->active()
+                ->withCount(['products as products_count' => fn ($products) => $products->active()]),
+        ])
+        ->withCount(['products as products_count' => fn ($query) => $query->active()])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get()
+        ->mapWithKeys(fn ($category) => [
+            $category->slug => [
+                'label' => $category->name,
+                'count' => $category->products_count + $category->children->sum('products_count'),
+            ],
+        ])
+        ->all();
+    $jewelleryTypeOptions = \App\Models\JewelleryType::query()
+        ->active()
+        ->withCount(['products as products_count' => fn ($query) => $query->active()])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get()
+        ->mapWithKeys(fn ($type) => [$type->name => ['label' => $type->name, 'count' => $type->products_count]])
+        ->all();
+    $metalOptions = \App\Models\MetalType::query()
+        ->active()
+        ->withCount(['products as products_count' => fn ($query) => $query->active()])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get()
+        ->mapWithKeys(fn ($type) => [$type->name => ['label' => $type->name, 'count' => $type->products_count]])
+        ->all();
+    $purityOptions = $productCollection
+        ->whereNotNull('purity')
+        ->groupBy('purity')
+        ->mapWithKeys(fn ($items, $value) => [$value => ['label' => $value, 'count' => $items->count()]])
+        ->sortKeys()
+        ->all();
+    $genderOptions = $productCollection
+        ->whereNotNull('gender')
+        ->groupBy('gender')
+        ->mapWithKeys(fn ($items, $value) => [$value => ['label' => $value, 'count' => $items->count()]])
+        ->sortBy('label')
+        ->all();
+    $occasionLabels = \App\Models\Product::OCCASIONS;
+    $occasionOptions = $productCollection
+        ->flatMap(fn ($product) => $product['occasion'] ?? [])
+        ->filter()
+        ->countBy()
+        ->mapWithKeys(fn ($count, $value) => [$value => ['label' => $occasionLabels[$value] ?? str($value)->replace('-', ' ')->title()->toString(), 'count' => $count]])
+        ->sortBy('label')
+        ->all();
+    $ratingOptions = collect([4 => '4★ & above', 3 => '3★ & above'])
+        ->filter(fn ($label, $value) => $productCollection->where('rating', '>=', $value)->isNotEmpty())
+        ->mapWithKeys(fn ($label, $value) => [$value => ['label' => $label, 'count' => $productCollection->where('rating', '>=', $value)->count()]])
+        ->all();
+    $availabilityOptions = $productCollection->where('in_stock', true)->isNotEmpty()
+        ? ['in_stock' => ['label' => 'In Stock Only', 'count' => $productCollection->where('in_stock', true)->count()]]
+        : [];
+    $flagOptions = collect([
+        'new' => ['label' => 'New Arrivals', 'count' => $productCollection->where('is_new', true)->count()],
+        'bestseller' => ['label' => 'Best Sellers', 'count' => $productCollection->where('is_bestseller', true)->count()],
+        'discount' => ['label' => 'On Discount', 'count' => $meta->where('discount', '>', 0)->count()],
+    ])->filter(fn ($option) => $option['count'] > 0)->all();
+    $filterSections = collect([
+        'category' => ['label' => 'Parent Category', 'type' => 'checkbox', 'options' => $categoryOptions],
+        'type' => ['label' => 'Jewellery Type', 'type' => 'checkbox', 'options' => $jewelleryTypeOptions],
+        'metal' => ['label' => 'Material Type', 'type' => 'checkbox', 'options' => $metalOptions],
+        'purity' => ['label' => 'Gold Purity', 'type' => 'checkbox', 'options' => $purityOptions],
+        'gender' => ['label' => 'Gender', 'type' => 'checkbox', 'options' => $genderOptions],
+        'occasion' => ['label' => 'Occasion', 'type' => 'checkbox', 'options' => $occasionOptions],
+        'rating' => ['label' => 'Rating', 'type' => 'checkbox', 'options' => $ratingOptions],
+        'availability' => ['label' => 'Availability', 'type' => 'checkbox', 'options' => $availabilityOptions],
+        'flags' => ['label' => 'Highlights', 'type' => 'checkbox', 'options' => $flagOptions],
+    ])->filter(fn ($section) => filled($section['options']))->all();
 @endphp
 
 <x-layouts.app :title="$title">
@@ -14,10 +95,11 @@
         x-data="{
             loading: true,
             sort: 'recommended',
-            filters: { category: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: 0, priceMax: 500000 },
+            filters: { category: [], type: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }} },
             meta: {{ Illuminate\Support\Js::from($meta) }},
             matches(p) {
                 if (this.filters.category.length && !this.filters.category.includes(p.category)) return false;
+                if (this.filters.type.length && !this.filters.type.includes(p.type)) return false;
                 if (this.filters.metal.length && !this.filters.metal.includes(p.metal)) return false;
                 if (this.filters.purity.length && !this.filters.purity.includes(p.purity)) return false;
                 if (this.filters.gender.length && !this.filters.gender.includes(p.gender)) return false;
@@ -80,13 +162,13 @@
                     <span x-text="visibleCount" class="font-semibold text-charcoal"></span> Products
                 </p>
                 <div class="flex items-center gap-3">
-                    <x-ui.filter-drawer />
+                    <x-ui.filter-drawer :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" />
                     <x-ui.sort-dropdown />
                 </div>
             </div>
 
             <div class="mt-8 flex gap-10">
-                <x-ui.filter-sidebar />
+                <x-ui.filter-sidebar :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" />
 
                 <div class="min-w-0 flex-1">
                     {{-- Loading skeleton --}}

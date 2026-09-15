@@ -1,6 +1,6 @@
 @php
     $meta = collect($products)->map(fn ($p, $i) => [
-        'i' => $i, 'category' => $p['category'], 'metal' => $p['metal'], 'purity' => $p['purity'],
+        'i' => $i, 'category' => $p['category'], 'type' => $p['type'], 'metal' => $p['metal'], 'purity' => $p['purity'],
         'gender' => $p['gender'], 'occasion' => $p['occasion'], 'price' => $p['price'],
         'rating' => $p['rating'], 'reviews' => $p['reviews_count'], 'in_stock' => $p['in_stock'],
         'is_new' => $p['is_new'], 'is_bestseller' => $p['is_bestseller'],
@@ -12,10 +12,11 @@
     <div
         x-data="{
             sort: 'recommended',
-            filters: { category: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: 0, priceMax: 500000 },
+            filters: { category: [], type: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: 0, priceMax: 500000 },
             meta: {{ Illuminate\Support\Js::from($meta) }},
             matches(p) {
                 if (this.filters.category.length && !this.filters.category.includes(p.category)) return false;
+                if (this.filters.type.length && !this.filters.type.includes(p.type)) return false;
                 if (this.filters.metal.length && !this.filters.metal.includes(p.metal)) return false;
                 if (this.filters.purity.length && !this.filters.purity.includes(p.purity)) return false;
                 if (this.filters.gender.length && !this.filters.gender.includes(p.gender)) return false;

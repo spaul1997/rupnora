@@ -9,8 +9,8 @@
 
 <select name="metal_type" class="admin-select lg:max-w-[140px]">
     <option value="">All Metals</option>
-    @foreach (\App\Http\Controllers\Admin\ProductController::METAL_TYPES as $metal)
-        <option value="{{ $metal }}" @selected(request('metal_type') === $metal)>{{ $metal }}</option>
+    @foreach ($metalTypes as $metalType)
+        <option value="{{ $metalType->name }}" @selected(request('metal_type') === $metalType->name)>{{ $metalType->name }}</option>
     @endforeach
 </select>
 

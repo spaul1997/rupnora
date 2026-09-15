@@ -77,8 +77,8 @@
         {{-- Jewellery Information --}}
         <div class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
             <h3 class="text-sm font-semibold text-gray-900">Jewellery Information</h3>
-            <div class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                <div>
+            <div class="product-jewellery-grid">
+                <div class="product-jewellery-type">
                     <label for="jewellery_type" class="admin-label">Jewellery Type <span class="text-error">*</span></label>
                     <select name="jewellery_type" id="jewellery_type" x-model="selectedJewelleryType" required class="admin-select">
                         <option value="">Select jewellery type</option>
@@ -93,7 +93,7 @@
                 </div>
                 <div
                     x-data="{ collectionOpen: false, collectionSearch: '' }"
-                    class="relative"
+                    class="product-jewellery-collection relative"
                     @click.outside="collectionOpen = false"
                     @keydown.escape="collectionOpen = false"
                 >
@@ -152,45 +152,41 @@
                         <p class="mt-1 text-xs text-error">{{ $message }}</p>
                     @enderror
                 </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:col-span-2">
-                    <x-admin.form.select label="Metal Type" name="metal_type" required :value="$product->metal_type ?? null" :options="array_combine($metalTypes, $metalTypes)" />
-                    <x-admin.form.input label="Metal Colour" name="metal_colour" :value="$product->metal_colour ?? null" />
-                    <x-admin.form.select label="Purity" name="purity" :value="$product->purity ?? null" :options="array_combine($purities, $purities)" placeholder="Not Applicable" />
-                </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:col-span-2">
+                <div class="product-jewellery-fields">
+                    <x-admin.form.select
+                        label="Material"
+                        name="metal_type"
+                        required
+                        :value="$product->metal_type ?? null"
+                        :options="$metalTypes->mapWithKeys(fn ($type) => [$type->name => $type->name.($type->is_active ? '' : ' (Inactive)')])->all()"
+                        placeholder="Select material"
+                    />
+                    <x-admin.form.input label="Finish / Plating" name="finish_plating" :value="$product->finish_plating ?? null" placeholder="e.g. Gold plated, Oxidised" />
+                    <x-admin.form.input label="Colour" name="metal_colour" :value="$product->metal_colour ?? null" />
+                    <x-admin.form.input label="Stone Type" name="gemstone_type" :value="$product->gemstone_type ?? null" />
+                    <x-admin.form.input label="Stone Colour" name="gemstone_colour" :value="$product->gemstone_colour ?? null" />
+                    <x-admin.form.select label="Occasion" name="occasion" :value="$product->occasion ?? null" :options="$occasionOptions" placeholder="Select occasion" />
+                    <x-admin.form.select label="Gender" name="gender" :value="$product->gender ?? null" :options="$genderOptions" placeholder="Select gender" />
                     <x-admin.form.input label="Gross Weight (g)" name="gross_weight" type="number" step="0.001" :value="$product->gross_weight ?? null" />
-                    <x-admin.form.input label="Net Weight (g)" name="net_weight" type="number" step="0.001" :value="$product->net_weight ?? null" />
-                    <x-admin.form.input label="Metal Weight (g)" name="metal_weight" type="number" step="0.001" :value="$product->metal_weight ?? null" />
+                    <div class="product-jewellery-toggles">
+                        <label class="flex min-h-[42px] items-center gap-2.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+                            <input type="checkbox" name="is_adjustable" value="1" @checked(old('is_adjustable', $product->is_adjustable ?? false)) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                            <span>Adjustable</span>
+                        </label>
+                        <label class="flex min-h-[42px] items-center gap-2.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+                            <input type="checkbox" name="is_water_resistant" value="1" @checked(old('is_water_resistant', $product->is_water_resistant ?? false)) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                            <span>Water Resistant</span>
+                        </label>
+                        <label class="flex min-h-[42px] items-center gap-2.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+                            <input type="checkbox" name="is_return_available" value="1" @checked(old('is_return_available', $product->is_return_available ?? false)) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                            <span>Return Available</span>
+                        </label>
+                        <label class="flex min-h-[42px] items-center gap-2.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+                            <input type="checkbox" name="is_refund_available" value="1" @checked(old('is_refund_available', $product->is_refund_available ?? false)) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                            <span>Refund Available</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        {{-- Diamond Details --}}
-        <div class="admin-card space-y-5 p-6">
-            <label class="flex items-center gap-2.5 text-sm font-semibold text-gray-900">
-                <input type="checkbox" name="has_diamond" value="1" x-model="hasDiamond" class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
-                Has Diamond
-            </label>
-            <div x-show="hasDiamond" x-cloak x-collapse class="grid grid-cols-2 gap-5 sm:grid-cols-3">
-                <x-admin.form.input label="Carat" name="diamond_carat" type="number" step="0.001" :value="$product->diamond_carat ?? null" />
-                <x-admin.form.input label="Diamond Count" name="diamond_count" type="number" :value="$product->diamond_count ?? null" />
-                <x-admin.form.input label="Colour" name="diamond_colour" :value="$product->diamond_colour ?? null" placeholder="e.g. VS-EF" />
-                <x-admin.form.input label="Clarity" name="diamond_clarity" :value="$product->diamond_clarity ?? null" placeholder="e.g. VVS1" />
-                <x-admin.form.input label="Cut" name="diamond_cut" :value="$product->diamond_cut ?? null" placeholder="e.g. Excellent" />
-                <x-admin.form.input label="Shape" name="diamond_shape" :value="$product->diamond_shape ?? null" placeholder="e.g. Round Brilliant" />
-            </div>
-        </div>
-
-        {{-- Gemstone Details --}}
-        <div class="admin-card space-y-5 p-6">
-            <label class="flex items-center gap-2.5 text-sm font-semibold text-gray-900">
-                <input type="checkbox" name="has_gemstone" value="1" x-model="hasGemstone" class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
-                Has Gemstone
-            </label>
-            <div x-show="hasGemstone" x-cloak x-collapse class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                <x-admin.form.input label="Gemstone Type" name="gemstone_type" :value="$product->gemstone_type ?? null" />
-                <x-admin.form.input label="Weight (ct)" name="gemstone_weight" type="number" step="0.001" :value="$product->gemstone_weight ?? null" />
-                <x-admin.form.input label="Colour" name="gemstone_colour" :value="$product->gemstone_colour ?? null" />
             </div>
         </div>
 
@@ -204,7 +200,7 @@
                 <x-admin.form.input label="Making Charge (₹)" name="making_charge" type="number" step="0.01" :value="$product->making_charge ?? 0" />
                 <x-admin.form.select label="Discount Type" name="discount_type" :value="$product->discount_type ?? null" :options="['percentage' => 'Percentage', 'fixed' => 'Fixed Amount']" placeholder="No Discount" />
                 <x-admin.form.input label="Discount Value" name="discount_value" type="number" step="0.01" :value="$product->discount_value ?? null" />
-                <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 3.00" />
+                <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 0" />
                 @if (isset($product))
                     <p class="self-end rounded-lg bg-ivory-soft px-3 py-2 text-xs text-gray-600">Current Final Price: <span class="font-semibold text-gray-900">₹{{ number_format($product->final_price, 2) }}</span></p>
                 @endif
@@ -277,6 +273,33 @@
                 <label class="admin-label">Upload New Images</label>
                 <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
                 <p class="mt-1 text-xs text-gray-400">JPG, PNG, WebP or AVIF only. Max 5MB each. Uploads are optimized to responsive AVIF/WebP files.</p>
+            </div>
+        </div>
+
+        {{-- Diamond Details --}}
+        <div class="admin-card space-y-5 p-6">
+            <label class="flex items-center gap-2.5 text-sm font-semibold text-gray-900">
+                <input type="checkbox" name="has_diamond" value="1" x-model="hasDiamond" class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                Has Diamond
+            </label>
+            <div x-show="hasDiamond" x-cloak x-collapse class="grid grid-cols-3 gap-4">
+                <x-admin.form.input label="Carat" name="diamond_carat" type="number" step="0.001" :value="$product->diamond_carat ?? null" />
+                <x-admin.form.input label="Diamond Count" name="diamond_count" type="number" :value="$product->diamond_count ?? null" />
+                <x-admin.form.input label="Colour" name="diamond_colour" :value="$product->diamond_colour ?? null" placeholder="e.g. VS-EF" />
+                <x-admin.form.input label="Clarity" name="diamond_clarity" :value="$product->diamond_clarity ?? null" placeholder="e.g. VVS1" />
+                <x-admin.form.input label="Cut" name="diamond_cut" :value="$product->diamond_cut ?? null" placeholder="e.g. Excellent" />
+                <x-admin.form.input label="Shape" name="diamond_shape" :value="$product->diamond_shape ?? null" placeholder="e.g. Round Brilliant" />
+            </div>
+        </div>
+
+        {{-- Gemstone Details --}}
+        <div class="admin-card space-y-5 p-6">
+            <label class="flex items-center gap-2.5 text-sm font-semibold text-gray-900">
+                <input type="checkbox" name="has_gemstone" value="1" x-model="hasGemstone" class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                Has Gemstone
+            </label>
+            <div x-show="hasGemstone" x-cloak x-collapse class="grid grid-cols-1 gap-4">
+                <x-admin.form.input label="Weight (ct)" name="gemstone_weight" type="number" step="0.001" :value="$product->gemstone_weight ?? null" />
             </div>
         </div>
 

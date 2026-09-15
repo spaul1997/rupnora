@@ -402,7 +402,7 @@ CREATE TABLE `products` (
   `discount_type` enum('percentage','fixed') DEFAULT NULL,
   `discount_value` decimal(12,2) DEFAULT NULL,
   `making_charge` decimal(12,2) NOT NULL DEFAULT 0.00,
-  `gst_percentage` decimal(5,2) NOT NULL DEFAULT 3.00,
+  `gst_percentage` decimal(5,2) NOT NULL DEFAULT 0.00,
   `final_price` decimal(12,2) NOT NULL,
   `stock_quantity` int(11) NOT NULL DEFAULT 0,
   `minimum_stock` int(10) UNSIGNED NOT NULL DEFAULT 5,

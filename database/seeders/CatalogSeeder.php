@@ -81,7 +81,7 @@ class CatalogSeeder extends Seeder
                 'discount_type' => null,
                 'discount_value' => null,
                 'making_charge' => round($data['price'] * 0.08, 2),
-                'gst_percentage' => 3.00,
+                'gst_percentage' => 0,
                 'final_price' => $data['price'],
                 'stock_quantity' => $data['stock'],
                 'minimum_stock' => 5,

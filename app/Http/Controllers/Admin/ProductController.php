@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\JewelleryCollection;
 use App\Models\JewelleryType;
+use App\Models\MetalType;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
@@ -21,8 +22,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
-    public const METAL_TYPES = ['Gold', 'White Gold', 'Rose Gold', 'Silver', 'Platinum'];
-
     public const PURITIES = ['14K', '18K', '22K', '24K'];
 
     public function index(Request $request): View
@@ -49,8 +48,9 @@ class ProductController extends Controller
             ->withQueryString();
 
         $categories = Category::orderBy('name')->get(['id', 'name']);
+        $metalTypes = MetalType::query()->orderBy('sort_order')->orderBy('name')->get(['name']);
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'metalTypes'));
     }
 
     public function create(): View
@@ -58,6 +58,7 @@ class ProductController extends Controller
         $parentCategories = Category::parents()->orderBy('name')->get(['id', 'name']);
         $subcategories = Category::query()->whereNotNull('parent_id')->orderBy('name')->get(['id', 'name', 'parent_id']);
         $jewelleryTypes = JewelleryType::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug']);
+        $metalTypes = MetalType::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug', 'is_active']);
         $collections = JewelleryCollection::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('admin.products.create', [
@@ -65,8 +66,10 @@ class ProductController extends Controller
             'subcategories' => $subcategories,
             'jewelleryTypes' => $jewelleryTypes,
             'collections' => $collections,
-            'metalTypes' => self::METAL_TYPES,
+            'metalTypes' => $metalTypes,
             'purities' => self::PURITIES,
+            'occasionOptions' => Product::OCCASIONS,
+            'genderOptions' => Product::GENDERS,
         ]);
     }
 
@@ -99,6 +102,11 @@ class ProductController extends Controller
         $parentCategories = Category::parents()->orderBy('name')->get(['id', 'name']);
         $subcategories = Category::query()->whereNotNull('parent_id')->orderBy('name')->get(['id', 'name', 'parent_id']);
         $jewelleryTypes = JewelleryType::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug']);
+        $metalTypes = MetalType::query()
+            ->where(fn ($query) => $query->where('is_active', true)->orWhere('name', $product->metal_type))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'is_active']);
         $collections = JewelleryCollection::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('admin.products.edit', [
@@ -107,8 +115,10 @@ class ProductController extends Controller
             'subcategories' => $subcategories,
             'jewelleryTypes' => $jewelleryTypes,
             'collections' => $collections,
-            'metalTypes' => self::METAL_TYPES,
+            'metalTypes' => $metalTypes,
             'purities' => self::PURITIES,
+            'occasionOptions' => Product::OCCASIONS,
+            'genderOptions' => Product::GENDERS,
         ]);
     }
 
@@ -228,9 +238,10 @@ class ProductController extends Controller
     {
         $data = $request->only([
             'name', 'slug', 'sku', 'barcode', 'category_id', 'brand', 'short_description', 'description',
-            'jewellery_type', 'metal_type', 'metal_colour', 'purity', 'gross_weight', 'net_weight', 'metal_weight',
+            'jewellery_type', 'metal_type', 'finish_plating', 'metal_colour', 'purity', 'gross_weight', 'net_weight', 'metal_weight',
             'diamond_carat', 'diamond_colour', 'diamond_clarity', 'diamond_cut', 'diamond_shape', 'diamond_count',
             'gemstone_type', 'gemstone_weight', 'gemstone_colour',
+            'occasion', 'gender',
             'mrp', 'selling_price', 'offer_price', 'discount_type', 'discount_value', 'making_charge', 'gst_percentage',
             'stock_quantity', 'minimum_stock',
             'meta_title', 'meta_description', 'meta_keywords',
@@ -240,6 +251,10 @@ class ProductController extends Controller
         $data['collection'] = json_encode(array_values(array_unique($request->input('collection', []))));
         $data['has_diamond'] = $request->boolean('has_diamond');
         $data['has_gemstone'] = $request->boolean('has_gemstone');
+        $data['is_adjustable'] = $request->boolean('is_adjustable');
+        $data['is_water_resistant'] = $request->boolean('is_water_resistant');
+        $data['is_return_available'] = $request->boolean('is_return_available');
+        $data['is_refund_available'] = $request->boolean('is_refund_available');
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_new_arrival'] = $request->boolean('is_new_arrival');
@@ -247,7 +262,7 @@ class ProductController extends Controller
         $data['is_trending'] = $request->boolean('is_trending');
         $data['is_on_sale'] = $request->boolean('is_on_sale');
         $data['minimum_stock'] = $this->defaultWhenBlank($data['minimum_stock'] ?? null, 5);
-        $data['gst_percentage'] = $this->defaultWhenBlank($data['gst_percentage'] ?? null, 3.00);
+        $data['gst_percentage'] = $this->defaultWhenBlank($data['gst_percentage'] ?? null, 0);
         $data['making_charge'] = $this->defaultWhenBlank($data['making_charge'] ?? null, 0);
 
         return $data;

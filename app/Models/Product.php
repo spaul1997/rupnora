@@ -11,13 +11,34 @@ class Product extends Model
 {
     use HasFactory;
 
+    public const OCCASIONS = [
+        'everyday' => 'Everyday',
+        'office' => 'Office',
+        'casual' => 'Casual',
+        'party' => 'Party',
+        'festive' => 'Festive',
+        'wedding' => 'Wedding',
+        'engagement' => 'Engagement',
+        'anniversary' => 'Anniversary',
+        'birthday' => 'Birthday',
+        'gift' => 'Gift',
+    ];
+
+    public const GENDERS = [
+        'Women' => 'Women',
+        'Men' => 'Men',
+        'Unisex' => 'Unisex',
+        'Kids' => 'Kids',
+    ];
+
     protected $fillable = [
         'name', 'slug', 'sku', 'barcode', 'category_id', 'collection', 'brand',
         'short_description', 'description',
-        'jewellery_type', 'metal_type', 'metal_colour', 'purity',
+        'jewellery_type', 'metal_type', 'finish_plating', 'metal_colour', 'purity',
         'gross_weight', 'net_weight', 'metal_weight',
         'has_diamond', 'diamond_carat', 'diamond_colour', 'diamond_clarity', 'diamond_cut', 'diamond_shape', 'diamond_count',
         'has_gemstone', 'gemstone_type', 'gemstone_weight', 'gemstone_colour',
+        'occasion', 'gender', 'is_adjustable', 'is_water_resistant', 'is_return_available', 'is_refund_available',
         'mrp', 'selling_price', 'offer_price', 'discount_type', 'discount_value', 'making_charge', 'gst_percentage', 'final_price',
         'stock_quantity', 'minimum_stock', 'stock_status',
         'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller', 'is_trending', 'is_on_sale',
@@ -35,6 +56,10 @@ class Product extends Model
             'diamond_count' => 'integer',
             'has_gemstone' => 'boolean',
             'gemstone_weight' => 'decimal:3',
+            'is_adjustable' => 'boolean',
+            'is_water_resistant' => 'boolean',
+            'is_return_available' => 'boolean',
+            'is_refund_available' => 'boolean',
             'mrp' => 'decimal:2',
             'selling_price' => 'decimal:2',
             'offer_price' => 'decimal:2',

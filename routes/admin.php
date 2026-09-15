@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\JewelleryCollectionController;
 use App\Http\Controllers\Admin\JewelleryTypeController;
+use App\Http\Controllers\Admin\MetalTypeController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
@@ -49,6 +50,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('categories/{category}/toggle-active', [CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
         Route::resource('jewellery-types', JewelleryTypeController::class)->parameters(['jewellery-types' => 'jewelleryType'])->except(['show']);
         Route::patch('jewellery-types/{jewelleryType}/toggle-active', [JewelleryTypeController::class, 'toggleActive'])->name('jewellery-types.toggle-active');
+        Route::resource('metal-types', MetalTypeController::class)->parameters(['metal-types' => 'metalType'])->except(['show']);
+        Route::patch('metal-types/{metalType}/toggle-active', [MetalTypeController::class, 'toggleActive'])->name('metal-types.toggle-active');
         Route::resource('jewellery-collections', JewelleryCollectionController::class)->parameters(['jewellery-collections' => 'jewelleryCollection'])->except(['show']);
         Route::patch('jewellery-collections/{jewelleryCollection}/toggle-active', [JewelleryCollectionController::class, 'toggleActive'])->name('jewellery-collections.toggle-active');
 

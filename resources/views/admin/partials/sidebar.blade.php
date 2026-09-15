@@ -21,12 +21,13 @@
         'products' => [
             'label' => 'Products',
             'icon' => 'M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z',
-            'active' => request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.jewellery-types.*') || request()->routeIs('admin.jewellery-collections.*') || request()->routeIs('admin.inventory.*'),
+            'active' => request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.jewellery-types.*') || request()->routeIs('admin.metal-types.*') || request()->routeIs('admin.jewellery-collections.*') || request()->routeIs('admin.inventory.*'),
             'items' => [
                 ['label' => 'All Products', 'url' => route('admin.products.index')],
                 ['label' => 'Add Product', 'url' => route('admin.products.create')],
                 ['label' => 'Categories', 'url' => route('admin.categories.index')],
                 ['label' => 'Jewellery Types', 'url' => route('admin.jewellery-types.index')],
+                ['label' => 'Metal Types', 'url' => route('admin.metal-types.index')],
                 ['label' => 'Collections', 'url' => route('admin.jewellery-collections.index')],
                 ['label' => 'Inventory', 'url' => route('admin.inventory.index')],
             ],

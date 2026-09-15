@@ -44,11 +44,19 @@
             <div class="admin-card p-6">
                 <h3 class="mb-4 text-sm font-semibold text-gray-900">Jewellery Details</h3>
                 <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-                    <div><dt class="text-gray-400">Type</dt><dd class="font-medium text-gray-800">{{ $product->jewellery_type }}</dd></div>
-                    <div><dt class="text-gray-400">Metal</dt><dd class="font-medium text-gray-800">{{ $product->metal_type }}</dd></div>
-                    <div><dt class="text-gray-400">Purity</dt><dd class="font-medium text-gray-800">{{ $product->purity ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Jewellery Type</dt><dd class="font-medium text-gray-800">{{ $product->jewellery_type }}</dd></div>
+                    <div><dt class="text-gray-400">Material</dt><dd class="font-medium text-gray-800">{{ $product->metal_type }}</dd></div>
+                    <div><dt class="text-gray-400">Finish / Plating</dt><dd class="font-medium text-gray-800">{{ $product->finish_plating ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Colour</dt><dd class="font-medium text-gray-800">{{ $product->metal_colour ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Stone Type</dt><dd class="font-medium text-gray-800">{{ $product->gemstone_type ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Stone Colour</dt><dd class="font-medium text-gray-800">{{ $product->gemstone_colour ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Occasion</dt><dd class="font-medium text-gray-800">{{ $product->occasion ? \App\Models\Product::OCCASIONS[$product->occasion] ?? ucfirst($product->occasion) : '—' }}</dd></div>
+                    <div><dt class="text-gray-400">Gender</dt><dd class="font-medium text-gray-800">{{ $product->gender ?? '—' }}</dd></div>
                     <div><dt class="text-gray-400">Gross Weight</dt><dd class="font-medium text-gray-800">{{ $product->gross_weight ?? '—' }} g</dd></div>
-                    <div><dt class="text-gray-400">Net Weight</dt><dd class="font-medium text-gray-800">{{ $product->net_weight ?? '—' }} g</dd></div>
+                    <div><dt class="text-gray-400">Adjustable</dt><dd class="font-medium text-gray-800">{{ $product->is_adjustable ? 'Yes' : 'No' }}</dd></div>
+                    <div><dt class="text-gray-400">Water Resistant</dt><dd class="font-medium text-gray-800">{{ $product->is_water_resistant ? 'Yes' : 'No' }}</dd></div>
+                    <div><dt class="text-gray-400">Return</dt><dd class="font-medium text-gray-800">{{ $product->is_return_available ? 'Available' : 'Not Available' }}</dd></div>
+                    <div><dt class="text-gray-400">Refund</dt><dd class="font-medium text-gray-800">{{ $product->is_refund_available ? 'Available' : 'Not Available' }}</dd></div>
                     @if ($product->has_diamond)
                         <div><dt class="text-gray-400">Diamond Carat</dt><dd class="font-medium text-gray-800">{{ $product->diamond_carat }} ct</dd></div>
                         <div><dt class="text-gray-400">Diamond Clarity</dt><dd class="font-medium text-gray-800">{{ $product->diamond_clarity }}</dd></div>

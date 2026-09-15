@@ -4,12 +4,41 @@ namespace Database\Seeders;
 
 use App\Models\JewelleryCollection;
 use App\Models\JewelleryType;
+use App\Models\MetalType;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class MasterDataSeeder extends Seeder
 {
+    protected const METAL_TYPES = [
+        'Gold',
+        'White Gold',
+        'Rose Gold',
+        'Silver',
+        'Platinum',
+        'Brass',
+        'Copper',
+        'Alloy',
+        'Zinc Alloy',
+        'Stainless Steel',
+        'German Silver',
+        'Sterling Silver / 925 Silver',
+        'Iron',
+        'Aluminium',
+        'Titanium',
+        'Nickel Alloy',
+        'Pewter',
+        'Mixed Metal',
+        'Gold-Plated Metal',
+        'Silver-Plated Metal',
+        'Rose Gold-Plated Metal',
+        'Rhodium-Plated Metal',
+        'Oxidised Metal',
+        'Antique-Finish Metal',
+        'Other',
+    ];
+
     protected const STYLE_TYPES = [
         'Gold-plated',
         'Silver-plated',
@@ -38,6 +67,23 @@ class MasterDataSeeder extends Seeder
 
     public function run(): void
     {
+        foreach (self::METAL_TYPES as $i => $type) {
+            $slug = Str::slug($type);
+            $exists = MetalType::query()
+                ->where('slug', $slug)
+                ->orWhere('name', $type)
+                ->exists();
+
+            if (! $exists) {
+                MetalType::query()->create([
+                    'name' => $type,
+                    'slug' => $slug,
+                    'sort_order' => $i,
+                    'is_active' => true,
+                ]);
+            }
+        }
+
         foreach (self::STYLE_TYPES as $i => $type) {
             JewelleryType::query()->updateOrCreate(
                 ['slug' => Str::slug($type)],
