@@ -5,6 +5,11 @@
 @php
     $categoryLabel = $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category']));
     $productUrlKey = $product['slug'] ?? $product['id'];
+    $cartPayload = [
+        'id' => $product['id'],
+        'name' => $product['name'],
+        'url' => route('cart.store'),
+    ];
 @endphp
 
 <div class="group relative" x-data="{ quickView: false }">
@@ -36,7 +41,7 @@
             </div>
 
             <div class="absolute right-2 top-2">
-                <x-ui.wishlist-button :id="$product['id']" size="sm" />
+                <x-ui.wishlist-button :id="$productUrlKey" size="sm" />
             </div>
 
             <button
@@ -60,7 +65,7 @@
 
     <button
         type="button"
-        @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})"
+        @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})"
         class="mt-2 w-full rounded-full border border-charcoal/80 py-1.5 text-[9.5px] font-semibold uppercase tracking-wide text-charcoal transition-all duration-300 hover:bg-charcoal hover:text-ivory sm:hidden"
     >
         Add to Cart
@@ -94,7 +99,7 @@
                     </div>
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                         <a href="{{ route('product.show', $productUrlKey) }}" class="btn-secondary flex-1">View Full Details</a>
-                        <button @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})" class="btn-primary flex-1">Add to Cart</button>
+                        <button @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})" class="btn-primary flex-1">Add to Cart</button>
                     </div>
                 </div>
             </div>

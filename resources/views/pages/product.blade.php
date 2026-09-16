@@ -8,6 +8,7 @@
     $gallery = count($gallery) > 0 ? $gallery : [null, null, null, null];
     $galleryCount = count($gallery);
     $shareUrl = route('product.show', $product['slug'] ?? $product['id']);
+    $productUrlKey = $product['slug'] ?? $product['id'];
     $whatsappShareText = rawurlencode($product['name'].' - '.$shareUrl);
     $sizeOptions = collect($product['sizes'] ?? [])->filter()->values();
     $variantRows = collect($product['variants'] ?? [])
@@ -21,6 +22,11 @@
         return filled($value) ? $value : $fallback;
     };
     $formatStockStatus = fn ($value) => $value ? ucfirst(str_replace('_', ' ', $value)) : 'Not specified';
+    $cartPayload = [
+        'id' => $product['id'],
+        'name' => $product['name'],
+        'url' => route('cart.store'),
+    ];
 @endphp
 
 <x-layouts.app :title="$product['name']" :description="$product['short_desc']">
@@ -101,7 +107,7 @@
                 <div class="mt-1.5 flex items-start justify-between gap-4">
                     <h1 class="font-display text-[28px] leading-tight text-charcoal sm:text-[32px]">{{ $product['name'] }}</h1>
                     <div class="flex flex-shrink-0 items-center gap-1">
-                        <x-ui.wishlist-button :id="$product['id']" />
+                        <x-ui.wishlist-button :id="$productUrlKey" />
                         <a href="https://wa.me/?text={{ $whatsappShareText }}" target="_blank" rel="noopener noreferrer" class="icon-btn text-success" aria-label="Share on WhatsApp">
                             <svg class="h-5 w-5" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
                                 <path d="M16.04 3.2c-7.06 0-12.8 5.72-12.8 12.77 0 2.25.59 4.45 1.71 6.39L3.14 29l6.8-1.78a12.75 12.75 0 006.1 1.55h.01c7.05 0 12.79-5.73 12.79-12.78 0-3.41-1.33-6.62-3.75-9.03a12.68 12.68 0 00-9.05-3.76zm0 23.41h-.01c-1.94 0-3.84-.52-5.5-1.5l-.39-.23-4.03 1.06 1.08-3.93-.26-.4a10.56 10.56 0 01-1.62-5.64c0-5.9 4.81-10.69 10.73-10.69 2.86 0 5.55 1.11 7.57 3.14a10.62 10.62 0 013.14 7.57c0 5.9-4.81 10.7-10.71 10.7zm5.87-8.01c-.32-.16-1.9-.94-2.19-1.04-.29-.11-.5-.16-.72.16-.21.32-.83 1.04-1.02 1.25-.19.21-.38.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.61-1.91-1.8-2.23-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.48 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.39.19-1.53-.08-.13-.29-.21-.61-.37z" />
@@ -198,7 +204,7 @@
                 </div>
 
                 <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-                    <button @click="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})" class="btn-primary flex-1">Add to Cart</button>
+                    <button @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" class="btn-primary flex-1">Add to Cart</button>
                     <a href="{{ route('checkout') }}" class="btn-secondary flex-1">Buy Now</a>
                 </div>
 
@@ -521,7 +527,7 @@
         {{-- Mobile sticky CTA --}}
         <div class="h-20 lg:hidden" aria-hidden="true"></div>
         <div class="fixed inset-x-0 bottom-16 z-30 flex gap-3 border-t border-line bg-paper p-3 lg:hidden" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
-            <button @click="$store.ui.addToCart({{ Illuminate\Support\Js::from($product['name']) }})" class="btn-primary flex-1 !py-3">Add to Cart</button>
+            <button @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" class="btn-primary flex-1 !py-3">Add to Cart</button>
             <a href="{{ route('checkout') }}" class="btn-secondary flex-1 !py-3 text-center">Buy Now</a>
         </div>
     </div>

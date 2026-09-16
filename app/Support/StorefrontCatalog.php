@@ -133,9 +133,9 @@ class StorefrontCatalog
                     'name' => $first->name,
                     'art' => $fallback['art'] ?? self::artFor($first->name),
                     'blurb' => $first->description ?: ($fallback['blurb'] ?? 'Explore the '.$first->name.'.'),
-                    'logo' => $first->logo ? asset('storage/'.$first->logo) : null,
-                    'image' => $first->logo ? asset('storage/'.$first->logo) : null,
-                    'banner' => $first->banner ? asset('storage/'.$first->banner) : null,
+                    'logo' => self::storageUrl($first->logo),
+                    'image' => self::storageUrl($first->logo),
+                    'banner' => self::storageUrl($first->banner),
                     'tag' => $count.' '.Str::plural('Design', $count),
                 ];
             })
@@ -436,8 +436,8 @@ class StorefrontCatalog
             'slug' => $slug,
             'name' => $category->name,
             'art' => $fallback['art'] ?? self::artFor($category->name.' '.$category->slug),
-            'image' => $category->image ? asset('storage/'.$category->image) : null,
-            'banner' => $banner ? asset('storage/'.$banner) : null,
+            'image' => self::storageUrl($category->image),
+            'banner' => self::storageUrl($banner),
             'blurb' => $category->description ?: ($fallback['blurb'] ?? 'Explore our '.$category->name.' collection.'),
             'count' => $category->products_count ?? $category->products()->active()->count(),
             'show_in_header' => (bool) ($category->show_in_header ?? true),
@@ -507,8 +507,8 @@ class StorefrontCatalog
             'is_return_available' => (bool) $product->is_return_available,
             'is_refund_available' => (bool) $product->is_refund_available,
             'art' => self::artFor($product->jewellery_type.' '.$categoryName.' '.$product->metal_type),
-            'image' => $primaryImage ? asset('storage/'.$primaryImage->image_path) : null,
-            'gallery' => $product->images->map(fn ($image) => asset('storage/'.$image->image_path))->values()->all(),
+            'image' => $primaryImage ? self::storageUrl($primaryImage->image_path) : null,
+            'gallery' => $product->images->map(fn ($image) => self::storageUrl($image->image_path))->values()->all(),
             'price' => $price,
             'mrp' => (float) $product->mrp,
             'rating' => $rating,
@@ -739,5 +739,10 @@ class StorefrontCatalog
     protected static function diamondCarat(mixed $value): string
     {
         return $value ? number_format((float) $value, 2).' ct' : '0 ct';
+    }
+
+    protected static function storageUrl(?string $path): ?string
+    {
+        return $path ? '/storage/'.ltrim($path, '/') : null;
     }
 }

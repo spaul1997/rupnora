@@ -20,21 +20,31 @@
                 <h1 class="font-display mt-6 text-3xl text-charcoal">Sign In</h1>
                 <p class="mt-2 text-sm text-muted">Enter your details to access your account.</p>
 
+                @if (session('success'))
+                    <div class="mt-5 rounded-xl bg-success/10 px-4 py-3 text-sm text-success">{{ session('success') }}</div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mt-5 rounded-xl bg-error/10 px-4 py-3 text-sm text-error">{{ session('error') }}</div>
+                @endif
+
                 <div class="mt-6 flex rounded-full border border-line p-1">
                     <button @click="mode = 'password'" class="flex-1 rounded-full py-2 text-xs font-semibold uppercase tracking-wide transition-colors" :class="mode === 'password' ? 'bg-charcoal text-ivory' : 'text-muted'">Password</button>
                     <button @click="mode = 'otp'" class="flex-1 rounded-full py-2 text-xs font-semibold uppercase tracking-wide transition-colors" :class="mode === 'otp' ? 'bg-charcoal text-ivory' : 'text-muted'">Login with OTP</button>
                 </div>
 
-                <form class="mt-6 space-y-5" onsubmit="event.preventDefault(); window.location.href='{{ route('account.dashboard') }}'">
+                <form method="POST" action="{{ route('login.store') }}" class="mt-6 space-y-5">
+                    @csrf
                     <div>
                         <label class="label-luxe">Email / Mobile Number</label>
-                        <input type="text" required class="input-luxe" placeholder="you@example.com or 98765 43210">
+                        <input type="text" name="login" value="{{ old('login') }}" required class="input-luxe" placeholder="you@example.com or 98765 43210">
+                        @error('login') <p class="mt-1.5 text-xs text-error">{{ $message }}</p> @enderror
                     </div>
 
                     <div x-show="mode === 'password'" x-cloak x-data="{ show: false }">
                         <label class="label-luxe">Password</label>
                         <div class="relative">
-                            <input :type="show ? 'text' : 'password'" required class="input-luxe pr-11" placeholder="Enter your password">
+                            <input :type="show ? 'text' : 'password'" name="password" :required="mode === 'password'" class="input-luxe pr-11" placeholder="Enter your password">
                             <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-charcoal">
                                 <svg x-show="!show" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" /><circle cx="12" cy="12" r="3" /></svg>
                                 <svg x-show="show" x-cloak class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.9 4.24A11 11 0 0112 4c7 0 11 7 11 7a13.2 13.2 0 01-3.1 3.9M6.1 6.1A13.3 13.3 0 001 11s4 7 11 7a10.9 10.9 0 004.9-1.1" stroke-linecap="round" /></svg>

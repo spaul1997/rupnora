@@ -1,20 +1,34 @@
 @php
-    $subtotal = collect($items)->sum(fn ($i) => $i['product']['price'] * $i['qty']);
-    $mrpTotal = collect($items)->sum(fn ($i) => $i['product']['mrp'] * $i['qty']);
-    $discount = $mrpTotal - $subtotal;
-    $tax = round($subtotal * 0.03);
+    $mrpTotal = collect($items)->sum(fn ($i) => max($i['product']['mrp'], $i['product']['price']) * $i['qty']);
+    $sellingTotal = collect($items)->sum(fn ($i) => $i['product']['price'] * $i['qty']);
+    $subtotal = $mrpTotal;
+    $discount = max(0, $mrpTotal - $sellingTotal);
+    $tax = round($sellingTotal * 0.03);
     $steps = ['Address', 'Delivery', 'Payment', 'Confirmation'];
+    $checkoutAddresses = collect($addresses)->map(fn ($address) => [
+        'id' => $address['id'],
+        'type' => $address['type'],
+        'default' => (bool) $address['default'],
+        'name' => $address['name'],
+        'phone' => $address['phone'],
+        'line1' => $address['line1'],
+        'line2' => $address['line2'],
+        'landmark' => $address['landmark'] ?? '',
+        'city' => $address['city'],
+        'state' => $address['state'],
+        'pincode' => $address['pincode'],
+        'country' => $address['country'],
+    ])->values()->all();
 @endphp
 
 <x-layouts.app title="Checkout">
     <div
-        x-data="{
-            step: 1,
-            selectedAddress: {{ $addresses[0]['id'] }},
-            delivery: 'standard',
-            payment: 'upi',
-            addingAddress: false,
-        }"
+        x-data="checkoutPage({
+            addresses: {{ Illuminate\Support\Js::from($checkoutAddresses) }},
+            selectedAddressId: {{ Illuminate\Support\Js::from($checkoutAddresses[0]['id'] ?? null) }},
+            addAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.store')) }},
+            placeOrderUrl: {{ Illuminate\Support\Js::from(route('checkout.order.store')) }},
+        })"
         class="container-luxe py-8"
     >
         {{-- Stepper --}}
@@ -44,19 +58,56 @@
                 <div x-show="step === 1" x-cloak>
                     <h2 class="font-display text-xl text-charcoal">Select Delivery Address</h2>
                     <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        @foreach ($addresses as $address)
-                            <x-ui.address-card :address="$address" selectable model="selectedAddress" />
-                        @endforeach
+                        <template x-for="address in addresses" :key="address.id">
+                            <button
+                                type="button"
+                                @click="selectAddress(address.id)"
+                                class="card-luxe relative p-5 text-left transition-colors"
+                                :class="selectedAddress === address.id ? 'border-champagne-dark ring-1 ring-champagne-dark' : ''"
+                            >
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2" :class="selectedAddress === address.id ? 'border-champagne-dark' : 'border-line'">
+                                            <span x-show="selectedAddress === address.id" class="h-2 w-2 rounded-full bg-champagne-dark"></span>
+                                        </span>
+                                        <span class="badge-luxe bg-beige text-charcoal-soft" x-text="address.type"></span>
+                                        <span x-show="address.default" x-cloak class="badge-luxe bg-champagne text-charcoal">Default</span>
+                                    </div>
+                                </div>
+                                <p class="mt-3 text-sm font-semibold text-charcoal" x-text="address.name"></p>
+                                <p class="mt-1 text-sm leading-relaxed text-muted" x-text="fullAddress(address)"></p>
+                                <p class="mt-2 text-sm text-charcoal" x-text="address.phone"></p>
+                            </button>
+                        </template>
                     </div>
-                    <button @click="addingAddress = !addingAddress" class="mt-4 text-sm font-medium text-champagne-dark hover:underline">+ Add New Address</button>
-                    <div x-show="addingAddress" x-collapse x-cloak class="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line p-5 sm:grid-cols-2">
-                        <input type="text" placeholder="Full Name" class="input-luxe">
-                        <input type="tel" placeholder="Mobile Number" class="input-luxe">
-                        <input type="text" placeholder="Address Line 1" class="input-luxe sm:col-span-2">
-                        <input type="text" placeholder="City" class="input-luxe">
-                        <input type="text" placeholder="PIN Code" class="input-luxe">
+                    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <button type="button" @click="addingAddress = !addingAddress; addressError = ''" class="text-left text-sm font-medium text-champagne-dark hover:underline" x-text="addingAddress ? 'Cancel New Address' : '+ Add New Address'">+ Add New Address</button>
+                        <button @click="continueToDelivery()" :disabled="!selectedAddressRecord" class="btn-primary w-full sm:ml-auto sm:w-auto">Continue to Delivery</button>
                     </div>
-                    <button @click="step = 2" class="btn-primary mt-6 w-full sm:w-auto">Continue to Delivery</button>
+                    <form @submit.prevent="saveAddress()" x-show="addingAddress" x-collapse x-cloak class="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line p-5 sm:grid-cols-2">
+                        <select x-model="newAddress.type" class="input-luxe">
+                            <option>Home</option>
+                            <option>Office</option>
+                            <option>Other</option>
+                        </select>
+                        <input type="text" x-model.trim="newAddress.name" placeholder="Full Name" class="input-luxe">
+                        <input type="tel" x-model.trim="newAddress.phone" placeholder="Mobile Number" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.line1" placeholder="Address Line 1" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.line2" placeholder="Address Line 2" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.landmark" placeholder="Landmark" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.city" placeholder="City" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.state" placeholder="State" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.pincode" maxlength="6" placeholder="PIN Code" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.country" placeholder="Country" class="input-luxe">
+                        <div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:items-center">
+                            <button type="submit" class="btn-primary w-full sm:w-auto" :disabled="!canSaveAddress || savingAddress">
+                                <span x-show="!savingAddress">Save Address</span>
+                                <span x-show="savingAddress" x-cloak>Saving...</span>
+                            </button>
+                            <button type="button" @click="addingAddress = false; resetNewAddress()" class="btn-secondary w-full sm:w-auto">Cancel</button>
+                        </div>
+                    </form>
+                    <p x-show="addressError" x-cloak class="mt-3 text-sm text-error" x-text="addressError"></p>
                 </div>
 
                 {{-- Step 2: Delivery --}}
@@ -127,9 +178,8 @@
                     <div class="mt-5 space-y-4">
                         <div class="rounded-xl border border-line p-4">
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Delivery Address</p>
-                            @foreach ($addresses as $address)
-                                <p x-show="selectedAddress === {{ $address['id'] }}" x-cloak class="mt-1.5 text-sm text-charcoal">{{ $address['name'] }}, {{ $address['line1'] }}, {{ $address['city'] }} {{ $address['pincode'] }}</p>
-                            @endforeach
+                            <p class="mt-1.5 text-sm text-charcoal" x-text="compactAddress(selectedAddressRecord)"></p>
+                            <p class="mt-1 text-xs text-muted" x-text="selectedAddressRecord?.phone || ''"></p>
                         </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Delivery Option</p>
@@ -143,10 +193,17 @@
                             <p class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Items</p>
                             <div class="divide-y divide-line">
                                 @foreach ($items as $item)
+                                    @php
+                                        $product = $item['product'];
+                                    @endphp
                                     <div class="flex items-center gap-3 py-2.5">
-                                        <x-ui.product-art :art="$item['product']['art']" class="h-12 w-12 flex-shrink-0 rounded-lg" />
-                                        <span class="min-w-0 flex-1 truncate text-sm text-charcoal">{{ $item['product']['name'] }} &times; {{ $item['qty'] }}</span>
-                                        <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($item['product']['price'] * $item['qty']) }}</span>
+                                        @if (! empty($product['image']))
+                                            <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="56px" class="h-14 w-14 flex-shrink-0 rounded-lg bg-ivory-soft object-cover" />
+                                        @else
+                                            <x-ui.product-art :art="$product['art']" class="h-14 w-14 flex-shrink-0 rounded-lg" />
+                                        @endif
+                                        <span class="min-w-0 flex-1 truncate text-sm text-charcoal">{{ $product['name'] }} &times; {{ $item['qty'] }}</span>
+                                        <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($product['price'] * $item['qty']) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -154,8 +211,12 @@
                     </div>
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 3" class="btn-secondary">Back</button>
-                        <a href="{{ route('order.success') }}" class="btn-primary flex-1 text-center sm:flex-initial">Place Order</a>
+                        <button type="button" @click="placeOrder()" :disabled="placingOrder || !selectedAddressRecord" class="btn-primary flex-1 text-center sm:flex-initial">
+                            <span x-show="!placingOrder">Place Order</span>
+                            <span x-show="placingOrder" x-cloak>Placing...</span>
+                        </button>
                     </div>
+                    <p x-show="orderError" x-cloak class="mt-3 text-sm text-error" x-text="orderError"></p>
                 </div>
             </div>
 

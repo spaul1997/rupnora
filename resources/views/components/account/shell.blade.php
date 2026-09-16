@@ -26,10 +26,13 @@
                         </a>
                     @endforeach
                     <div class="my-1.5 border-t border-line"></div>
-                    <a href="{{ route('login') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-error transition-colors hover:bg-error/5">
-                        <svg class="h-4.5 w-4.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m6 14l5-5-5-5m5 5H9" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        Logout
-                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm text-error transition-colors hover:bg-error/5">
+                            <svg class="h-4.5 w-4.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m6 14l5-5-5-5m5 5H9" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            Logout
+                        </button>
+                    </form>
                 </nav>
             </div>
         </aside>

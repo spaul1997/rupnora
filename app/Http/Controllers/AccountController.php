@@ -3,19 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Support\Catalog;
+use App\Support\CheckoutOrders;
+use App\Support\ShoppingCart;
 use App\Support\StorefrontCatalog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class AccountController extends Controller
 {
     protected function customer(): array
     {
+        $customer = session('storefront_customer', []);
+        $name = $customer['name'] ?? 'Ananya Rao';
+        $nameParts = preg_split('/\s+/', trim($name), 2);
+
         return [
-            'name' => 'Ananya Rao',
-            'first_name' => 'Ananya',
-            'last_name' => 'Rao',
-            'email' => 'ananya.rao@example.com',
-            'phone' => '+91 98765 43210',
+            'name' => $name,
+            'first_name' => $nameParts[0] ?? 'Ananya',
+            'last_name' => $nameParts[1] ?? 'Rao',
+            'email' => $customer['email'] ?? 'ananya.rao@example.com',
+            'phone' => $customer['phone'] ?? '+91 98765 43210',
             'joined' => 'March 2024',
             'reward_points' => 1240,
         ];
@@ -23,7 +31,7 @@ class AccountController extends Controller
 
     public function dashboard()
     {
-        $orders = Catalog::orders();
+        $orders = CheckoutOrders::all();
 
         return view('account.dashboard', [
             'title' => 'My Account',
@@ -31,7 +39,7 @@ class AccountController extends Controller
             'orders' => array_slice($orders, 0, 3),
             'totalOrders' => count($orders),
             'activeOrders' => collect($orders)->whereIn('status', ['Processing', 'Confirmed', 'Shipped', 'Out for Delivery'])->count(),
-            'wishlistCount' => 2,
+            'wishlistCount' => count(ShoppingCart::wishlistIds()),
             'address' => Catalog::addresses()[0],
             'recommended' => StorefrontCatalog::bestSellers(4),
         ]);
@@ -42,13 +50,13 @@ class AccountController extends Controller
         return view('account.orders', [
             'title' => 'My Orders',
             'customer' => $this->customer(),
-            'orders' => Catalog::orders(),
+            'orders' => CheckoutOrders::all(),
         ]);
     }
 
     public function orderShow(string $id)
     {
-        $order = Catalog::order($id);
+        $order = CheckoutOrders::find($id);
 
         abort_if(! $order, Response::HTTP_NOT_FOUND);
 
@@ -66,12 +74,41 @@ class AccountController extends Controller
 
     public function wishlist()
     {
-        $ids = ['eternal-bloom-diamond-ring', 'royal-heritage-gold-necklace', 'aurora-diamond-studs'];
+        $ids = ShoppingCart::wishlistIds();
 
         return view('account.wishlist', [
             'title' => 'Wishlist',
             'customer' => $this->customer(),
             'products' => collect($ids)->map(fn ($id) => StorefrontCatalog::product($id))->filter()->values()->all(),
+        ]);
+    }
+
+    public function removeWishlist(string $product): JsonResponse
+    {
+        ShoppingCart::removeWishlistId($product);
+        $wishlistIds = ShoppingCart::wishlistIds();
+
+        return response()->json([
+            'count' => count($wishlistIds),
+            'wishlistIds' => $wishlistIds,
+            'message' => 'Removed from wishlist',
+        ]);
+    }
+
+    public function addWishlist(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'product_id' => ['required'],
+        ]);
+
+        abort_if(! ShoppingCart::addWishlistId($data['product_id']), Response::HTTP_NOT_FOUND);
+
+        $wishlistIds = ShoppingCart::wishlistIds();
+
+        return response()->json([
+            'count' => count($wishlistIds),
+            'wishlistIds' => $wishlistIds,
+            'message' => 'Added to wishlist',
         ]);
     }
 

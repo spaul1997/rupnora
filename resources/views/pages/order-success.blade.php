@@ -1,5 +1,14 @@
 @php
-    $subtotal = collect($order['items'])->sum(fn ($i) => $i['product']['price'] * $i['qty']);
+    $totalPaid = $order['total'] ?? collect($order['items'])->sum(fn ($i) => $i['product']['price'] * $i['qty']);
+    $expectedDelivery = $order['expected_delivery'] ?? now()->addDays(6)->format('d M Y');
+    $address = $order['address'];
+    $addressLines = [
+        $address['name'] ?? '',
+        collect([$address['line1'] ?? '', $address['line2'] ?? '', $address['landmark'] ?? ''])->filter()->join(', '),
+        collect([$address['city'] ?? '', $address['state'] ?? '', $address['pincode'] ?? ''])->filter()->join(', '),
+        $address['phone'] ?? '',
+    ];
+    $paymentStatusClass = ($order['payment_status'] ?? '') === 'Paid' ? 'text-success' : 'text-champagne-dark';
 @endphp
 
 <x-layouts.app title="Order Confirmed">
@@ -20,21 +29,22 @@
                 </div>
                 <div>
                     <p class="text-xs text-muted">Payment Status</p>
-                    <p class="mt-1 text-sm font-semibold text-success">{{ $order['payment_status'] }}</p>
+                    <p class="mt-1 text-sm font-semibold {{ $paymentStatusClass }}">{{ $order['payment_status'] }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-muted">Expected Delivery</p>
-                    <p class="mt-1 text-sm font-semibold text-charcoal">{{ now()->addDays(6)->format('d M Y') }}</p>
+                    <p class="mt-1 text-sm font-semibold text-charcoal">{{ $expectedDelivery }}</p>
                 </div>
             </div>
 
             <div class="mt-6 border-t border-line pt-6">
                 <p class="text-xs font-medium uppercase tracking-wide text-muted">Shipping Address</p>
                 <p class="mt-2 text-sm leading-relaxed text-charcoal">
-                    {{ $order['address']['name'] }}<br>
-                    {{ $order['address']['line1'] }}, {{ $order['address']['line2'] }}<br>
-                    {{ $order['address']['city'] }}, {{ $order['address']['state'] }} {{ $order['address']['pincode'] }}<br>
-                    {{ $order['address']['phone'] }}
+                    @foreach ($addressLines as $line)
+                        @if ($line)
+                            {{ $line }}@if(! $loop->last)<br>@endif
+                        @endif
+                    @endforeach
                 </p>
             </div>
 
@@ -42,16 +52,23 @@
                 <p class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Order Summary</p>
                 <div class="divide-y divide-line">
                     @foreach ($order['items'] as $item)
+                        @php
+                            $product = $item['product'];
+                        @endphp
                         <div class="flex items-center gap-3 py-3">
-                            <x-ui.product-art :art="$item['product']['art']" class="h-14 w-14 flex-shrink-0 rounded-lg" />
-                            <span class="min-w-0 flex-1 truncate text-sm text-charcoal">{{ $item['product']['name'] }} &times; {{ $item['qty'] }}</span>
-                            <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($item['product']['price'] * $item['qty']) }}</span>
+                            @if (! empty($product['image']))
+                                <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="56px" class="h-14 w-14 flex-shrink-0 rounded-lg bg-ivory-soft object-cover" />
+                            @else
+                                <x-ui.product-art :art="$product['art']" class="h-14 w-14 flex-shrink-0 rounded-lg" />
+                            @endif
+                            <span class="min-w-0 flex-1 truncate text-sm text-charcoal">{{ $product['name'] }} &times; {{ $item['qty'] }}</span>
+                            <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($product['price'] * $item['qty']) }}</span>
                         </div>
                     @endforeach
                 </div>
                 <div class="mt-3 flex justify-between border-t border-line pt-3">
                     <span class="font-display text-base text-charcoal">Total Paid</span>
-                    <span class="font-display text-base text-charcoal">₹{{ number_format($subtotal) }}</span>
+                    <span class="font-display text-base text-charcoal">₹{{ number_format($totalPaid) }}</span>
                 </div>
             </div>
         </div>

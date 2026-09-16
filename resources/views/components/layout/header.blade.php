@@ -63,12 +63,12 @@
 
                 <a href="{{ route('account.wishlist') }}" class="icon-btn relative hidden h-9 w-9 sm:inline-flex" aria-label="Wishlist">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20.5s-7.5-4.9-10.1-9.6C.3 7.9 1.6 4.5 4.9 3.6c2-.5 4 .3 5.1 2 .3.4.7.4 1 0 1.1-1.7 3.1-2.5 5.1-2 3.3.9 4.6 4.3 3 7.3-2.6 4.7-10.1 9.6-10.1 9.6z" stroke-linejoin="round" /></svg>
-                    <span x-show="$store.ui.wishlistIds.length > 0" x-text="$store.ui.wishlistIds.length" class="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-champagne-dark text-[10px] font-semibold text-ivory"></span>
+                    <span x-cloak x-show="$store.ui.wishlistIds.length > 0" x-text="$store.ui.wishlistIds.length" class="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-champagne-dark text-[10px] font-semibold text-ivory"></span>
                 </a>
 
                 <a href="{{ route('cart') }}" class="icon-btn relative h-9 w-9" aria-label="Cart">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h13l1.5 12h-16z" stroke-linejoin="round" /><path d="M8 7V5.5a3 3 0 016 0V7" /></svg>
-                    <span x-show="$store.ui.cartCount > 0" x-text="$store.ui.cartCount" class="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-champagne-dark text-[10px] font-semibold text-ivory"></span>
+                    <span x-cloak x-show="$store.ui.cartCount > 0" x-text="$store.ui.cartCount" class="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-champagne-dark text-[10px] font-semibold text-ivory"></span>
                 </a>
             </div>
         </div>

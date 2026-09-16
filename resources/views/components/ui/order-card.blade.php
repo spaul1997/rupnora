@@ -24,7 +24,11 @@
                 $productUrlKey = $product['slug'] ?? $product['id'];
             @endphp
             <div class="flex items-center gap-4 py-4">
-                <x-ui.product-art :art="$product['art']" class="h-16 w-16 flex-shrink-0 rounded-lg" />
+                @if (! empty($product['image']))
+                    <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="64px" class="h-16 w-16 flex-shrink-0 rounded-lg bg-ivory-soft object-cover" />
+                @else
+                    <x-ui.product-art :art="$product['art']" class="h-16 w-16 flex-shrink-0 rounded-lg" />
+                @endif
                 <div class="min-w-0 flex-1">
                     <a href="{{ route('product.show', $productUrlKey) }}" class="block truncate font-display text-[15px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
                     <p class="mt-0.5 text-xs text-muted">

@@ -6,11 +6,16 @@
 @php
     $dim = $size === 'sm' ? 'h-8 w-8' : 'h-10 w-10';
     $iconDim = $size === 'sm' ? 'h-4 w-4' : 'h-[18px] w-[18px]';
+    $wishlistPayload = [
+        'id' => (string) $id,
+        'addUrl' => route('account.wishlist.store'),
+        'removeUrl' => route('account.wishlist.destroy', $id),
+    ];
 @endphp
 
 <button
     type="button"
-    @click.stop.prevent="$store.ui.toggleWishlist('{{ $id }}')"
+    @click.stop.prevent="$store.ui.toggleWishlist({{ Illuminate\Support\Js::from($wishlistPayload) }})"
     :aria-pressed="$store.ui.isWishlisted('{{ $id }}')"
     aria-label="Toggle wishlist"
     {{ $attributes->merge(['class' => "$dim inline-flex items-center justify-center rounded-full bg-paper/90 text-charcoal shadow-card backdrop-blur transition-all duration-200 hover:scale-105 active:scale-95"]) }}

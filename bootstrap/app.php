@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'storefront.customer' => \App\Http\Middleware\EnsureStorefrontCustomer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
