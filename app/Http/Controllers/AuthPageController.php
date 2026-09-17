@@ -7,6 +7,7 @@ use App\Mail\PasswordResetSuccessMail;
 use App\Mail\RegisterMail;
 use App\Models\User;
 use App\Models\WebsiteSetting;
+use App\Support\ShoppingCart;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -262,6 +263,8 @@ class AuthPageController extends Controller
 
     private function syncCustomerSession(Request $request, User $user): void
     {
+        ShoppingCart::mergeGuestWishlist();
+
         $request->session()->put('storefront_customer', [
             'id' => $user->id,
             'name' => $user->name,

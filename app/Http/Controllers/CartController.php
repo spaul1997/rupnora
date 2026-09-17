@@ -65,6 +65,11 @@ class CartController extends Controller
         return response()->json([
             'count' => ShoppingCart::count(),
             'summary' => ShoppingCart::summary(),
+            'items' => collect(ShoppingCart::items())->map(fn (array $item) => [
+                'key' => $item['key'], 'price' => $item['product']['price'],
+                'mrp' => max($item['product']['mrp'], $item['product']['price']),
+                'qty' => $item['qty'], 'max' => $item['max_qty'],
+            ])->all(),
             'wishlistIds' => ShoppingCart::wishlistIds(),
             'message' => $message,
         ]);

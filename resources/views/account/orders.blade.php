@@ -1,5 +1,5 @@
 @php
-    $tabs = ['All', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+    $tabs = collect($orders)->pluck('status')->unique()->prepend('All')->values()->all();
 @endphp
 
 <x-layouts.app :title="$title">

@@ -290,6 +290,18 @@ window.cartPage = (initialItems = []) => ({
                 Alpine.store('ui').setCartCount(data.count);
             }
 
+            for (const current of data.items || []) {
+                const row = this.items.find((entry) => entry.key === current.key);
+                if (row) {
+                    row.price = Number(current.price);
+                    row.mrp = Number(current.mrp);
+                    row.max = Number(current.max);
+                    if (row === item) {
+                        row.qty = Number(current.qty);
+                    }
+                }
+            }
+
             return data;
         } catch (error) {
             Alpine.store('ui').notify('Unable to update cart. Please try again.', 'error');

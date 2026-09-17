@@ -68,7 +68,6 @@ class ProductController extends Controller
             'collections' => $collections,
             'metalTypes' => $metalTypes,
             'purities' => self::PURITIES,
-            'occasionOptions' => Product::OCCASIONS,
             'genderOptions' => Product::GENDERS,
         ]);
     }
@@ -242,7 +241,7 @@ class ProductController extends Controller
             'diamond_carat', 'diamond_colour', 'diamond_clarity', 'diamond_cut', 'diamond_shape', 'diamond_count',
             'gemstone_type', 'gemstone_weight', 'gemstone_colour',
             'occasion', 'gender',
-            'mrp', 'selling_price', 'offer_price', 'discount_type', 'discount_value', 'making_charge', 'gst_percentage',
+            'mrp', 'selling_price', 'offer_price', 'offer_expiry_date', 'discount_type', 'discount_value', 'discount_expiry_date', 'making_charge', 'gst_percentage',
             'stock_quantity', 'minimum_stock',
             'meta_title', 'meta_description', 'meta_keywords',
         ]);

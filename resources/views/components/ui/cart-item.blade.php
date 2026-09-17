@@ -43,10 +43,8 @@
             </div>
             <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span class="font-semibold text-charcoal text-[15px]" x-text="formatMoney(itemLinePrice({{ $index }}))">₹{{ number_format($product['price'] * $item['qty']) }}</span>
-                @if ($hasDiscount)
-                    <span class="text-sm text-muted-light line-through" x-text="formatMoney(itemLineMrp({{ $index }}))">₹{{ number_format($product['mrp'] * $item['qty']) }}</span>
-                    <span class="text-sm font-semibold text-success">{{ $discountPercent }}% OFF</span>
-                @endif
+                <span x-show="items[{{ $index }}].mrp > items[{{ $index }}].price" @if (! $hasDiscount) x-cloak @endif class="text-sm text-muted-light line-through" x-text="formatMoney(itemLineMrp({{ $index }}))">₹{{ number_format($product['mrp'] * $item['qty']) }}</span>
+                <span x-show="items[{{ $index }}].mrp > items[{{ $index }}].price" @if (! $hasDiscount) x-cloak @endif class="text-sm font-semibold text-success" x-text="Math.round((1 - items[{{ $index }}].price / items[{{ $index }}].mrp) * 100) + '% OFF'">{{ $discountPercent }}% OFF</span>
             </div>
         </div>
     </div>

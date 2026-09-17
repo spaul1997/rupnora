@@ -126,6 +126,12 @@
                 <div class="mt-5 rounded-xl bg-ivory-soft p-4">
                     <x-ui.price :price="$product['price']" :mrp="$product['mrp']" size="lg" />
                     <p class="mt-1 text-xs text-muted">Inclusive of all taxes</p>
+                    @if (! empty($product['offer_expiry_date']))
+                        <p class="mt-1 text-xs text-champagne-dark">Offer price valid through {{ $product['offer_expiry_date'] }}.</p>
+                    @endif
+                    @if (! empty($product['discount_expiry_date']))
+                        <p class="mt-1 text-xs text-champagne-dark">Discount valid through {{ $product['discount_expiry_date'] }}.</p>
+                    @endif
                     @if ($discount > 0)
                         <p class="mt-1 text-xs font-medium text-success">You save ₹{{ number_format($product['mrp'] - $product['price']) }} ({{ $discount }}% OFF)</p>
                     @endif

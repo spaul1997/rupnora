@@ -6,6 +6,8 @@ use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
+use App\Observers\ContactMessageObserver;
+use App\Observers\OrderObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Order::observe(OrderObserver::class);
+        ContactMessage::observe(ContactMessageObserver::class);
+
         View::composer('admin.layouts.app', function ($view) {
             $view->with('adminNotifications', $this->adminNotifications());
         });

@@ -25,7 +25,7 @@ class Order extends Model
         'subtotal', 'discount_amount', 'coupon_code', 'coupon_discount', 'shipping_charge', 'gst_amount',
         'grand_total', 'paid_amount', 'refund_amount',
         'shipping_address', 'billing_address',
-        'courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery', 'delivered_at',
+        'courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery', 'delivered_at', 'stock_reserved',
     ];
 
     protected function casts(): array
@@ -44,6 +44,7 @@ class Order extends Model
             'paid_at' => 'datetime',
             'estimated_delivery' => 'date',
             'delivered_at' => 'datetime',
+            'stock_reserved' => 'boolean',
         ];
     }
 

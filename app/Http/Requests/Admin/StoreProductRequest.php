@@ -96,8 +96,10 @@ class StoreProductRequest extends FormRequest
             'mrp' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'offer_price' => ['nullable', 'numeric', 'min:0'],
+            'offer_expiry_date' => ['nullable', 'date_format:Y-m-d'],
             'discount_type' => ['nullable', 'in:percentage,fixed'],
             'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'discount_expiry_date' => ['nullable', 'date_format:Y-m-d'],
             'making_charge' => ['nullable', 'numeric', 'min:0'],
             'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
 

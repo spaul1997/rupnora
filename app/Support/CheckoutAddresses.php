@@ -2,20 +2,23 @@
 
 namespace App\Support;
 
+use App\Models\CustomerAddress;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CheckoutAddresses
 {
-    private const ADDRESSES_KEY = 'checkout.addresses';
-
-    private const INITIALIZED_KEY = 'checkout.addresses_initialized';
+    private const ADDRESSES_KEY = 'checkout.guest_addresses';
 
     public static function all(): array
     {
-        $isCustomer = auth()->check() && auth()->user()->role === 'customer';
-
-        if (! session()->has(self::INITIALIZED_KEY) || session('checkout.addresses_customer') !== $isCustomer) {
-            self::put($isCustomer ? Catalog::addresses() : [], $isCustomer);
+        if (auth()->user()?->role === 'customer') {
+            return auth()->user()->addresses()
+                ->orderByDesc('is_default')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (CustomerAddress $address) => $address->toStorefront())
+                ->all();
         }
 
         return session(self::ADDRESSES_KEY, []);
@@ -23,6 +26,25 @@ class CheckoutAddresses
 
     public static function add(array $data): array
     {
+        if (auth()->user()?->role === 'customer') {
+            return DB::transaction(function () use ($data) {
+                $customer = auth()->user();
+                $customer->newQuery()->whereKey($customer->id)->lockForUpdate()->firstOrFail();
+                $default = ($data['default'] ?? false) || ! $customer->addresses()->exists();
+
+                if ($default) {
+                    $customer->addresses()->update(['is_default' => false]);
+                }
+
+                $address = $customer->addresses()->create([
+                    ...collect($data)->except('default')->all(),
+                    'is_default' => $default,
+                ]);
+
+                return $address->toStorefront();
+            });
+        }
+
         $addresses = self::all();
 
         $address = [
@@ -41,15 +63,8 @@ class CheckoutAddresses
         ];
 
         $addresses[] = $address;
-        self::put($addresses, auth()->check() && auth()->user()->role === 'customer');
+        session()->put(self::ADDRESSES_KEY, array_values($addresses));
 
         return $address;
-    }
-
-    private static function put(array $addresses, bool $isCustomer): void
-    {
-        session()->put(self::ADDRESSES_KEY, array_values($addresses));
-        session()->put(self::INITIALIZED_KEY, true);
-        session()->put('checkout.addresses_customer', $isCustomer);
     }
 }

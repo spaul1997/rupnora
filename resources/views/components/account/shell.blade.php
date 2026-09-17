@@ -44,9 +44,29 @@
                     {{ $item['label'] }}
                 </a>
             @endforeach
+            @auth
+                <form method="POST" action="{{ route('logout') }}" class="flex-shrink-0">
+                    @csrf
+                    <button type="submit" class="rounded-full border border-line px-4 py-2 text-xs font-medium text-error">Logout</button>
+                </form>
+            @endauth
         </div>
 
         <div class="min-w-0 flex-1">
+            @foreach (['success' => 'text-success', 'error' => 'text-error', 'warning' => 'text-champagne-dark'] as $key => $color)
+                @if (session($key))
+                    <div role="status" class="mb-6 rounded-xl border border-line bg-paper p-4 text-sm {{ $color }}">{{ session($key) }}</div>
+                @endif
+            @endforeach
+            @if ($errors->any())
+                <div role="alert" class="mb-6 rounded-xl border border-error/30 bg-paper p-4 text-sm text-error">
+                    <ul class="list-inside list-disc space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             {{ $slot }}
         </div>
     </div>

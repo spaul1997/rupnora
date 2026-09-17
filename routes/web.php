@@ -132,6 +132,7 @@ Route::get('/new-arrivals', [CategoryController::class, 'newArrivals'])->name('n
 Route::get('/best-sellers', [CategoryController::class, 'bestSellers'])->name('best-sellers');
 Route::get('/jewellery-type/{slug}', [CategoryController::class, 'jewelleryType'])->name('jewellery-type.show');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
+Route::get('/recipient/{slug}', [CategoryController::class, 'recipient'])->name('recipient.show');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 
@@ -169,10 +170,25 @@ Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
         Route::get('/orders/{id}', [AccountController::class, 'orderShow'])->name('orders.show');
+        Route::get('/orders/{id}/invoice', [AccountController::class, 'invoice'])->name('orders.invoice');
+        Route::post('/orders/{id}/cancel', [AccountController::class, 'cancelOrder'])->name('orders.cancel');
+        Route::post('/orders/{id}/return', [AccountController::class, 'requestReturn'])->name('orders.return');
+        Route::post('/orders/{id}/buy-again', [AccountController::class, 'buyAgain'])->name('orders.buy-again');
         Route::get('/addresses', [AccountController::class, 'addresses'])->name('addresses');
+        Route::post('/addresses', [AccountController::class, 'storeAddress'])->name('addresses.store');
+        Route::get('/addresses/{address}/edit', [AccountController::class, 'editAddress'])->name('addresses.edit');
+        Route::put('/addresses/{address}', [AccountController::class, 'updateAddress'])->name('addresses.update');
+        Route::delete('/addresses/{address}', [AccountController::class, 'deleteAddress'])->name('addresses.destroy');
+        Route::patch('/addresses/{address}/default', [AccountController::class, 'defaultAddress'])->name('addresses.default');
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/profile/photo', [AccountController::class, 'photo'])->name('photo');
         Route::get('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
+        Route::put('/change-password', [AccountController::class, 'updatePassword'])->name('password.update');
         Route::get('/notifications', [AccountController::class, 'notifications'])->name('notifications');
+        Route::patch('/notifications/read-all', [AccountController::class, 'readAllNotifications'])->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [AccountController::class, 'readNotification'])->name('notifications.read');
         Route::get('/support', [AccountController::class, 'support'])->name('support');
+        Route::post('/support', [AccountController::class, 'storeSupport'])->middleware('throttle:10,1')->name('support.store');
     });
 });

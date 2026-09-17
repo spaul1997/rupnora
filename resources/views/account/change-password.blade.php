@@ -3,18 +3,20 @@
         <h1 class="font-display text-2xl text-charcoal sm:text-3xl">Change Password</h1>
         <p class="mt-2 text-sm text-muted">Choose a strong password you haven't used before.</p>
 
-        <form class="mt-8 max-w-md space-y-5" onsubmit="event.preventDefault(); Alpine.store('ui').notify('Password updated successfully', 'success'); this.reset()">
+        <form method="POST" action="{{ route('account.password.update') }}" class="mt-8 max-w-md space-y-5">
+            @csrf
+            @method('PUT')
             <div>
                 <label class="label-luxe">Current Password</label>
-                <input type="password" required class="input-luxe" placeholder="Enter current password">
+                <input type="password" name="current_password" required autocomplete="current-password" class="input-luxe" placeholder="Enter current password">
             </div>
             <div>
                 <label class="label-luxe">New Password</label>
-                <input type="password" required minlength="8" class="input-luxe" placeholder="Minimum 8 characters">
+                <input type="password" name="password" required minlength="8" autocomplete="new-password" class="input-luxe" placeholder="Minimum 8 characters">
             </div>
             <div>
                 <label class="label-luxe">Confirm New Password</label>
-                <input type="password" required minlength="8" class="input-luxe" placeholder="Re-enter new password">
+                <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password" class="input-luxe" placeholder="Re-enter new password">
             </div>
             <button type="submit" class="btn-primary">Update Password</button>
         </form>

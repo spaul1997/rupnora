@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Catalog;
 use App\Support\StorefrontCatalog;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,6 +33,28 @@ class CategoryController extends Controller
         abort_if(! $category, Response::HTTP_NOT_FOUND);
 
         return $this->categoryView($slug, $category);
+    }
+
+    public function recipient(string $slug)
+    {
+        $recipient = collect(Catalog::recipients())->firstWhere('slug', $slug);
+
+        abort_if(! $recipient, Response::HTTP_NOT_FOUND);
+
+        $gender = $slug === 'for-him' ? 'Men' : 'Women';
+        $products = collect(StorefrontCatalog::products())
+            ->whereStrict('gender', $gender)
+            ->values()
+            ->all();
+
+        return view('pages.category', [
+            'title' => $recipient['name'],
+            'slug' => $slug,
+            'category' => $recipient,
+            'products' => $products,
+            'showBanner' => false,
+            'initialGenderFilter' => [$gender],
+        ]);
     }
 
     public function newArrivals()

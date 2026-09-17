@@ -98,6 +98,24 @@
                     <path d="M44 78 L56 78" opacity="0.5" />
                     @break
 
+                @case('man')
+                    <circle cx="50" cy="30" r="14" />
+                    <line x1="50" y1="44" x2="50" y2="52" />
+                    <path d="M18 92 Q20 60 36 53 L64 53 Q80 60 82 92 Z" />
+                    <path d="M42 53 L50 65 L58 53" opacity="0.5" />
+                    @break
+
+                @case('woman')
+                    <path d="M33 24 Q50 9 67 24" />
+                    <circle cx="50" cy="29" r="13" />
+                    <path d="M34 24 Q29 48 37 68" opacity="0.6" />
+                    <path d="M66 24 Q71 48 63 68" opacity="0.6" />
+                    <line x1="50" y1="42" x2="50" y2="50" />
+                    <path d="M20 92 Q23 62 38 55 L62 55 Q77 62 80 92 Z" />
+                    <circle cx="50" cy="60" r="2.2" opacity="0.6" />
+                    <line x1="50" y1="50" x2="50" y2="58" opacity="0.5" />
+                    @break
+
                 @default
                     <circle cx="50" cy="50" r="26" />
             @endswitch

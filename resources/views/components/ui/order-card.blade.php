@@ -30,7 +30,11 @@
                     <x-ui.product-art :art="$product['art']" class="h-16 w-16 flex-shrink-0 rounded-lg" />
                 @endif
                 <div class="min-w-0 flex-1">
-                    <a href="{{ route('product.show', $productUrlKey) }}" class="block truncate font-display text-[15px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
+                    @if ($product['available'] ?? true)
+                        <a href="{{ route('product.show', $productUrlKey) }}" class="block truncate font-display text-[15px] text-charcoal hover:text-champagne-dark">{{ $product['name'] }}</a>
+                    @else
+                        <p class="truncate font-display text-[15px] text-charcoal">{{ $product['name'] }}</p>
+                    @endif
                     <p class="mt-0.5 text-xs text-muted">
                         Qty: {{ $item['qty'] }}
                         @if ($item['size']) &middot; Size: {{ $item['size'] }} @endif
@@ -48,13 +52,22 @@
             @if (in_array($order['status'], ['Shipped', 'Out for Delivery']))
                 <a href="{{ route('account.orders.show', $order['id']) }}" class="btn-secondary !px-4 !py-2 text-[11px]">Track Order</a>
             @endif
-            <button type="button" class="btn-secondary !px-4 !py-2 text-[11px]">Download Invoice</button>
+            <a href="{{ route('account.orders.invoice', $order['id']) }}" target="_blank" rel="noopener" class="btn-secondary !px-4 !py-2 text-[11px]">Invoice / Save PDF</a>
             @if ($order['status'] === 'Delivered')
-                <button type="button" class="btn-secondary !px-4 !py-2 text-[11px]">Buy Again</button>
-                <button type="button" class="btn-ghost !px-4 !py-2 text-[11px]">Return Product</button>
+                <form method="POST" action="{{ route('account.orders.buy-again', $order['id']) }}">
+                    @csrf
+                    <button type="submit" class="btn-secondary !px-4 !py-2 text-[11px]">Buy Again</button>
+                </form>
+                <form method="POST" action="{{ route('account.orders.return', $order['id']) }}">
+                    @csrf
+                    <button type="submit" class="btn-ghost !px-4 !py-2 text-[11px]">Request Return</button>
+                </form>
             @endif
-            @if (in_array($order['status'], ['Processing', 'Confirmed']))
-                <button type="button" class="btn-ghost !px-4 !py-2 text-[11px] text-error border-error/30 hover:bg-error/10">Cancel Order</button>
+            @if (in_array($order['status'], ['Pending', 'Processing', 'Confirmed']))
+                <form method="POST" action="{{ route('account.orders.cancel', $order['id']) }}">
+                    @csrf
+                    <button type="submit" class="btn-ghost !px-4 !py-2 text-[11px] text-error border-error/30 hover:bg-error/10">Cancel Order</button>
+                </form>
             @endif
         </div>
     </div>

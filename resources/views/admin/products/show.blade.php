@@ -30,6 +30,28 @@
                 </div>
             </div>
 
+            @if ($product->offer_price !== null || $product->discount_type)
+                <div class="admin-card p-6">
+                    <h3 class="mb-4 text-sm font-semibold text-gray-900">Offers &amp; Discounts</h3>
+                    <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+                        @if ($product->offer_price !== null)
+                            <div>
+                                <dt class="text-gray-400">Offer Price</dt>
+                                <dd class="font-medium text-gray-800">₹{{ number_format($product->offer_price, 2) }} &middot; {{ $product->offerHasExpired() ? 'Expired' : 'Active' }}</dd>
+                                <dd class="mt-1 text-xs text-gray-500">{{ $product->offer_expiry_date ? 'Valid through '.$product->offer_expiry_date->format('d M Y') : 'No expiry' }}</dd>
+                            </div>
+                        @endif
+                        @if ($product->discount_type)
+                            <div>
+                                <dt class="text-gray-400">Discount</dt>
+                                <dd class="font-medium text-gray-800">{{ $product->discount_type === 'percentage' ? $product->discount_value.'%' : '₹'.number_format($product->discount_value, 2) }} &middot; {{ $product->hasActiveDiscount() ? 'Active' : ($product->discountHasExpired() ? 'Expired' : 'Inactive') }}</dd>
+                                <dd class="mt-1 text-xs text-gray-500">{{ $product->discount_expiry_date ? 'Valid through '.$product->discount_expiry_date->format('d M Y') : 'No expiry' }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                </div>
+            @endif
+
             @if ($product->images->count() > 0)
                 <div class="admin-card p-6">
                     <h3 class="mb-4 text-sm font-semibold text-gray-900">Images</h3>

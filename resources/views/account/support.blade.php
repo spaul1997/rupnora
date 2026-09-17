@@ -9,7 +9,15 @@
                 ['label' => 'Email Us', 'value' => $settings->support_email, 'icon' => 'M3 6h18v12H3zM3 6l9 7 9-7'],
                 ['label' => 'WhatsApp', 'value' => $settings->whatsapp, 'icon' => 'M12 2a10 10 0 00-8.6 15.1L2 22l5-1.4A10 10 0 1012 2z'],
             ] as $item)
-                <div class="flex items-center gap-3 rounded-xl border border-line p-4">
+                @php
+                    $contactUrl = match ($item['label']) {
+                        'Call Us' => 'tel:'.preg_replace('/[^+0-9]/', '', $item['value'] ?? ''),
+                        'Email Us' => 'mailto:'.$item['value'],
+                        'WhatsApp' => 'https://wa.me/'.preg_replace('/\D/', '', $item['value'] ?? ''),
+                    };
+                @endphp
+                @if (filled($item['value']))
+                <a href="{{ $contactUrl }}" class="flex items-center gap-3 rounded-xl border border-line p-4 transition-colors hover:bg-ivory-soft">
                     <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-beige text-champagne-dark">
                         <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="{{ $item['icon'] }}" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </div>
@@ -17,8 +25,50 @@
                         <p class="text-xs text-muted">{{ $item['label'] }}</p>
                         <p class="text-sm font-medium text-charcoal">{{ $item['value'] }}</p>
                     </div>
-                </div>
+                </a>
+                @endif
             @endforeach
+        </div>
+
+        <div class="mt-10">
+            <h2 class="font-display text-xl text-charcoal">Send a Support Request</h2>
+            <form method="POST" action="{{ route('account.support.store') }}" class="mt-4 max-w-xl space-y-4">
+                @csrf
+                <div>
+                    <label for="support-subject" class="label-luxe">Subject</label>
+                    <input id="support-subject" name="subject" required maxlength="150" value="{{ old('subject') }}" class="input-luxe">
+                </div>
+                <div>
+                    <label for="support-message" class="label-luxe">Message</label>
+                    <textarea id="support-message" name="message" required maxlength="2000" rows="5" class="input-luxe">{{ old('message') }}</textarea>
+                </div>
+                <button type="submit" class="btn-primary">Submit Request</button>
+            </form>
+        </div>
+
+        <div class="mt-10">
+            <h2 class="font-display text-xl text-charcoal">Your Support Requests</h2>
+            <div class="mt-4 space-y-4">
+                @forelse ($tickets as $ticket)
+                    <div class="rounded-xl border border-line p-5">
+                        <div class="flex flex-wrap justify-between gap-2">
+                            <p class="text-sm font-semibold text-charcoal">{{ $ticket->ticket_no }} &middot; {{ $ticket->subject }}</p>
+                            <span class="text-xs text-muted">{{ Str::headline($ticket->status) }}</span>
+                        </div>
+                        <p class="mt-2 whitespace-pre-line text-sm text-muted">{{ $ticket->message }}</p>
+                        <p class="mt-2 text-xs text-muted-light">{{ $ticket->created_at->format('d M Y, h:i A') }}</p>
+                        @if ($ticket->admin_reply)
+                            <div class="mt-4 rounded-lg bg-ivory-soft p-4">
+                                <p class="text-xs font-semibold text-charcoal">Support reply</p>
+                                <p class="mt-1 whitespace-pre-line text-sm text-muted">{{ $ticket->admin_reply }}</p>
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-sm text-muted">You haven't submitted any support requests yet.</p>
+                @endforelse
+            </div>
+            <div class="mt-6">{{ $tickets->links() }}</div>
         </div>
 
         <div class="mt-10">

@@ -8,7 +8,7 @@
 @if ($cancelled)
     <div class="flex items-center gap-3 rounded-xl bg-error/5 p-4">
         <svg class="h-5 w-5 flex-shrink-0 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" /></svg>
-        <p class="text-sm text-charcoal">This order was cancelled and the amount has been refunded to your original payment method.</p>
+        <p class="text-sm text-charcoal">This order was cancelled.</p>
     </div>
 @else
     <div class="flex flex-col gap-0 sm:flex-row sm:items-start">

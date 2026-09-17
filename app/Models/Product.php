@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,7 +41,7 @@ class Product extends Model
         'has_diamond', 'diamond_carat', 'diamond_colour', 'diamond_clarity', 'diamond_cut', 'diamond_shape', 'diamond_count',
         'has_gemstone', 'gemstone_type', 'gemstone_weight', 'gemstone_colour',
         'occasion', 'gender', 'is_adjustable', 'is_water_resistant', 'is_return_available', 'is_refund_available',
-        'mrp', 'selling_price', 'offer_price', 'discount_type', 'discount_value', 'making_charge', 'gst_percentage', 'final_price',
+        'mrp', 'selling_price', 'offer_price', 'offer_expiry_date', 'discount_type', 'discount_value', 'discount_expiry_date', 'making_charge', 'gst_percentage', 'final_price',
         'stock_quantity', 'minimum_stock', 'stock_status',
         'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller', 'is_trending', 'is_on_sale',
         'meta_title', 'meta_description', 'meta_keywords',
@@ -63,7 +65,9 @@ class Product extends Model
             'mrp' => 'decimal:2',
             'selling_price' => 'decimal:2',
             'offer_price' => 'decimal:2',
+            'offer_expiry_date' => 'date',
             'discount_value' => 'decimal:2',
+            'discount_expiry_date' => 'date',
             'making_charge' => 'decimal:2',
             'gst_percentage' => 'decimal:2',
             'final_price' => 'decimal:2',
@@ -86,13 +90,41 @@ class Product extends Model
         });
     }
 
+    protected function finalPrice(): Attribute
+    {
+        // Expiry changes the current price even when the product has not been saved again.
+        return Attribute::get(fn () => $this->computeFinalPrice());
+    }
+
+    public function offerHasExpired(): bool
+    {
+        return $this->offer_expiry_date?->lt(today()) ?? false;
+    }
+
+    public function discountHasExpired(): bool
+    {
+        return $this->discount_expiry_date?->lt(today()) ?? false;
+    }
+
+    public function hasActiveOffer(): bool
+    {
+        return $this->offer_price !== null && ! $this->offerHasExpired();
+    }
+
+    public function hasActiveDiscount(): bool
+    {
+        return in_array($this->discount_type, ['percentage', 'fixed'])
+            && (float) $this->discount_value > 0
+            && ! $this->discountHasExpired();
+    }
+
     public function computeFinalPrice(): float
     {
-        $base = (float) ($this->offer_price ?? $this->selling_price);
+        $base = (float) ($this->hasActiveOffer() ? $this->offer_price : $this->selling_price);
 
-        if ($this->discount_type === 'percentage' && $this->discount_value) {
+        if ($this->hasActiveDiscount() && $this->discount_type === 'percentage') {
             $base -= $base * ((float) $this->discount_value / 100);
-        } elseif ($this->discount_type === 'fixed' && $this->discount_value) {
+        } elseif ($this->hasActiveDiscount() && $this->discount_type === 'fixed') {
             $base -= (float) $this->discount_value;
         }
 
@@ -163,6 +195,23 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopePricedAtMost(Builder $query, float $maximum): Builder
+    {
+        if ($maximum < 0) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Collection price limits must use the same live price as the storefront.
+        $column = fn (string $name) => $this->qualifyColumn($name);
+        $offer = 'CASE WHEN '.$column('offer_price').' IS NOT NULL AND ('.$column('offer_expiry_date').' IS NULL OR '.$column('offer_expiry_date').' >= ?) THEN '.$column('offer_price').' ELSE '.$column('selling_price').' END';
+        $discount = 'CASE WHEN '.$column('discount_expiry_date').' IS NULL OR '.$column('discount_expiry_date').' >= ? THEN CASE '.$column('discount_type')." WHEN 'percentage' THEN (".$offer.') * COALESCE('.$column('discount_value').", 0) / 100.0 WHEN 'fixed' THEN COALESCE(".$column('discount_value').', 0) ELSE 0 END ELSE 0 END';
+        $price = '(('.$offer.') - ('.$discount.') + COALESCE('.$column('making_charge').', 0)) * (1 + COALESCE('.$column('gst_percentage').', 0) / 100.0)';
+        $date = today()->toDateString();
+
+        // Negative calculated prices are clamped to zero; both satisfy a nonnegative limit.
+        return $query->whereRaw('ROUND('.$price.', 2) <= CAST(? AS DECIMAL(18, 2))', [$date, $date, $date, $maximum]);
     }
 
     public function scopeWhereCollectionSlug($query, string $slug)

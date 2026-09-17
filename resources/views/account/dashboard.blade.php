@@ -11,7 +11,7 @@
                 ['label' => 'Total Orders', 'value' => $totalOrders, 'icon' => 'M3 7h13l1.5 12h-16z'],
                 ['label' => 'Active Orders', 'value' => $activeOrders, 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ['label' => 'Wishlist Items', 'value' => $wishlistCount, 'icon' => 'M12 20.5s-7.5-4.9-10.1-9.6C.3 7.9 1.6 4.5 4.9 3.6c2-.5 4 .3 5.1 2 .3.4.7.4 1 0 1.1-1.7 3.1-2.5 5.1-2 3.3.9 4.6 4.3 3 7.3-2.6 4.7-10.1 9.6-10.1 9.6z'],
-                ['label' => 'Reward Points', 'value' => $customer['reward_points'], 'icon' => 'M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z'],
+                ['label' => 'Saved Addresses', 'value' => $addressCount, 'icon' => 'M12 21s-7-6.5-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.5 12 21 12 21z'],
             ] as $card)
                 <div class="rounded-2xl border border-line p-5">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-beige text-champagne-dark">
@@ -27,12 +27,12 @@
         <div class="mt-8 rounded-2xl border border-line p-5">
             <div class="flex items-center justify-between">
                 <p class="text-sm font-medium text-charcoal">Profile Completion</p>
-                <span class="text-sm font-semibold text-champagne-dark">80%</span>
+                <span class="text-sm font-semibold text-champagne-dark">{{ $profileCompletion }}%</span>
             </div>
             <div class="mt-3 h-2 overflow-hidden rounded-full bg-beige">
-                <div class="h-full rounded-full bg-champagne-dark" style="width: 80%"></div>
+                <div class="h-full rounded-full bg-champagne-dark" style="width: {{ $profileCompletion }}%"></div>
             </div>
-            <p class="mt-2 text-xs text-muted">Add a profile photo and verify your email to reach 100%.</p>
+            <a href="{{ route('account.profile') }}" class="mt-2 inline-block text-xs text-champagne-dark hover:underline">Keep your contact details, birthday, photo and saved address up to date.</a>
         </div>
 
         <div class="mt-10 flex items-center justify-between">
@@ -40,9 +40,11 @@
             <a href="{{ route('account.orders') }}" class="link-underline text-sm font-medium text-charcoal">View All</a>
         </div>
         <div class="mt-5 space-y-5">
-            @foreach ($orders as $order)
+            @forelse ($orders as $order)
                 <x-ui.order-card :order="$order" />
-            @endforeach
+            @empty
+                <p class="text-sm text-muted">You haven't placed any orders yet.</p>
+            @endforelse
         </div>
 
         <div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -52,7 +54,11 @@
                     <a href="{{ route('account.addresses') }}" class="link-underline text-sm font-medium text-charcoal">Manage</a>
                 </div>
                 <div class="mt-5">
-                    <x-ui.address-card :address="$address" />
+                    @if ($address)
+                        <x-ui.address-card :address="$address" />
+                    @else
+                        <p class="text-sm text-muted">You haven't saved an address yet.</p>
+                    @endif
                 </div>
             </div>
         </div>

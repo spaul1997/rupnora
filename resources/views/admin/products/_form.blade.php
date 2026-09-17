@@ -165,7 +165,9 @@
                     <x-admin.form.input label="Colour" name="metal_colour" :value="$product->metal_colour ?? null" />
                     <x-admin.form.input label="Stone Type" name="gemstone_type" :value="$product->gemstone_type ?? null" />
                     <x-admin.form.input label="Stone Colour" name="gemstone_colour" :value="$product->gemstone_colour ?? null" />
-                    <x-admin.form.select label="Occasion" name="occasion" :value="$product->occasion ?? null" :options="$occasionOptions" placeholder="Select occasion" />
+                    @if (isset($product))
+                        <x-admin.form.select label="Occasion" name="occasion" :value="$product->occasion ?? null" :options="$occasionOptions" placeholder="Select occasion" />
+                    @endif
                     <x-admin.form.select label="Gender" name="gender" :value="$product->gender ?? null" :options="$genderOptions" placeholder="Select gender" />
                     <x-admin.form.input label="Gross Weight (g)" name="gross_weight" type="number" step="0.001" :value="$product->gross_weight ?? null" />
                     <div class="product-jewellery-toggles">
@@ -193,13 +195,26 @@
         {{-- Pricing --}}
         <div class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
             <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
+            <p class="text-xs text-gray-500">Offers and discounts apply through the selected date ({{ config('app.timezone') }}). Leave an expiry date blank for no expiry.</p>
             <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
                 <x-admin.form.input label="MRP (₹)" name="mrp" type="number" step="0.01" required :value="$product->mrp ?? null" />
                 <x-admin.form.input label="Selling Price (₹)" name="selling_price" type="number" step="0.01" required :value="$product->selling_price ?? null" />
-                <x-admin.form.input label="Offer Price (₹)" name="offer_price" type="number" step="0.01" :value="$product->offer_price ?? null" />
+                <div class="space-y-3">
+                    <x-admin.form.input label="Offer Price (₹)" name="offer_price" type="number" step="0.01" :value="$product->offer_price ?? null" />
+                    <x-admin.form.input label="Offer Price Expiry Date" name="offer_expiry_date" type="date" :value="isset($product) ? $product->offer_expiry_date?->format('Y-m-d') : null" />
+                    @if (isset($product) && $product->offer_price !== null && $product->offerHasExpired())
+                        <p class="text-xs text-error">Offer expired. The selling price is used.</p>
+                    @endif
+                </div>
                 <x-admin.form.input label="Making Charge (₹)" name="making_charge" type="number" step="0.01" :value="$product->making_charge ?? 0" />
                 <x-admin.form.select label="Discount Type" name="discount_type" :value="$product->discount_type ?? null" :options="['percentage' => 'Percentage', 'fixed' => 'Fixed Amount']" placeholder="No Discount" />
-                <x-admin.form.input label="Discount Value" name="discount_value" type="number" step="0.01" :value="$product->discount_value ?? null" />
+                <div class="space-y-3">
+                    <x-admin.form.input label="Discount Value" name="discount_value" type="number" step="0.01" :value="$product->discount_value ?? null" />
+                    <x-admin.form.input label="Discount Expiry Date" name="discount_expiry_date" type="date" :value="isset($product) ? $product->discount_expiry_date?->format('Y-m-d') : null" />
+                    @if (isset($product) && $product->discount_type && $product->discount_value > 0 && $product->discountHasExpired())
+                        <p class="text-xs text-error">Discount expired. It is no longer applied.</p>
+                    @endif
+                </div>
                 <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 0" />
                 @if (isset($product))
                     <p class="self-end rounded-lg bg-ivory-soft px-3 py-2 text-xs text-gray-600">Current Final Price: <span class="font-semibold text-gray-900">₹{{ number_format($product->final_price, 2) }}</span></p>

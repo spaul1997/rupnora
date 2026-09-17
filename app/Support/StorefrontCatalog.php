@@ -461,7 +461,7 @@ class StorefrontCatalog
         $category = $product->category;
         $categorySlug = $category ? self::normalizeCategorySlug($category->parent ?? $category) : 'jewellery';
         $categoryName = $category?->parent?->name ?? $category?->name ?? 'Jewellery';
-        $price = (float) ($product->final_price ?: $product->offer_price ?: $product->selling_price);
+        $price = $product->computeFinalPrice();
         $reviewsCount = (int) ($product->approved_reviews_count ?? 0);
         $rating = $product->approved_reviews_avg_rating
             ? round((float) $product->approved_reviews_avg_rating, 1)
@@ -511,6 +511,8 @@ class StorefrontCatalog
             'gallery' => $product->images->map(fn ($image) => self::storageUrl($image->image_path))->values()->all(),
             'price' => $price,
             'mrp' => (float) $product->mrp,
+            'offer_expiry_date' => $product->hasActiveOffer() ? $product->offer_expiry_date?->format('d M Y') : null,
+            'discount_expiry_date' => $product->hasActiveDiscount() ? $product->discount_expiry_date?->format('d M Y') : null,
             'rating' => $rating,
             'reviews_count' => $reviewsCount,
             'badges' => $badges,
@@ -530,7 +532,7 @@ class StorefrontCatalog
                     'metal' => $variant->metal,
                     'purity' => $variant->purity,
                     'colour' => $variant->colour,
-                    'price' => $variant->offer_price ?: $variant->price,
+                    'price' => ! $product->offerHasExpired() ? ($variant->offer_price ?? $variant->price) : $variant->price,
                     'stock_quantity' => (int) $variant->stock_quantity,
                     'status' => $variant->status,
                 ])
@@ -613,16 +615,16 @@ class StorefrontCatalog
         $query = self::baseProductQuery();
 
         return match ($slug) {
-            'daily-wear' => $query->where('final_price', '<=', 50000),
+            'daily-wear' => $query->pricedAtMost(50000),
             'office-wear' => $query->whereIn('jewellery_type', ['Minimal', 'Pearl', 'Silver-plated']),
             'casual-wear' => $query->whereIn('jewellery_type', ['Handmade', 'Minimal', 'Western', 'Silver-plated']),
             'college-wear' => $query->whereIn('jewellery_type', ['Handmade', 'Minimal', 'Artificial Stone']),
             'party-wear' => $query->whereIn('jewellery_type', ['American Diamond', 'Pearl', 'Rose-gold-plated', 'Western']),
             'festive-wear' => $query->whereIn('jewellery_type', ['Kundan', 'Traditional', 'Gold-plated', 'Oxidised']),
             'wedding-wear' => $query->whereIn('jewellery_type', ['Kundan', 'Pearl', 'Traditional', 'American Diamond']),
-            'gift-jewellery' => $query->where('final_price', '<=', 100000),
+            'gift-jewellery' => $query->pricedAtMost(100000),
             'diamond-collection' => $query->where('has_diamond', true),
-            'everyday-gold' => $query->where('metal_type', 'like', '%Gold%')->where('final_price', '<=', 60000),
+            'everyday-gold' => $query->where('metal_type', 'like', '%Gold%')->pricedAtMost(60000),
             'wedding-collection' => $query->whereHas('category', fn (Builder $category) => $category->where('slug', 'like', '%bridal%')),
             'minimal-collection' => $query->whereIn('jewellery_type', ['Pendant', 'Ring', 'Earrings']),
             'festive-collection' => $query->whereIn('jewellery_type', ['Bangle', 'Necklace', 'Earrings']),

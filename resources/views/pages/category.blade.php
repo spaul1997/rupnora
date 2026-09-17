@@ -95,7 +95,7 @@
         x-data="{
             loading: true,
             sort: 'recommended',
-            filters: { category: [], type: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }} },
+            filters: { category: [], type: [], metal: [], purity: [], gender: {{ Illuminate\Support\Js::from($initialGenderFilter ?? []) }}, occasion: [], rating: [], availability: [], flags: [], priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }} },
             meta: {{ Illuminate\Support\Js::from($meta) }},
             matches(p) {
                 if (this.filters.category.length && !this.filters.category.includes(p.category)) return false;

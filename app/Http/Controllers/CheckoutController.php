@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Catalog;
+use App\Http\Requests\StorefrontAddressRequest;
 use App\Support\CheckoutAddresses;
 use App\Support\CheckoutOrders;
 use App\Support\ShoppingCart;
@@ -21,20 +21,9 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function storeAddress(Request $request): JsonResponse
+    public function storeAddress(StorefrontAddressRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'type' => ['required', 'string', 'in:Home,Office,Other'],
-            'name' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:30'],
-            'line1' => ['required', 'string', 'max:180'],
-            'line2' => ['nullable', 'string', 'max:180'],
-            'landmark' => ['nullable', 'string', 'max:120'],
-            'city' => ['required', 'string', 'max:100'],
-            'state' => ['required', 'string', 'max:100'],
-            'pincode' => ['required', 'regex:/^[1-9][0-9]{5}$/'],
-            'country' => ['nullable', 'string', 'max:80'],
-        ]);
+        $data = $request->validated();
 
         return response()->json([
             'address' => CheckoutAddresses::add($data),

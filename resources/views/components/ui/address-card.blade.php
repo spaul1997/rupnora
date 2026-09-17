@@ -1,15 +1,15 @@
-@props(['address', 'selectable' => false, 'model' => 'selectedAddress'])
+@props(['address', 'selectable' => false, 'manage' => false, 'model' => 'selectedAddress'])
 
 <div
-    @if($selectable) @click="{{ $model }} = {{ $address['id'] }}" @endif
+    @if($selectable) @click="{{ $model }} = {{ Illuminate\Support\Js::from($address['id']) }}" @endif
     class="card-luxe relative p-5 {{ $selectable ? 'cursor-pointer transition-colors' : '' }}"
-    @if($selectable) :class="{{ $model }} === {{ $address['id'] }} ? 'border-champagne-dark ring-1 ring-champagne-dark' : ''" @endif
+    @if($selectable) :class="{{ $model }} === {{ Illuminate\Support\Js::from($address['id']) }} ? 'border-champagne-dark ring-1 ring-champagne-dark' : ''" @endif
 >
     <div class="flex items-start justify-between gap-3">
         <div class="flex items-center gap-2">
             @if ($selectable)
-                <span class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2" :class="{{ $model }} === {{ $address['id'] }} ? 'border-champagne-dark' : 'border-line'">
-                    <span x-show="{{ $model }} === {{ $address['id'] }}" class="h-2 w-2 rounded-full bg-champagne-dark"></span>
+                <span class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2" :class="{{ $model }} === {{ Illuminate\Support\Js::from($address['id']) }} ? 'border-champagne-dark' : 'border-line'">
+                    <span x-show="{{ $model }} === {{ Illuminate\Support\Js::from($address['id']) }}" class="h-2 w-2 rounded-full bg-champagne-dark"></span>
                 </span>
             @endif
             <span class="badge-luxe bg-beige text-charcoal-soft">{{ $address['type'] }}</span>
@@ -17,21 +17,29 @@
                 <span class="badge-luxe bg-champagne text-charcoal">Default</span>
             @endif
         </div>
-        @if (! $selectable)
+        @if ($manage && ! $selectable)
             <div class="flex items-center gap-3 text-xs">
-                <button type="button" class="text-muted hover:text-champagne-dark">Edit</button>
-                <button type="button" class="text-muted hover:text-error">Delete</button>
+                <a href="{{ route('account.addresses.edit', $address['id']) }}" class="text-muted hover:text-champagne-dark">Edit</a>
+                <form method="POST" action="{{ route('account.addresses.destroy', $address['id']) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-muted hover:text-error">Delete</button>
+                </form>
             </div>
         @endif
     </div>
     <p class="mt-3 text-sm font-semibold text-charcoal">{{ $address['name'] }}</p>
     <p class="mt-1 text-sm leading-relaxed text-muted">
-        {{ $address['line1'] }}, {{ $address['line2'] }}@if(!empty($address['landmark'])), {{ $address['landmark'] }}@endif<br>
+        {{ collect([$address['line1'], $address['line2'], $address['landmark'] ?? ''])->filter()->join(', ') }}<br>
         {{ $address['city'] }}, {{ $address['state'] }} {{ $address['pincode'] }}<br>
         {{ $address['country'] }}
     </p>
     <p class="mt-2 text-sm text-charcoal">{{ $address['phone'] }}</p>
-    @if (! $selectable && ! $address['default'])
-        <button type="button" class="mt-3 text-xs font-medium text-champagne-dark hover:underline">Set as Default</button>
+    @if ($manage && ! $selectable && ! $address['default'])
+        <form method="POST" action="{{ route('account.addresses.default', $address['id']) }}" class="mt-3">
+            @csrf
+            @method('PATCH')
+            <button type="submit" class="text-xs font-medium text-champagne-dark hover:underline">Set as Default</button>
+        </form>
     @endif
 </div>

@@ -140,13 +140,19 @@
                 <span class="eyebrow">Who Are You Shopping For</span>
                 <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Shop by Recipient</h2>
             </div>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div class="mx-auto grid max-w-xl grid-cols-2 gap-3 sm:gap-4">
                 @foreach ($recipients as $rec)
-                    <a href="{{ route('category.show', $rec['slug'] === 'for-him' ? 'mens' : ($rec['slug'] === 'bridal' ? 'bridal' : 'rings')) }}" class="group relative block overflow-hidden rounded-2xl border border-line">
-                        <x-ui.product-art :art="$rec['art']" class="aspect-[4/5] transition-transform duration-700 group-hover:scale-105" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent"></div>
-                        <div class="absolute inset-x-0 bottom-0 p-4">
-                            <span class="font-display text-lg text-ivory">{{ $rec['name'] }}</span>
+                    <a href="{{ route('recipient.show', $rec['slug']) }}" class="group relative block overflow-hidden rounded-xl border border-line bg-charcoal">
+                        <x-ui.product-art :art="$rec['art']" tone="{{ $rec['slug'] === 'for-him' ? 1 : 2 }}" class="aspect-square opacity-90 transition-transform duration-700 ease-out group-hover:scale-105" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/20 to-transparent"></div>
+                        <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 sm:p-4">
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-semibold uppercase tracking-wide text-champagne-light">{{ $rec['slug'] === 'for-him' ? "Men's Edit" : "Women's Edit" }}</span>
+                                <h3 class="font-display mt-0.5 text-base text-ivory sm:text-lg">{{ $rec['name'] }}</h3>
+                            </div>
+                            <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ivory/10 text-ivory transition-all duration-300 group-hover:translate-x-0.5 group-hover:bg-champagne-light group-hover:text-charcoal">
+                                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            </span>
                         </div>
                     </a>
                 @endforeach

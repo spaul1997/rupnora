@@ -2,38 +2,45 @@
     <x-account.shell active="profile">
         <h1 class="font-display text-2xl text-charcoal sm:text-3xl">Profile</h1>
 
-        <div class="mt-6 flex items-center gap-4">
-            <div class="flex h-20 w-20 items-center justify-center rounded-full bg-beige font-display text-2xl text-champagne-dark">
-                {{ Str::of($customer['name'])->explode(' ')->map(fn($n) => $n[0])->take(2)->implode('') }}
+        <form method="POST" action="{{ route('account.profile.update') }}" enctype="multipart/form-data" class="mt-6 max-w-xl space-y-5">
+            @csrf
+            @method('PATCH')
+            <div class="flex items-center gap-4">
+                @if ($customer['has_photo'])
+                    <img src="{{ route('account.photo') }}" alt="Profile photo" class="h-20 w-20 rounded-full object-cover">
+                @else
+                    <div class="flex h-20 w-20 items-center justify-center rounded-full bg-beige font-display text-2xl text-champagne-dark">
+                        {{ Str::of($customer['name'])->explode(' ')->filter()->map(fn($n) => mb_substr($n, 0, 1))->take(2)->implode('') }}
+                    </div>
+                @endif
+                <div>
+                    <label for="profile-photo" class="label-luxe">Change Photo</label>
+                    <input id="profile-photo" type="file" name="photo" accept="image/jpeg,image/png" class="block max-w-full text-xs text-muted">
+                    <p class="mt-1.5 text-xs text-muted">JPG or PNG, max 2MB.</p>
+                </div>
             </div>
-            <div>
-                <button class="btn-secondary !px-4 !py-2 text-[11px]">Change Photo</button>
-                <p class="mt-1.5 text-xs text-muted">JPG or PNG, max 2MB.</p>
-            </div>
-        </div>
 
-        <form class="mt-8 max-w-xl space-y-5" onsubmit="event.preventDefault(); Alpine.store('ui').notify('Profile updated successfully', 'success')">
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                     <label class="label-luxe">First Name</label>
-                    <input type="text" value="{{ $customer['first_name'] }}" class="input-luxe">
+                    <input type="text" name="first_name" required maxlength="60" autocomplete="given-name" value="{{ old('first_name', $customer['first_name']) }}" class="input-luxe">
                 </div>
                 <div>
                     <label class="label-luxe">Last Name</label>
-                    <input type="text" value="{{ $customer['last_name'] }}" class="input-luxe">
+                    <input type="text" name="last_name" maxlength="60" autocomplete="family-name" value="{{ old('last_name', $customer['last_name']) }}" class="input-luxe">
                 </div>
             </div>
             <div>
                 <label class="label-luxe">Email</label>
-                <input type="email" value="{{ $customer['email'] }}" class="input-luxe">
+                <input type="email" name="email" required autocomplete="email" value="{{ old('email', $customer['email']) }}" class="input-luxe">
             </div>
             <div>
                 <label class="label-luxe">Mobile Number</label>
-                <input type="tel" value="{{ $customer['phone'] }}" class="input-luxe">
+                <input type="tel" name="phone" maxlength="30" autocomplete="tel" value="{{ old('phone', $customer['phone']) }}" class="input-luxe">
             </div>
             <div>
                 <label class="label-luxe">Date of Birth</label>
-                <input type="date" class="input-luxe">
+                <input type="date" name="date_of_birth" max="{{ now()->format('Y-m-d') }}" value="{{ old('date_of_birth', $customer['date_of_birth']) }}" class="input-luxe">
             </div>
             <button type="submit" class="btn-primary">Save Changes</button>
         </form>

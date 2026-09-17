@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContactMessage extends Model
 {
     protected $fillable = [
-        'ticket_no', 'name', 'email', 'phone', 'subject', 'message',
+        'user_id', 'ticket_no', 'name', 'email', 'phone', 'subject', 'message',
         'priority', 'status', 'assigned_to', 'admin_note', 'admin_reply', 'replied_at',
     ];
 
@@ -17,6 +17,11 @@ class ContactMessage extends Model
         return [
             'replied_at' => 'datetime',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function assignedTo(): BelongsTo

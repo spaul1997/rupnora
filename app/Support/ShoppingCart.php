@@ -2,24 +2,17 @@
 
 namespace App\Support;
 
+use App\Models\Product;
+
 class ShoppingCart
 {
     private const CART_KEY = 'shopping_cart.items';
+
     private const INITIALIZED_KEY = 'shopping_cart.initialized';
+
     private const WISHLIST_KEY = 'wishlist.product_ids';
+
     private const WISHLIST_INITIALIZED_KEY = 'wishlist.initialized';
-
-    private const DEFAULT_ITEMS = [
-        ['product_id' => 'eternal-bloom-diamond-ring', 'qty' => 1, 'size' => '14'],
-        ['product_id' => 'celestial-18k-gold-hoop-earrings', 'qty' => 1, 'size' => null],
-        ['product_id' => 'moonlight-silver-bracelet', 'qty' => 2, 'size' => 'Adjustable'],
-    ];
-
-    private const DEFAULT_WISHLIST_IDS = [
-        'eternal-bloom-diamond-ring',
-        'royal-heritage-gold-necklace',
-        'aurora-diamond-studs',
-    ];
 
     public static function items(): array
     {
@@ -155,6 +148,14 @@ class ShoppingCart
 
     public static function removeWishlistId(string|int $productId): bool
     {
+        if (auth()->user()?->role === 'customer') {
+            $product = Product::query()->where('slug', $productId)
+                ->when(is_numeric($productId), fn ($query) => $query->orWhere('id', $productId))
+                ->first();
+
+            return $product && auth()->user()->wishlistProducts()->detach($product->id) > 0;
+        }
+
         $ids = self::rawWishlistIds();
         $removeKeys = self::wishlistKeysFor($productId);
         $nextIds = collect($ids)
@@ -173,8 +174,16 @@ class ShoppingCart
 
     public static function addWishlistId(string|int $productId): bool
     {
-        if (! StorefrontCatalog::product($productId)) {
+        $product = StorefrontCatalog::product($productId);
+
+        if (! $product) {
             return false;
+        }
+
+        if (auth()->user()?->role === 'customer') {
+            auth()->user()->wishlistProducts()->syncWithoutDetaching([$product['id']]);
+
+            return true;
         }
 
         $ids = collect(self::rawWishlistIds())
@@ -190,10 +199,17 @@ class ShoppingCart
 
     private static function rawWishlistIds(): array
     {
+        if (auth()->user()?->role === 'customer') {
+            return auth()->user()->wishlistProducts()->active()
+                ->orderBy('wishlist_items.id')
+                ->get(['products.id', 'products.slug'])
+                ->map(fn (Product $product) => (string) ($product->slug ?: $product->id))
+                ->all();
+        }
+
         if (! session()->has(self::WISHLIST_INITIALIZED_KEY)) {
             self::putWishlistIds(
-                collect(self::DEFAULT_WISHLIST_IDS)
-                    ->merge(session(self::WISHLIST_KEY, []))
+                collect(session(self::WISHLIST_KEY, []))
                     ->unique()
                     ->values()
                     ->all()
@@ -215,35 +231,22 @@ class ShoppingCart
         return $validIds;
     }
 
+    public static function mergeGuestWishlist(): void
+    {
+        foreach (session(self::WISHLIST_KEY, []) as $id) {
+            self::addWishlistId($id);
+        }
+
+        session()->forget([self::WISHLIST_KEY, self::WISHLIST_INITIALIZED_KEY]);
+    }
+
     private static function rawCart(): array
     {
         if (! session()->has(self::INITIALIZED_KEY)) {
-            self::seedDefaults();
+            self::putCart([]);
         }
 
         return session(self::CART_KEY, []);
-    }
-
-    private static function seedDefaults(): void
-    {
-        $cart = [];
-
-        foreach (self::DEFAULT_ITEMS as $item) {
-            $product = StorefrontCatalog::product($item['product_id']);
-
-            if (! $product) {
-                continue;
-            }
-
-            $key = self::lineKey($product['id'], $item['size']);
-            $cart[$key] = [
-                'product_id' => $product['id'],
-                'qty' => self::clampQty((int) $item['qty'], self::maxQty($product)),
-                'size' => $item['size'],
-            ];
-        }
-
-        self::putCart($cart);
     }
 
     private static function putCart(array $cart): void
