@@ -2,29 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WebsiteSetting;
 use App\Support\Catalog;
 use App\Support\CheckoutOrders;
 use App\Support\ShoppingCart;
 use App\Support\StorefrontCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class AccountController extends Controller
 {
     protected function customer(): array
     {
-        $customer = session('storefront_customer', []);
-        $name = $customer['name'] ?? 'Ananya Rao';
+        $customer = Auth::user();
+        $name = $customer->name;
         $nameParts = preg_split('/\s+/', trim($name), 2);
 
         return [
             'name' => $name,
-            'first_name' => $nameParts[0] ?? 'Ananya',
-            'last_name' => $nameParts[1] ?? 'Rao',
-            'email' => $customer['email'] ?? 'ananya.rao@example.com',
-            'phone' => $customer['phone'] ?? '+91 98765 43210',
-            'joined' => 'March 2024',
+            'first_name' => $nameParts[0] ?? '',
+            'last_name' => $nameParts[1] ?? '',
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'joined' => $customer->created_at->format('F Y'),
             'reward_points' => 1240,
         ];
     }
@@ -63,7 +65,7 @@ class AccountController extends Controller
         $subtotal = collect($order['items'])->sum(fn ($item) => $item['product']['price'] * $item['qty']);
 
         return view('account.order-details', [
-            'title' => 'Order ' . $order['id'],
+            'title' => 'Order '.$order['id'],
             'customer' => $this->customer(),
             'order' => $order,
             'subtotal' => $subtotal,
@@ -159,6 +161,7 @@ class AccountController extends Controller
             'title' => 'Support',
             'customer' => $this->customer(),
             'faqs' => Catalog::faqs(),
+            'settings' => WebsiteSetting::current(),
         ]);
     }
 }

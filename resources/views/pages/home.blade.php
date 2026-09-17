@@ -49,7 +49,7 @@
                 </div>
                 <a href="{{ route('new-arrivals') }}" class="hidden link-underline text-sm font-medium text-charcoal sm:block">View All</a>
             </div>
-            <div x-data="{}" class="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
+            <div x-data="{}" class="-mr-5 flex snap-x gap-3 overflow-x-auto pr-5 pb-4 sm:mr-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pr-0 sm:pb-0 lg:grid-cols-5">
                 @foreach ($newArrivals as $product)
                     <div class="w-[72%] flex-shrink-0 snap-start sm:w-auto">
                         <x-ui.product-card :product="$product" />
@@ -208,6 +208,34 @@
                 <div class="mt-8 flex items-center justify-center gap-3">
                     <button @click="active = Math.max(0, active - 1)" class="icon-btn border border-line"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
                     <button @click="active = Math.min(total - perView, active + 1)" class="icon-btn border border-line"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- K2. Influencer Program --}}
+    <section class="section-pad bg-charcoal">
+        <div class="container-luxe grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                <x-ui.product-art art="diamond" class="aspect-[4/5] rounded-2xl" />
+                <x-ui.product-art art="bridal" :tone="2" class="mt-8 aspect-[4/5] rounded-2xl" />
+            </div>
+            <div>
+                <span class="eyebrow text-champagne-light">Rupnora Partner Program</span>
+                <h2 class="font-display mt-3 text-3xl text-ivory sm:text-4xl">Become a Rupnora Influencer</h2>
+                <p class="mt-4 text-[15px] leading-relaxed text-ivory/70">
+                    Partner with us to style, shoot and share Rupnora pieces with your audience. Get early access to new collections, complimentary pieces for content and exclusive commission on every sale you drive.
+                </p>
+                <ul class="mt-6 space-y-3">
+                    @foreach (['Early access to new collections', 'Complimentary pieces for content', 'Exclusive commission on referred sales'] as $perk)
+                        <li class="flex items-start gap-3 text-sm text-ivory/70">
+                            <svg class="mt-0.5 h-4.5 w-4.5 flex-shrink-0 text-champagne-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            {{ $perk }}
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="mt-8 flex flex-wrap gap-3">
+                    <a href="{{ route('influencer') }}" class="btn-light">Join as Influencer</a>
                 </div>
             </div>
         </div>

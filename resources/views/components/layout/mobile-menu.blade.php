@@ -29,11 +29,18 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-beige text-champagne-dark">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round" /></svg>
         </div>
-        <div class="flex gap-3 text-sm">
-            <a href="{{ route('login') }}" class="font-semibold text-charcoal">Sign In</a>
-            <span class="text-line">/</span>
-            <a href="{{ route('register') }}" class="text-muted">Create Account</a>
-        </div>
+        @if (auth()->check() && auth()->user()->role === 'customer')
+            <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-charcoal">{{ auth()->user()->name }}</p>
+                <p class="truncate text-xs text-muted">{{ auth()->user()->email }}</p>
+            </div>
+        @else
+            <div class="flex gap-3 text-sm">
+                <a href="{{ route('login') }}" class="font-semibold text-charcoal">Sign In</a>
+                <span class="text-line">/</span>
+                <a href="{{ route('register') }}" class="text-muted">Create Account</a>
+            </div>
+        @endif
     </div>
 
     <nav class="px-2 py-3">
@@ -74,5 +81,11 @@
         <a href="{{ route('about') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Our Story</a>
         <a href="{{ route('careers') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Careers</a>
         <a href="{{ route('contact') }}" class="block rounded-lg px-3 py-3 text-sm text-muted hover:bg-ivory-soft">Contact Us</a>
+        @if (auth()->check() && auth()->user()->role === 'customer')
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full rounded-lg px-3 py-3 text-left text-sm text-muted hover:bg-ivory-soft">Sign Out</button>
+            </form>
+        @endif
     </nav>
 </div>

@@ -27,9 +27,9 @@ return new class extends Migration
         });
 
         DB::table('website_settings')->insert([
-            'company_name' => 'Aurelle Jewellery',
-            'support_email' => 'care@aurellejewellery.com',
-            'sales_email' => 'sales@aurellejewellery.com',
+            'company_name' => 'Rupnora',
+            'support_email' => 'info@rupnora.in',
+            'sales_email' => 'support@rupnora.in',
             'phone' => '+91 80 4567 8900',
             'whatsapp' => '+91 98765 00000',
             'address' => '42 MG Road, Indiranagar, Bengaluru, Karnataka 560038',

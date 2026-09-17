@@ -5,9 +5,9 @@
 
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             @foreach ([
-                ['label' => 'Call Us', 'value' => '+91 80 4567 8900', 'icon' => 'M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8 9.9a16 16 0 006 6l1.4-1.4a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.8 2.2z'],
-                ['label' => 'Email Us', 'value' => 'care@aurellejewellery.com', 'icon' => 'M3 6h18v12H3zM3 6l9 7 9-7'],
-                ['label' => 'WhatsApp', 'value' => '+91 98765 00000', 'icon' => 'M12 2a10 10 0 00-8.6 15.1L2 22l5-1.4A10 10 0 1012 2z'],
+                ['label' => 'Call Us', 'value' => $settings->phone, 'icon' => 'M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8 9.9a16 16 0 006 6l1.4-1.4a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.8 2.2z'],
+                ['label' => 'Email Us', 'value' => $settings->support_email, 'icon' => 'M3 6h18v12H3zM3 6l9 7 9-7'],
+                ['label' => 'WhatsApp', 'value' => $settings->whatsapp, 'icon' => 'M12 2a10 10 0 00-8.6 15.1L2 22l5-1.4A10 10 0 1012 2z'],
             ] as $item)
                 <div class="flex items-center gap-3 rounded-xl border border-line p-4">
                     <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-beige text-champagne-dark">

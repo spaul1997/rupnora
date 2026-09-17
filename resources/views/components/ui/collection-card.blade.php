@@ -23,16 +23,16 @@
         @endif
     </div>
 
-    <div class="p-3 sm:p-4">
-        <div class="flex items-start justify-between gap-3">
+    <div class="p-2.5 sm:p-4">
+        <div class="flex items-start justify-between gap-2 sm:gap-3">
             <div class="min-w-0">
-                <h3 class="truncate font-display text-base text-charcoal sm:text-lg">{{ $collection['name'] }}</h3>
+                <h3 class="line-clamp-2 font-display text-[12.5px] leading-snug text-charcoal sm:text-lg sm:leading-normal">{{ $collection['name'] }}</h3>
                 @if ($blurb)
-                    <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-muted sm:text-sm">{{ $blurb }}</p>
+                    <p class="mt-1 hidden line-clamp-2 text-xs leading-relaxed text-muted sm:block sm:text-sm">{{ $blurb }}</p>
                 @endif
             </div>
-            <span class="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-beige text-champagne-dark transition-transform duration-300 group-hover:translate-x-0.5">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <span class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-beige text-champagne-dark transition-transform duration-300 group-hover:translate-x-0.5 sm:mt-1 sm:h-7 sm:w-7">
+                <svg class="h-3 w-3 sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </span>
         </div>
     </div>

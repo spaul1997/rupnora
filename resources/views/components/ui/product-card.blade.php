@@ -56,7 +56,7 @@
 
     <div class="mt-2 space-y-0.5">
         <p class="text-[9.5px] uppercase tracking-wide text-muted">{{ $categoryLabel }}</p>
-        <a href="{{ route('product.show', $productUrlKey) }}" class="block font-display text-[12.5px] leading-tight text-charcoal hover:text-champagne-dark transition-colors line-clamp-2">
+        <a href="{{ route('product.show', $productUrlKey) }}" class="block min-h-[2.5em] font-display text-[12.5px] leading-tight text-charcoal hover:text-champagne-dark transition-colors line-clamp-2 sm:min-h-0 sm:line-clamp-1">
             {{ $product['name'] }}
         </a>
         <x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" size="xs" />

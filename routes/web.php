@@ -10,7 +10,22 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
+use App\Mail\ForgotPasswordOtpMail;
+use App\Mail\OrderFailedMail;
+use App\Mail\OrderSuccessMail;
+use App\Mail\PasswordResetSuccessMail;
+use App\Mail\PaymentFailedMail;
+use App\Mail\PaymentRefundMail;
+use App\Mail\PaymentSuccessMail;
+use App\Mail\RefundAcceptedMail;
+use App\Mail\RefundCompletedMail;
+use App\Mail\RefundRejectedMail;
+use App\Mail\RegisterMail;
+use App\Models\Order;
+use App\Models\User;
+use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear-cache', function () {
@@ -21,6 +36,65 @@ Route::get('/clear-cache', function () {
         ->with('success', 'Application cache cleared successfully.');
 })->name('clear-cache');
 
+Route::get('/mail-test', function () {
+    try {
+        $supportEmail = WebsiteSetting::current()->support_email;
+
+        abort_unless($supportEmail, 422, 'Set a support email in Website Settings first.');
+
+        Mail::raw('Rupnora webmail SMTP is working successfully.', function ($message) use ($supportEmail) {
+            $message->to($supportEmail)
+                ->subject('Rupnora Laravel Mail Test');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Test email sent successfully.',
+        ]);
+    } catch (Throwable $exception) {
+        report($exception);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Email sending failed. Check storage/logs/laravel.log',
+        ], 500);
+    }
+});
+
+Route::get('/mail-preview/{type}', function (string $type) {
+    $user = new User(['name' => 'Ananya Rao', 'email' => 'ananya.rao@example.com']);
+
+    if ($type === 'register') {
+        return new RegisterMail($user);
+    }
+
+    if ($type === 'forgot-password-otp') {
+        return new ForgotPasswordOtpMail('4821', $user->name);
+    }
+
+    if ($type === 'password-reset-success') {
+        return new PasswordResetSuccessMail($user->name);
+    }
+
+    $order = Order::with('items')->latest()->first();
+
+    if (! $order) {
+        abort(404, 'No orders found to preview with. Seed an order first.');
+    }
+
+    return match ($type) {
+        'order-success' => new OrderSuccessMail($order),
+        'order-failed' => new OrderFailedMail($order, 'Your bank declined the transaction.'),
+        'payment-success' => new PaymentSuccessMail($order),
+        'payment-failed' => new PaymentFailedMail($order, 'The transaction timed out.'),
+        'payment-refund' => new PaymentRefundMail($order),
+        'refund-accepted' => new RefundAcceptedMail($order),
+        'refund-rejected' => new RefundRejectedMail($order, 'The item shows signs of use and does not meet our return policy.'),
+        'refund-completed' => new RefundCompletedMail($order),
+        default => abort(404, 'Unknown mail preview type.'),
+    };
+})->name('mail-preview');
+
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('/about', function () {
@@ -30,6 +104,10 @@ Route::get('/about', function () {
 Route::get('/careers', function () {
     return view('pages.careers', ['title' => 'Careers']);
 })->name('careers');
+
+Route::get('/influencer', function () {
+    return view('pages.influencer', ['title' => 'Influencer Program']);
+})->name('influencer');
 
 Route::get('/privacy-policy', function () {
     return view('pages.privacy-policy', ['title' => 'Privacy Policy']);
@@ -74,7 +152,11 @@ Route::get('/login', [AuthPageController::class, 'login'])->name('login');
 Route::post('/login', [AuthPageController::class, 'loginStore'])->name('login.store');
 Route::post('/logout', [AuthPageController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthPageController::class, 'register'])->name('register');
+Route::post('/register', [AuthPageController::class, 'registerStore'])->name('register.store');
 Route::get('/forgot-password', [AuthPageController::class, 'forgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthPageController::class, 'sendResetCode'])->middleware('throttle:6,1')->name('password.email');
+Route::post('/forgot-password/verify', [AuthPageController::class, 'verifyResetCode'])->middleware('throttle:6,1')->name('password.verify');
+Route::post('/reset-password', [AuthPageController::class, 'resetPassword'])->middleware('throttle:6,1')->name('password.update');
 
 require __DIR__.'/admin.php';
 

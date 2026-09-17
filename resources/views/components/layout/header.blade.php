@@ -53,11 +53,19 @@
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke-linecap="round" /></svg>
                     </button>
                     <div x-cloak x-show="open" @click.outside="open = false" x-transition class="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-line bg-paper p-2 shadow-lift">
-                        <a href="{{ route('login') }}" class="block rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">Sign In</a>
-                        <a href="{{ route('register') }}" class="block rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">Create Account</a>
-                        <div class="my-1.5 border-t border-line"></div>
-                        <a href="{{ route('account.dashboard') }}" class="block rounded-lg px-3 py-2 text-sm text-muted hover:bg-ivory-soft">My Account</a>
-                        <a href="{{ route('account.orders') }}" class="block rounded-lg px-3 py-2 text-sm text-muted hover:bg-ivory-soft">My Orders</a>
+                        @if (auth()->check() && auth()->user()->role === 'customer')
+                            <p class="truncate px-3 py-2 text-xs text-muted">{{ auth()->user()->name }}</p>
+                            <div class="my-1.5 border-t border-line"></div>
+                            <a href="{{ route('account.dashboard') }}" class="block rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">My Account</a>
+                            <a href="{{ route('account.orders') }}" class="block rounded-lg px-3 py-2 text-sm text-muted hover:bg-ivory-soft">My Orders</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm text-muted hover:bg-ivory-soft">Sign Out</button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}" class="block rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">Sign In</a>
+                            <a href="{{ route('register') }}" class="block rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">Create Account</a>
+                        @endif
                     </div>
                 </div>
 

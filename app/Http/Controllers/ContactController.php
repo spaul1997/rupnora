@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WebsiteSetting;
 use App\Support\Catalog;
 use Illuminate\Http\Request;
 
@@ -12,6 +13,7 @@ class ContactController extends Controller
         return view('pages.contact', [
             'title' => 'Contact Us',
             'faqs' => Catalog::faqs(),
+            'settings' => WebsiteSetting::current(),
         ]);
     }
 

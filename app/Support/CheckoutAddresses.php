@@ -7,11 +7,12 @@ use Illuminate\Support\Str;
 class CheckoutAddresses
 {
     private const ADDRESSES_KEY = 'checkout.addresses';
+
     private const INITIALIZED_KEY = 'checkout.addresses_initialized';
 
     public static function all(): array
     {
-        $isCustomer = session()->has('storefront_customer');
+        $isCustomer = auth()->check() && auth()->user()->role === 'customer';
 
         if (! session()->has(self::INITIALIZED_KEY) || session('checkout.addresses_customer') !== $isCustomer) {
             self::put($isCustomer ? Catalog::addresses() : [], $isCustomer);
@@ -40,7 +41,7 @@ class CheckoutAddresses
         ];
 
         $addresses[] = $address;
-        self::put($addresses, session()->has('storefront_customer'));
+        self::put($addresses, auth()->check() && auth()->user()->role === 'customer');
 
         return $address;
     }

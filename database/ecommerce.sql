@@ -572,7 +572,7 @@ CREATE TABLE `website_settings` (
 --
 
 INSERT INTO `website_settings` (`id`, `company_name`, `support_email`, `sales_email`, `phone`, `whatsapp`, `address`, `business_hours`, `google_map_url`, `facebook`, `instagram`, `linkedin`, `youtube`, `created_at`, `updated_at`) VALUES
-(1, 'Aurelle Jewellery', 'care@aurellejewellery.com', 'sales@aurellejewellery.com', '+91 80 4567 8900', '+91 98765 00000', '42 MG Road, Indiranagar, Bengaluru, Karnataka 560038', 'Mon - Sat: 10:30 AM - 8:00 PM · Sun: 11:00 AM - 6:00 PM', NULL, NULL, NULL, NULL, NULL, '2026-09-10 12:50:04', '2026-09-10 12:50:04');
+(1, 'Aurelle Jewellery', 'info@rupnora.in', 'sales@aurellejewellery.com', '+91 80 4567 8900', '+91 98765 00000', '42 MG Road, Indiranagar, Bengaluru, Karnataka 560038', 'Mon - Sat: 10:30 AM - 8:00 PM · Sun: 11:00 AM - 6:00 PM', NULL, NULL, NULL, NULL, NULL, '2026-09-10 12:50:04', '2026-09-10 12:50:04');
 
 --
 -- Indexes for dumped tables
