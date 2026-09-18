@@ -31,7 +31,7 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td align="center">
-                <x-mail.button :url="route('order.success', $order->id)" color="#231535">Track Your Order</x-mail.button>
+                <x-mail.button :url="route('order.success', $order->order_number)" color="#231535">Track Your Order</x-mail.button>
             </td>
         </tr>
     </table>

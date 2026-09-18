@@ -3,8 +3,8 @@
         <div class="grid overflow-hidden rounded-3xl border border-line bg-paper shadow-card lg:grid-cols-[1.05fr_0.95fr]">
         <div class="relative hidden min-h-[480px] overflow-hidden bg-gradient-to-br from-beige via-ivory to-champagne-light/40 lg:block">
             <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 22px 22px; color: var(--color-charcoal);"></div>
-            <div class="absolute inset-0 opacity-60">
-                <x-ui.product-art art="bridal" class="aspect-auto h-full" />
+            <div class="absolute inset-0">
+                <x-ui.optimized-image :src="asset('images/login.png')" alt="Rupnora" sizes="50vw" class="h-full w-full object-cover" />
             </div>
             <div class="relative flex h-full flex-col justify-end p-8 xl:p-10">
                 <span class="eyebrow">Rupnora Rewards</span>

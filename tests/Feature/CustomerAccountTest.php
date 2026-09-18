@@ -88,7 +88,7 @@ class CustomerAccountTest extends TestCase
         $this->actingAs($customer)->post(route('account.addresses.store'), $this->address())->assertRedirect(route('account.addresses'));
         $first = $customer->addresses()->firstOrFail();
         $this->assertTrue($first->is_default);
-        $this->postJson(route('checkout.addresses.store'), $this->address(['type' => 'Office', 'line1' => 'Office Street']))->assertOk();
+        $this->postJson(route('checkout.addresses.store'), $this->address(['type' => 'Office', 'line1' => 'Office Street', 'email' => 'delivery@example.com', 'district' => 'Kolkata']))->assertOk();
         $second = $customer->addresses()->latest('id')->firstOrFail();
         $this->get(route('checkout'))->assertViewHas('addresses', fn ($addresses) => count($addresses) === 2);
         $this->patch(route('account.addresses.default', $second->id))->assertSessionHasNoErrors();
@@ -162,6 +162,8 @@ class CustomerAccountTest extends TestCase
         $response = $this->postJson(route('checkout.order.store'), ['address_id' => $address->id, 'delivery' => 'express', 'payment' => 'cod'])->assertOk();
         $order = $customer->orders()->firstOrFail();
         $this->assertSame($order->order_number, $response->json('orderId'));
+        $this->assertSame('Cash on Delivery', $order->payment_method);
+        $this->assertSame('cod', $order->payment_status);
         $this->assertSame(2, $order->items()->first()->quantity);
         $this->assertSame(8, $product->fresh()->stock_quantity);
         $this->get(route('account.dashboard'))->assertViewHas('totalOrders', 1)->assertViewHas('activeOrders', 1);
@@ -172,6 +174,48 @@ class CustomerAccountTest extends TestCase
         $this->post(route('account.orders.cancel', $order->order_number))->assertSessionHasErrors('order');
         $this->assertSame(10, $product->fresh()->stock_quantity);
         $this->assertFalse($order->fresh()->stock_reserved);
+    }
+
+    public function test_checkout_accepts_online_payment_and_rejects_removed_payment_methods(): void
+    {
+        $customer = $this->customer();
+        $product = $this->product();
+        $address = $customer->addresses()->create([...$this->address(), 'is_default' => true]);
+        $this->actingAs($customer)->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 1])->assertOk();
+
+        foreach (['upi', 'card', 'netbanking', 'wallet'] as $payment) {
+            $this->postJson(route('checkout.order.store'), [
+                'address_id' => $address->id, 'delivery' => 'standard', 'payment' => $payment,
+            ])->assertUnprocessable()->assertJsonValidationErrors('payment');
+        }
+
+        $this->assertDatabaseCount('orders', 0);
+        $this->postJson(route('checkout.order.store'), [
+            'address_id' => $address->id, 'delivery' => 'standard', 'payment' => 'online',
+        ])->assertOk();
+
+        $order = $customer->orders()->firstOrFail();
+        $this->assertSame('Online Payment', $order->payment_method);
+        $this->assertSame('pending', $order->payment_status);
+        $this->assertNull($order->paid_at);
+        $this->get(route('order.success', $order->order_number))->assertOk()
+            ->assertViewHas('order', fn ($data) => $data['payment_method'] === 'Online Payment' && $data['payment_status'] === 'Pending');
+    }
+
+    public function test_guest_online_payment_is_saved_without_marking_an_unpaid_order_as_paid(): void
+    {
+        $product = $this->product();
+        $addressId = $this->postJson(route('checkout.addresses.store'), $this->address([
+            'email' => 'delivery@example.com', 'district' => 'Kolkata',
+        ]))->assertOk()->json('address.id');
+        $this->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 1])->assertOk();
+        $orderId = $this->postJson(route('checkout.order.store'), [
+            'address_id' => $addressId, 'delivery' => 'standard', 'payment' => 'online',
+        ])->assertOk()->json('orderId');
+
+        $this->get(route('order.success', $orderId))->assertOk()
+            ->assertViewHas('order', fn ($order) => $order['payment_method'] === 'Online Payment'
+                && $order['payment_status'] === 'Pending');
     }
 
     public function test_return_and_buy_again_actions_use_real_orders_and_stock(): void

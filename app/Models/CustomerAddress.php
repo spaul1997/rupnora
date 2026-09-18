@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CustomerAddress extends Model
 {
     protected $fillable = [
-        'type', 'is_default', 'name', 'phone', 'line1', 'line2', 'landmark',
-        'city', 'state', 'pincode', 'country',
+        'type', 'is_default', 'name', 'email', 'phone', 'line1', 'line2', 'landmark',
+        'city', 'district', 'state', 'pincode', 'country',
     ];
 
     protected function casts(): array
@@ -27,9 +27,11 @@ class CustomerAddress extends Model
         return [
             'id' => $this->id,
             'default' => $this->is_default,
+            'email' => $this->email ?? '',
             ...$this->only(['type', 'name', 'phone', 'city', 'state', 'pincode', 'country']),
             'line1' => $this->line1,
             'line2' => $this->line2 ?? '',
+            'district' => $this->district ?? '',
             'landmark' => $this->landmark ?? '',
         ];
     }

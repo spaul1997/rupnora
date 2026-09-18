@@ -10,7 +10,16 @@ class WebsiteSetting extends Model
         'company_name', 'support_email', 'sales_email', 'phone', 'whatsapp',
         'address', 'business_hours', 'google_map_url',
         'facebook', 'instagram', 'linkedin', 'youtube',
+        'express_delivery_charge', 'cod_order_limit',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'express_delivery_charge' => 'decimal:2',
+            'cod_order_limit' => 'decimal:2',
+        ];
+    }
 
     public static function current(): self
     {

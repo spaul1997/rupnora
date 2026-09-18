@@ -146,6 +146,7 @@ Route::post('/cart/{key}/wishlist', [CartController::class, 'moveToWishlist'])->
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/addresses', [CheckoutController::class, 'storeAddress'])->name('checkout.addresses.store');
+Route::patch('/checkout/addresses/{address}', [CheckoutController::class, 'updateAddress'])->name('checkout.addresses.update');
 Route::post('/checkout/order', [CheckoutController::class, 'placeOrder'])->name('checkout.order.store');
 Route::get('/order-success/{id?}', [CheckoutController::class, 'success'])->name('order.success');
 

@@ -2,6 +2,8 @@
     'art' => 'ring',
     'tone' => 1,
     'class' => 'aspect-square',
+    'iconClass' => 'text-charcoal-soft/65',
+    'strokeWidth' => '1.4',
 ])
 
 @php
@@ -15,7 +17,7 @@
 <div {{ $attributes->merge(['class' => "$class relative overflow-hidden bg-gradient-to-br $gradient"]) }}>
     <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 16px 16px; color: var(--color-charcoal);"></div>
     <div class="absolute inset-0 flex items-center justify-center p-[18%]">
-        <svg viewBox="0 0 100 100" class="h-full w-full text-charcoal-soft/65" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 100 100" class="h-full w-full {{ $iconClass }}" fill="none" stroke="currentColor" stroke-width="{{ $strokeWidth }}" stroke-linecap="round" stroke-linejoin="round">
             @switch($art)
                 @case('ring')
                     <circle cx="50" cy="62" r="24" />

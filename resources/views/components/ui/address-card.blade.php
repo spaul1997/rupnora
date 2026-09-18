@@ -31,7 +31,7 @@
     <p class="mt-3 text-sm font-semibold text-charcoal">{{ $address['name'] }}</p>
     <p class="mt-1 text-sm leading-relaxed text-muted">
         {{ collect([$address['line1'], $address['line2'], $address['landmark'] ?? ''])->filter()->join(', ') }}<br>
-        {{ $address['city'] }}, {{ $address['state'] }} {{ $address['pincode'] }}<br>
+        {{ collect([$address['city'], $address['district'] ?? '', $address['state']])->filter()->join(', ') }} {{ $address['pincode'] }}<br>
         {{ $address['country'] }}
     </p>
     <p class="mt-2 text-sm text-charcoal">{{ $address['phone'] }}</p>

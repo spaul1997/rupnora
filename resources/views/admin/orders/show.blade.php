@@ -34,7 +34,7 @@
                         <p class="text-sm leading-relaxed text-gray-600">
                             {{ $order->shipping_address['name'] ?? '' }}<br>
                             {{ $order->shipping_address['line1'] ?? '' }}, {{ $order->shipping_address['line2'] ?? '' }}<br>
-                            {{ $order->shipping_address['city'] ?? '' }}, {{ $order->shipping_address['state'] ?? '' }} {{ $order->shipping_address['pincode'] ?? '' }}<br>
+                            {{ collect([$order->shipping_address['city'] ?? '', $order->shipping_address['district'] ?? '', $order->shipping_address['state'] ?? ''])->filter()->join(', ') }} {{ $order->shipping_address['pincode'] ?? '' }}<br>
                             {{ $order->shipping_address['country'] ?? '' }}<br>
                             {{ $order->shipping_address['phone'] ?? '' }}
                         </p>

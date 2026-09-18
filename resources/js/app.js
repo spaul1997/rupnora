@@ -17,6 +17,7 @@ Alpine.store('ui', {
     mobileMenuOpen: false,
     searchOpen: false,
     filterDrawerOpen: false,
+    buyingNow: false,
     cartCount: Number(initialState.cartCount || 0),
     wishlistIds: (initialState.wishlistIds || []).map((id) => String(id)),
     toasts: [],
@@ -117,6 +118,24 @@ Alpine.store('ui', {
 
         this.notify(`${name} added to cart`, 'success');
         return true;
+    },
+
+    async buyNow(item, checkoutUrl = '/checkout') {
+        if (this.buyingNow) {
+            return;
+        }
+
+        this.buyingNow = true;
+
+        try {
+            const added = await this.addToCart(item);
+
+            if (added) {
+                window.location.href = checkoutUrl;
+            }
+        } finally {
+            this.buyingNow = false;
+        }
     },
 
     notify(message, type = 'default') {
@@ -369,9 +388,10 @@ window.wishlistPage = (initialProducts = []) => ({
 const blankCheckoutAddress = () => ({
     type: 'Home',
     name: '',
+    email: '',
     phone: '',
     line1: '',
-    line2: '',
+    district: '',
     landmark: '',
     city: '',
     state: '',
@@ -379,15 +399,20 @@ const blankCheckoutAddress = () => ({
     country: 'India',
 });
 
-window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, placeOrderUrl = null } = {}) => ({
+window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, codOrderLimit = 0, baseTotal = 0 } = {}) => ({
     step: 1,
     selectedAddress: selectedAddressId ?? addresses[0]?.id ?? null,
     addresses: addresses.map((address) => ({ ...address })),
     addAddressUrl,
+    updateAddressUrl,
     placeOrderUrl,
+    expressDeliveryCharge: Math.max(0, Number(expressDeliveryCharge) || 0),
+    codOrderLimit: Math.max(0, Number(codOrderLimit) || 0),
+    baseTotal: Number(baseTotal) || 0,
     delivery: 'standard',
-    payment: 'upi',
+    payment: 'online',
     addingAddress: false,
+    editingAddressId: null,
     savingAddress: false,
     placingOrder: false,
     addressError: '',
@@ -398,8 +423,45 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         return this.addresses.find((address) => address.id === this.selectedAddress) || null;
     },
 
+    get shippingCost() {
+        return this.delivery === 'express' ? this.expressDeliveryCharge : 0;
+    },
+
+    get orderTotal() {
+        return Math.round((this.baseTotal + this.shippingCost) * 100) / 100;
+    },
+
+    get codAvailable() {
+        return this.orderTotal < this.codOrderLimit;
+    },
+
+    get codDescription() {
+        return this.codOrderLimit > 0
+            ? `Available on orders below ${this.formatMoney(this.codOrderLimit)}`
+            : 'Cash on Delivery is currently unavailable.';
+    },
+
+    get deliveryDescription() {
+        const expressPrice = this.expressDeliveryCharge > 0 ? this.formatMoney(this.expressDeliveryCharge) : 'Free';
+
+        return this.delivery === 'express'
+            ? `Express Delivery (${expressPrice}, 2–3 days)`
+            : 'Standard Delivery (Free, 5–7 days)';
+    },
+
+    formatMoney(value) {
+        const amount = Math.round((Number(value) || 0) * 100) / 100;
+
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+            maximumFractionDigits: 2,
+        }).format(amount);
+    },
+
     get canSaveAddress() {
-        return ['name', 'phone', 'line1', 'city', 'state', 'pincode'].every((field) => {
+        return ['type', 'name', 'email', 'phone', 'line1', 'city', 'district', 'state', 'pincode'].every((field) => {
             return String(this.newAddress[field] || '').trim().length > 0;
         });
     },
@@ -411,10 +473,42 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
 
     resetNewAddress() {
         this.newAddress = blankCheckoutAddress();
+        this.editingAddressId = null;
         this.addressError = '';
     },
 
+    toggleAddressForm() {
+        if (this.savingAddress) return;
+
+        this.addingAddress = !this.addingAddress;
+        this.resetNewAddress();
+    },
+
+    editAddress(id) {
+        if (this.savingAddress) return;
+
+        const address = this.addresses.find((entry) => entry.id === id);
+        if (!address) return;
+
+        this.resetNewAddress();
+        for (const field of Object.keys(this.newAddress)) {
+            this.newAddress[field] = address[field] ?? this.newAddress[field];
+        }
+        this.newAddress.country = 'India';
+        this.editingAddressId = id;
+        this.addingAddress = true;
+    },
+
+    cancelAddress() {
+        if (this.savingAddress) return;
+
+        this.addingAddress = false;
+        this.resetNewAddress();
+    },
+
     async saveAddress() {
+        if (this.savingAddress) return;
+
         if (!this.canSaveAddress) {
             this.addressError = 'Please complete all required address fields.';
             return;
@@ -428,40 +522,51 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         const payload = {
             type: this.newAddress.type || 'Home',
             name: this.newAddress.name.trim(),
+            email: this.newAddress.email.trim(),
             phone: this.newAddress.phone.trim(),
             line1: this.newAddress.line1.trim(),
-            line2: this.newAddress.line2.trim(),
+            district: this.newAddress.district.trim(),
             landmark: this.newAddress.landmark.trim(),
             city: this.newAddress.city.trim(),
             state: this.newAddress.state.trim(),
             pincode: this.newAddress.pincode.trim(),
-            country: this.newAddress.country.trim() || 'India',
+            country: 'India',
         };
 
         this.savingAddress = true;
         this.addressError = '';
 
-        if (this.addAddressUrl) {
+        const editingId = this.editingAddressId;
+        const editing = editingId !== null;
+        const url = editing
+            ? this.updateAddressUrl?.replace('__ADDRESS__', encodeURIComponent(editingId))
+            : this.addAddressUrl;
+
+        if (url) {
             try {
-                const response = await fetch(this.addAddressUrl, {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: editing ? 'PATCH' : 'POST',
                     headers: jsonHeaders(),
                     body: JSON.stringify(payload),
                 });
 
+                const data = await response.json().catch(() => ({}));
+
                 if (!response.ok) {
-                    throw new Error('Address request failed');
+                    const firstError = Object.values(data.errors || {})[0]?.[0];
+                    throw new Error(firstError || data.message || 'Unable to save address. Please try again.');
                 }
 
-                const data = await response.json();
-                this.addresses = data.addresses || [...this.addresses, data.address];
+                this.addresses = data.addresses || (editing
+                    ? this.addresses.map((address) => address.id === editingId ? data.address : address)
+                    : [...this.addresses, data.address]);
                 this.selectAddress(data.address.id);
                 this.resetNewAddress();
                 this.addingAddress = false;
-                Alpine.store('ui').notify(data.message || 'Address added', 'success');
+                Alpine.store('ui').notify(data.message || (editing ? 'Address updated' : 'Address added'), 'success');
                 return;
             } catch (error) {
-                this.addressError = 'Unable to save address. Please try again.';
+                this.addressError = error.message || 'Unable to save address. Please try again.';
                 return;
             } finally {
                 this.savingAddress = false;
@@ -469,21 +574,32 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         }
 
         const address = {
-            id: `new-${Date.now()}`,
-            default: this.addresses.length === 0,
+            ...(editing ? this.addresses.find((entry) => entry.id === editingId) : {
+                id: `new-${Date.now()}`,
+                default: this.addresses.length === 0,
+            }),
             ...payload,
         };
 
-        this.addresses.push(address);
+        if (editing) {
+            this.addresses = this.addresses.map((entry) => entry.id === editingId ? address : entry);
+        } else {
+            this.addresses.push(address);
+        }
         this.selectAddress(address.id);
         this.resetNewAddress();
         this.addressError = '';
         this.addingAddress = false;
         this.savingAddress = false;
-        Alpine.store('ui').notify('Address added', 'success');
+        Alpine.store('ui').notify(editing ? 'Address updated' : 'Address added', 'success');
     },
 
     continueToDelivery() {
+        if (this.addingAddress || this.savingAddress) {
+            this.addressError = 'Please save or cancel the address form before continuing.';
+            return;
+        }
+
         if (!this.selectedAddressRecord) {
             this.addressError = 'Please select or add a delivery address.';
             return;
@@ -502,6 +618,12 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
 
         if (!this.placeOrderUrl) {
             this.orderError = 'Unable to place order. Please refresh and try again.';
+            return;
+        }
+
+        if (this.payment === 'cod' && !this.codAvailable) {
+            this.orderError = `${this.codDescription} Please choose Online Payment.`;
+            this.step = 3;
             return;
         }
 
@@ -543,7 +665,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
             return '';
         }
 
-        return [address.name, address.line1, address.city, address.pincode]
+        return [address.name, address.line1, address.city, address.district, address.pincode]
             .filter(Boolean)
             .join(', ');
     },
@@ -554,7 +676,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         }
 
         const area = [address.line1, address.line2, address.landmark].filter(Boolean).join(', ');
-        const cityLine = [address.city, address.state, address.pincode].filter(Boolean).join(' ');
+        const cityLine = [address.city, address.district, address.state, address.pincode].filter(Boolean).join(' ');
 
         return [area, cityLine, address.country].filter(Boolean).join(' - ');
     },

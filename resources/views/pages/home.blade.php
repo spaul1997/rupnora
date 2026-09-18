@@ -67,10 +67,13 @@
                 <span class="eyebrow text-champagne-light">By Metal &amp; Stone</span>
                 <h2 class="font-display mt-2 text-3xl text-ivory sm:text-4xl">Shop by Jewellery Type</h2>
             </div>
+            @php
+                $typeIcons = ['ring', 'necklace', 'earring', 'bangle', 'diamond'];
+            @endphp
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
                 @foreach ($jewelleryTypes as $type)
                     <a href="{{ route('jewellery-type.show', $type['slug']) }}" class="group flex flex-col items-center gap-4 rounded-2xl border border-ivory/10 bg-ivory/5 p-6 text-center transition-colors hover:border-champagne-light/40 hover:bg-ivory/10">
-                        <x-ui.product-art :art="$type['art']" class="h-16 w-16 rounded-full" />
+                        <x-ui.product-art :art="$typeIcons[$loop->index % count($typeIcons)]" class="h-20 w-20 rounded-full sm:h-24 sm:w-24" icon-class="text-charcoal" stroke-width="2.2" />
                         <span class="font-display text-sm text-ivory sm:text-base">{{ $type['name'] }}</span>
                         <span class="text-xs text-ivory/60">{{ $type['tag'] }}</span>
                     </a>
@@ -116,13 +119,16 @@
                     <span class="eyebrow">Popular Picks</span>
                     <h2 class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">Shop by Subcategory</h2>
                 </div>
+                @php
+                    $subIcons = ['ring', 'necklace', 'earring', 'bangle', 'diamond', 'bracelet'];
+                @endphp
                 <div class="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4">
                     @foreach ($topSubcategories as $cat)
                         <a href="{{ route('category.show', $cat['slug']) }}" class="group flex flex-col items-center gap-3 text-center">
                             @if (! empty($cat['image']))
                                 <x-ui.optimized-image :src="$cat['image']" :alt="$cat['name']" sizes="96px" class="h-20 w-20 rounded-full border border-line object-cover transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" />
                             @else
-                                <x-ui.product-art :art="$cat['art']" class="h-20 w-20 rounded-full border border-line transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" />
+                                <x-ui.product-art :art="$subIcons[$loop->index % count($subIcons)]" class="h-20 w-20 rounded-full border border-line transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24" icon-class="text-charcoal" stroke-width="2.2" />
                             @endif
                             <span class="text-xs font-medium text-charcoal-soft sm:text-sm">{{ $cat['name'] }}</span>
                             <span class="text-[10px] text-muted">{{ $cat['count'] }} {{ \Illuminate\Support\Str::plural('Product', $cat['count']) }}</span>
@@ -143,7 +149,11 @@
             <div class="mx-auto grid max-w-xl grid-cols-2 gap-3 sm:gap-4">
                 @foreach ($recipients as $rec)
                     <a href="{{ route('recipient.show', $rec['slug']) }}" class="group relative block overflow-hidden rounded-xl border border-line bg-charcoal">
-                        <x-ui.product-art :art="$rec['art']" tone="{{ $rec['slug'] === 'for-him' ? 1 : 2 }}" class="aspect-square opacity-90 transition-transform duration-700 ease-out group-hover:scale-105" />
+                        @if (! empty($rec['image']))
+                            <x-ui.optimized-image :src="asset($rec['image'])" :alt="$rec['name']" sizes="(min-width: 640px) 400px, 50vw" class="aspect-square h-full w-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-105" />
+                        @else
+                            <x-ui.product-art :art="$rec['art']" tone="{{ $rec['slug'] === 'for-him' ? 1 : 2 }}" class="aspect-square opacity-90 transition-transform duration-700 ease-out group-hover:scale-105" />
+                        @endif
                         <div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/20 to-transparent"></div>
                         <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 sm:p-4">
                             <div class="min-w-0">
@@ -223,8 +233,8 @@
     <section class="section-pad bg-charcoal">
         <div class="container-luxe grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                <x-ui.product-art art="diamond" class="aspect-[4/5] rounded-2xl" />
-                <x-ui.product-art art="bridal" :tone="2" class="mt-8 aspect-[4/5] rounded-2xl" />
+                <x-ui.optimized-image :src="asset('images/inf1.png')" alt="Rupnora influencer styling" sizes="(min-width: 1024px) 25vw, 50vw" class="aspect-[4/5] w-full rounded-2xl object-cover" />
+                <x-ui.optimized-image :src="asset('images/inf2.png')" alt="Rupnora influencer piece" sizes="(min-width: 1024px) 25vw, 50vw" class="mt-8 aspect-[4/5] w-full rounded-2xl object-cover" />
             </div>
             <div>
                 <span class="eyebrow text-champagne-light">Rupnora Partner Program</span>

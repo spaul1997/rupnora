@@ -68,18 +68,37 @@ class StorefrontAuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_customer_can_log_in_with_equivalently_formatted_mobile_number(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '+91 98765 43210',
+            'password' => 'Secret123!',
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post(route('login.store'), [
+            'login' => '98765-43210',
+            'password' => 'Secret123!',
+        ]);
+
+        $response->assertRedirect(route('account.dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_customer_can_reset_password_using_emailed_otp(): void
     {
         Mail::fake();
         $user = User::factory()->create([
             'email' => 'customer@example.com',
+            'phone' => '+91 98765 43210',
             'password' => 'OldPassword1!',
             'role' => 'customer',
             'is_active' => true,
         ]);
 
         $this->post(route('password.email'), [
-            'login' => $user->email,
+            'login' => '9876543210',
         ])->assertRedirect(route('password.request'));
 
         $otp = null;

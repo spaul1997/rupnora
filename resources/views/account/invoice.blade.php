@@ -31,7 +31,7 @@
             <div>
                 <h2 class="font-semibold">Shipping Address</h2>
                 <p class="mt-2">{{ collect([$order->shipping_address['line1'] ?? '', $order->shipping_address['line2'] ?? ''])->filter()->join(', ') }}</p>
-                <p>{{ $order->shipping_address['city'] ?? '' }}, {{ $order->shipping_address['state'] ?? '' }} {{ $order->shipping_address['pincode'] ?? '' }}</p>
+                <p>{{ collect([$order->shipping_address['city'] ?? '', $order->shipping_address['district'] ?? '', $order->shipping_address['state'] ?? ''])->filter()->join(', ') }} {{ $order->shipping_address['pincode'] ?? '' }}</p>
                 <p>{{ $order->shipping_address['country'] ?? '' }}</p>
             </div>
         </div>

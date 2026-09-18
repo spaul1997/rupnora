@@ -11,7 +11,7 @@
             <td style="font-family:Arial,sans-serif; font-size:13px; line-height:20px; color:#4f3267;">
                 {{ $address['name'] ?? '' }}<br>
                 {{ trim(($address['line1'] ?? '').(isset($address['line2']) && $address['line2'] ? ', '.$address['line2'] : ''), ', ') }}<br>
-                {{ $address['city'] ?? '' }}, {{ $address['state'] ?? '' }} {{ $address['pincode'] ?? '' }}<br>
+                {{ collect([$address['city'] ?? '', $address['district'] ?? '', $address['state'] ?? ''])->filter()->join(', ') }} {{ $address['pincode'] ?? '' }}<br>
                 {{ $address['country'] ?? '' }}
                 @if (!empty($address['phone']))
                     <br>{{ $address['phone'] }}

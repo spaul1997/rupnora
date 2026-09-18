@@ -7,6 +7,7 @@
     'showCoupon' => true,
     'ctaLabel' => 'Proceed to Checkout',
     'ctaUrl' => null,
+    'dynamicDelivery' => false,
 ])
 
 @php
@@ -42,7 +43,7 @@
         @endif
         <div class="flex justify-between text-muted">
             <span>Shipping</span>
-            <span class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping) : 'Free' }}</span>
+            <span @if ($dynamicDelivery) x-text="shippingCost > 0 ? formatMoney(shippingCost) : 'Free'" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping) : 'Free' }}</span>
         </div>
         <div class="flex justify-between text-muted">
             <span>Tax (GST incl.)</span>
@@ -52,7 +53,7 @@
 
     <div class="mt-5 flex justify-between border-t border-line pt-5">
         <span class="font-display text-lg text-charcoal">Total</span>
-        <span class="font-display text-lg text-charcoal">₹{{ number_format($total) }}</span>
+        <span @if ($dynamicDelivery) x-text="formatMoney(orderTotal)" @endif class="font-display text-lg text-charcoal">₹{{ number_format($total) }}</span>
     </div>
 
     @if ($ctaUrl)

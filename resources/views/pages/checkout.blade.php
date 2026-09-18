@@ -10,11 +10,13 @@
         'type' => $address['type'],
         'default' => (bool) $address['default'],
         'name' => $address['name'],
+        'email' => $address['email'] ?? '',
         'phone' => $address['phone'],
         'line1' => $address['line1'],
         'line2' => $address['line2'],
         'landmark' => $address['landmark'] ?? '',
         'city' => $address['city'],
+        'district' => $address['district'] ?? '',
         'state' => $address['state'],
         'pincode' => $address['pincode'],
         'country' => $address['country'],
@@ -27,8 +29,13 @@
             addresses: {{ Illuminate\Support\Js::from($checkoutAddresses) }},
             selectedAddressId: {{ Illuminate\Support\Js::from($checkoutAddresses[0]['id'] ?? null) }},
             addAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.store')) }},
+            updateAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.update', ['address' => '__ADDRESS__'])) }},
             placeOrderUrl: {{ Illuminate\Support\Js::from(route('checkout.order.store')) }},
+            expressDeliveryCharge: {{ Illuminate\Support\Js::from($expressDeliveryCharge) }},
+            codOrderLimit: {{ Illuminate\Support\Js::from($codOrderLimit) }},
+            baseTotal: {{ Illuminate\Support\Js::from($sellingTotal + $tax) }},
         })"
+        x-effect="if (payment === 'cod' && !codAvailable) payment = 'online'"
         class="container-luxe py-8"
     >
         {{-- Stepper --}}
@@ -59,52 +66,58 @@
                     <h2 class="font-display text-xl text-charcoal">Select Delivery Address</h2>
                     <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <template x-for="address in addresses" :key="address.id">
-                            <button
-                                type="button"
-                                @click="selectAddress(address.id)"
+                            <div
                                 class="card-luxe relative p-5 text-left transition-colors"
                                 :class="selectedAddress === address.id ? 'border-champagne-dark ring-1 ring-champagne-dark' : ''"
                             >
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="flex items-center gap-2">
+                                <button type="button" @click="selectAddress(address.id)" :aria-pressed="selectedAddress === address.id" class="block w-full text-left">
+                                    <span class="flex flex-wrap items-center gap-2 pr-12">
                                         <span class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2" :class="selectedAddress === address.id ? 'border-champagne-dark' : 'border-line'">
                                             <span x-show="selectedAddress === address.id" class="h-2 w-2 rounded-full bg-champagne-dark"></span>
                                         </span>
                                         <span class="badge-luxe bg-beige text-charcoal-soft" x-text="address.type"></span>
                                         <span x-show="address.default" x-cloak class="badge-luxe bg-champagne text-charcoal">Default</span>
-                                    </div>
-                                </div>
-                                <p class="mt-3 text-sm font-semibold text-charcoal" x-text="address.name"></p>
-                                <p class="mt-1 text-sm leading-relaxed text-muted" x-text="fullAddress(address)"></p>
-                                <p class="mt-2 text-sm text-charcoal" x-text="address.phone"></p>
-                            </button>
+                                    </span>
+                                    <span class="mt-3 block text-sm font-semibold text-charcoal" x-text="address.name"></span>
+                                    <span class="mt-1 block text-sm leading-relaxed text-muted" x-text="fullAddress(address)"></span>
+                                    <span class="mt-2 block text-sm text-charcoal" x-text="address.phone"></span>
+                                </button>
+                                <button type="button" @click="editAddress(address.id)" :disabled="savingAddress" :aria-label="'Edit address for ' + address.name" class="absolute right-5 top-5 text-sm font-medium text-champagne-dark hover:underline disabled:opacity-50">Edit</button>
+                            </div>
                         </template>
                     </div>
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <button type="button" @click="addingAddress = !addingAddress; addressError = ''" class="text-left text-sm font-medium text-champagne-dark hover:underline" x-text="addingAddress ? 'Cancel New Address' : '+ Add New Address'">+ Add New Address</button>
-                        <button @click="continueToDelivery()" :disabled="!selectedAddressRecord" class="btn-primary w-full sm:ml-auto sm:w-auto">Continue to Delivery</button>
+                        <button type="button" @click="toggleAddressForm()" :disabled="savingAddress" class="text-left text-sm font-medium text-champagne-dark hover:underline disabled:opacity-50" x-text="addingAddress ? (editingAddressId !== null ? 'Cancel Edit Address' : 'Cancel New Address') : '+ Add New Address'">+ Add New Address</button>
+                        <button @click="continueToDelivery()" :disabled="!selectedAddressRecord || addingAddress || savingAddress" class="btn-primary w-full sm:ml-auto sm:w-auto">Continue to Delivery</button>
                     </div>
                     <form @submit.prevent="saveAddress()" x-show="addingAddress" x-collapse x-cloak class="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line p-5 sm:grid-cols-2">
-                        <select x-model="newAddress.type" class="input-luxe">
+                        <h3 class="text-sm font-semibold text-charcoal sm:col-span-2" x-text="editingAddressId !== null ? 'Edit Address' : 'Add New Address'"></h3>
+                        <select x-model="newAddress.type" required aria-label="Address Type" class="input-luxe">
                             <option>Home</option>
                             <option>Office</option>
                             <option>Other</option>
                         </select>
-                        <input type="text" x-model.trim="newAddress.name" placeholder="Full Name" class="input-luxe">
-                        <input type="tel" x-model.trim="newAddress.phone" placeholder="Mobile Number" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.line1" placeholder="Address Line 1" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.line2" placeholder="Address Line 2" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.landmark" placeholder="Landmark" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.city" placeholder="City" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.state" placeholder="State" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.pincode" maxlength="6" placeholder="PIN Code" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.country" placeholder="Country" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.name" required maxlength="100" autocomplete="name" placeholder="Full Name *" class="input-luxe">
+                        <input type="email" x-model.trim="newAddress.email" required maxlength="254" autocomplete="email" placeholder="Email ID *" class="input-luxe">
+                        <input type="tel" x-model.trim="newAddress.phone" required maxlength="30" autocomplete="tel" placeholder="Mobile Number *" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.line1" required maxlength="180" autocomplete="address-line1" placeholder="Address *" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.district" required maxlength="100" autocomplete="address-level2" placeholder="District *" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.landmark" maxlength="120" placeholder="Landmark (optional)" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.city" required maxlength="100" autocomplete="address-level3" placeholder="City *" class="input-luxe">
+                        <select x-model="newAddress.state" required autocomplete="address-level1" aria-label="State" class="input-luxe">
+                            <option value="" disabled>Select State *</option>
+                            @foreach (config('checkout.states') as $state)
+                                <option value="{{ $state }}">{{ $state }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" x-model.trim="newAddress.pincode" required maxlength="6" pattern="[1-9][0-9]{5}" inputmode="numeric" autocomplete="postal-code" placeholder="PIN Code *" class="input-luxe">
+                        <input type="hidden" name="country" value="India">
                         <div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:items-center">
                             <button type="submit" class="btn-primary w-full sm:w-auto" :disabled="!canSaveAddress || savingAddress">
-                                <span x-show="!savingAddress">Save Address</span>
+                                <span x-show="!savingAddress" x-text="editingAddressId !== null ? 'Update Address' : 'Save Address'">Save Address</span>
                                 <span x-show="savingAddress" x-cloak>Saving...</span>
                             </button>
-                            <button type="button" @click="addingAddress = false; resetNewAddress()" class="btn-secondary w-full sm:w-auto">Cancel</button>
+                            <button type="button" @click="cancelAddress()" :disabled="savingAddress" class="btn-secondary w-full sm:w-auto">Cancel</button>
                         </div>
                     </form>
                     <p x-show="addressError" x-cloak class="mt-3 text-sm text-error" x-text="addressError"></p>
@@ -129,7 +142,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium text-charcoal">Express Delivery</span>
-                                    <span class="text-sm font-semibold text-charcoal">₹199</span>
+                                    <span class="text-sm font-semibold text-charcoal" x-text="expressDeliveryCharge > 0 ? formatMoney(expressDeliveryCharge) : 'Free'">{{ $expressDeliveryCharge > 0 ? '₹'.number_format($expressDeliveryCharge, 2) : 'Free' }}</span>
                                 </div>
                                 <p class="mt-1 text-xs text-muted">Arrives in 2&ndash;3 business days, fully insured.</p>
                             </div>
@@ -146,25 +159,17 @@
                     <h2 class="font-display text-xl text-charcoal">Payment Method</h2>
                     <div class="mt-5 space-y-3">
                         @foreach ([
-                            ['key' => 'upi', 'label' => 'UPI', 'desc' => 'Pay via Google Pay, PhonePe, Paytm & more'],
-                            ['key' => 'card', 'label' => 'Credit / Debit Card', 'desc' => 'Visa, Mastercard, RuPay accepted'],
-                            ['key' => 'netbanking', 'label' => 'Net Banking', 'desc' => 'All major Indian banks supported'],
-                            ['key' => 'wallet', 'label' => 'Wallet', 'desc' => 'Paytm, Amazon Pay, Mobikwik'],
-                            ['key' => 'cod', 'label' => 'Cash on Delivery', 'desc' => 'Available on orders below ₹1,00,000'],
+                            ['key' => 'online', 'label' => 'Online Payment', 'desc' => 'Pay online.'],
+                            ['key' => 'cod', 'label' => 'Cash on Delivery', 'desc' => $codOrderLimit > 0 ? 'Available on orders below ₹'.number_format($codOrderLimit, $codOrderLimit == floor($codOrderLimit) ? 0 : 2) : 'Cash on Delivery is currently unavailable.'],
                         ] as $method)
                             <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors" :class="payment === '{{ $method['key'] }}' ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line'">
-                                <input type="radio" x-model="payment" value="{{ $method['key'] }}" class="mt-1 h-4 w-4 text-champagne-dark focus:ring-champagne-dark/40">
+                                <input type="radio" x-model="payment" value="{{ $method['key'] }}" @if ($method['key'] === 'cod') :disabled="!codAvailable" @endif class="mt-1 h-4 w-4 text-champagne-dark focus:ring-champagne-dark/40">
                                 <div>
                                     <span class="text-sm font-medium text-charcoal">{{ $method['label'] }}</span>
-                                    <p class="mt-1 text-xs text-muted">{{ $method['desc'] }}</p>
+                                    <p @if ($method['key'] === 'cod') x-text="codDescription" @endif class="mt-1 text-xs text-muted">{{ $method['desc'] }}</p>
                                 </div>
                             </label>
                         @endforeach
-                    </div>
-                    <div x-show="payment === 'card'" x-cloak x-collapse class="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line p-5 sm:grid-cols-2">
-                        <input type="text" placeholder="Card Number" class="input-luxe sm:col-span-2">
-                        <input type="text" placeholder="MM / YY" class="input-luxe">
-                        <input type="text" placeholder="CVV" class="input-luxe">
                     </div>
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 2" class="btn-secondary">Back</button>
@@ -183,11 +188,11 @@
                         </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Delivery Option</p>
-                            <p class="mt-1.5 text-sm text-charcoal" x-text="delivery === 'standard' ? 'Standard Delivery (Free, 5–7 days)' : 'Express Delivery (₹199, 2–3 days)'"></p>
+                            <p class="mt-1.5 text-sm text-charcoal" x-text="deliveryDescription"></p>
                         </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Payment Method</p>
-                            <p class="mt-1.5 text-sm capitalize text-charcoal" x-text="payment === 'cod' ? 'Cash on Delivery' : payment.toUpperCase()"></p>
+                            <p class="mt-1.5 text-sm text-charcoal" x-text="payment === 'cod' ? 'Cash on Delivery' : 'Online Payment'"></p>
                         </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Items</p>
@@ -222,7 +227,7 @@
 
             <div>
                 <div class="lg:sticky lg:top-28">
-                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :shipping="0" :tax="$tax" :showCoupon="false" ctaLabel="" />
+                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :shipping="0" :tax="$tax" :showCoupon="false" :dynamicDelivery="true" ctaLabel="" />
                 </div>
             </div>
         </div>

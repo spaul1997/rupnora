@@ -53,8 +53,8 @@ class Catalog
     public static function recipients(): array
     {
         return [
-            ['slug' => 'for-her', 'name' => 'For Her', 'art' => 'woman', 'blurb' => 'Rings, necklaces & everyday elegance'],
-            ['slug' => 'for-him', 'name' => 'For Him', 'art' => 'man', 'blurb' => 'Chains, bands & bold statements'],
+            ['slug' => 'for-her', 'name' => 'For Her', 'art' => 'woman', 'image' => 'images/her.png', 'blurb' => 'Rings, necklaces & everyday elegance'],
+            ['slug' => 'for-him', 'name' => 'For Him', 'art' => 'man', 'image' => 'images/him.png', 'blurb' => 'Chains, bands & bold statements'],
         ];
     }
 

@@ -3,8 +3,8 @@
         <div class="grid overflow-hidden rounded-3xl border border-line bg-paper shadow-card lg:grid-cols-[0.9fr_1.1fr]">
         <div class="relative hidden min-h-[480px] overflow-hidden bg-gradient-to-br from-champagne-light/50 via-ivory to-beige lg:block">
             <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 22px 22px; color: var(--color-charcoal);"></div>
-            <div class="absolute inset-0 opacity-60">
-                <x-ui.product-art art="diamond" class="aspect-auto h-full" />
+            <div class="absolute inset-0">
+                <x-ui.optimized-image :src="asset('images/register.png')" alt="Rupnora" sizes="50vw" class="h-full w-full object-cover" />
             </div>
             <div class="relative flex h-full flex-col justify-end p-8 xl:p-10">
                 <span class="eyebrow">Join Rupnora</span>

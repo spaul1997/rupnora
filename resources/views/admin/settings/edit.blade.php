@@ -3,7 +3,7 @@
 @section('title', 'Website Settings')
 
 @section('content')
-    <x-admin.page-header title="Website Settings" description="Manage contact details shown on the storefront." />
+    <x-admin.page-header title="Website Settings" description="Manage storefront contact details and delivery pricing." />
 
     <div class="max-w-3xl">
         <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6">
@@ -24,6 +24,12 @@
                 <x-admin.form.textarea label="Address" name="address" :value="$settings->address" :rows="3" />
                 <x-admin.form.input label="Business Hours" name="business_hours" :value="$settings->business_hours" />
                 <x-admin.form.input label="Google Map URL" name="google_map_url" :value="$settings->google_map_url" />
+            </div>
+
+            <div class="admin-card space-y-5 p-6">
+                <h3 class="text-sm font-semibold text-gray-900">Delivery</h3>
+                <x-admin.form.input label="Express Delivery Price (INR)" name="express_delivery_charge" type="number" :value="$settings->express_delivery_charge" :required="true" min="0" max="99999999.99" step="0.01" help="Charged when customers choose Express Delivery. Enter 0 for free express delivery." />
+                <x-admin.form.input label="Cash on Delivery Order Limit (INR)" name="cod_order_limit" type="number" :value="$settings->cod_order_limit" :required="true" min="0" max="99999999.99" step="0.01" help="Cash on Delivery is available when the final order total, including tax and delivery, is below this amount. Enter 0 to disable Cash on Delivery." />
             </div>
 
             <div class="admin-card space-y-5 p-6">

@@ -5,7 +5,7 @@
     $addressLines = [
         $address['name'] ?? '',
         collect([$address['line1'] ?? '', $address['line2'] ?? '', $address['landmark'] ?? ''])->filter()->join(', '),
-        collect([$address['city'] ?? '', $address['state'] ?? '', $address['pincode'] ?? ''])->filter()->join(', '),
+        collect([$address['city'] ?? '', $address['district'] ?? '', $address['state'] ?? '', $address['pincode'] ?? ''])->filter()->join(', '),
         $address['phone'] ?? '',
     ];
     $paymentStatusClass = ($order['payment_status'] ?? '') === 'Paid' ? 'text-success' : 'text-champagne-dark';

@@ -5,8 +5,11 @@ namespace App\Support;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
+use App\Models\WebsiteSetting;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -14,64 +17,26 @@ class CheckoutOrders
 {
     private const ORDERS_KEY = 'checkout.orders';
 
+    private const GUEST_ORDER_IDS_KEY = 'checkout.guest_order_ids';
+
     private const LATEST_ORDER_KEY = 'checkout.latest_order_id';
 
     public static function create(array $data): array
     {
-        if (auth()->user()?->role === 'customer') {
-            return self::createCustomerOrder($data);
-        }
-
-        $items = ShoppingCart::items();
-        $sellingTotal = collect($items)->sum(fn (array $item) => $item['product']['price'] * $item['qty']);
-        $mrpTotal = collect($items)->sum(fn (array $item) => max($item['product']['mrp'], $item['product']['price']) * $item['qty']);
-        $discount = max(0, $mrpTotal - $sellingTotal);
-        $delivery = $data['delivery'] ?? 'standard';
-        $shipping = $delivery === 'express' ? 199 : 0;
-        $tax = round($sellingTotal * 0.03);
-        $address = self::address((string) $data['address_id']);
-        $payment = self::paymentMethod($data['payment'] ?? 'upi');
-        $orderId = self::nextOrderId();
-
-        $order = [
-            'id' => $orderId,
-            'customer_id' => null,
-            'date' => now()->format('d M Y'),
-            'status' => 'Processing',
-            'payment_status' => ($data['payment'] ?? 'upi') === 'cod' ? 'Pending' : 'Paid',
-            'payment_method' => $payment,
-            'delivery_option' => $delivery === 'express' ? 'Express Delivery' : 'Standard Delivery',
-            'expected_delivery' => now()->addDays($delivery === 'express' ? 3 : 7)->format('d M Y'),
-            'items' => $items,
-            'subtotal' => $mrpTotal,
-            'discount' => $discount,
-            'shipping' => $shipping,
-            'tax' => $tax,
-            'total' => $mrpTotal - $discount + $shipping + $tax,
-            'address' => $address,
-            'timeline' => [
-                'Order Placed' => now()->format('d M Y'),
-                'Confirmed' => ($data['payment'] ?? 'upi') === 'cod' ? null : now()->format('d M Y'),
-                'Packed' => null,
-                'Shipped' => null,
-                'Out for Delivery' => null,
-                'Delivered' => null,
-            ],
-        ];
-
-        $orders = self::sessionOrders();
-        $orders[$orderId] = $order;
-
-        session()->put(self::ORDERS_KEY, array_slice($orders, -10, 10, true));
-        session()->put(self::LATEST_ORDER_KEY, $orderId);
-
-        return $order;
+        return self::createCustomerOrder($data);
     }
 
     public static function find(string $id): ?array
     {
         if (auth()->user()?->role === 'customer') {
             $order = self::customerQuery()->where('order_number', $id)->first();
+
+            return $order ? self::mapOrder($order) : null;
+        }
+
+        if (in_array($id, session(self::GUEST_ORDER_IDS_KEY, []), true)) {
+            $order = Order::query()->where('order_number', $id)
+                ->with(['items.product.images', 'statusHistories'])->first();
 
             return $order ? self::mapOrder($order) : null;
         }
@@ -94,12 +59,18 @@ class CheckoutOrders
             return self::customerQuery()->latest()->get()->map(fn (Order $order) => self::mapOrder($order))->all();
         }
 
-        return collect(array_values(self::sessionOrders()))
+        $orders = Order::query()->whereIn('order_number', session(self::GUEST_ORDER_IDS_KEY, []))
+            ->with(['items.product.images', 'statusHistories'])->latest('id')->get()
+            ->map(fn (Order $order) => self::mapOrder($order))->all();
+
+        $legacyOrders = collect(array_values(self::sessionOrders()))
             ->filter(fn (array $order) => array_key_exists('customer_id', $order) && $order['customer_id'] === null)
             ->reverse()
             ->unique('id')
             ->values()
             ->all();
+
+        return [...$orders, ...$legacyOrders];
     }
 
     private static function sessionOrders(): array
@@ -124,9 +95,15 @@ class CheckoutOrders
     {
         $items = ShoppingCart::items();
         $address = self::address((string) $data['address_id']);
-        $shipping = $data['delivery'] === 'express' ? 199 : 0;
+        $shipping = $data['delivery'] === 'express' ? (float) WebsiteSetting::current()->express_delivery_charge : 0;
+        $guestCheckout = auth()->user()?->role !== 'customer';
 
-        $order = DB::transaction(function () use ($data, $items, $address, $shipping) {
+        if ($guestCheckout) {
+            $address['email'] = mb_strtolower(trim($address['email'] ?? ''));
+            $address['phone'] = trim($address['phone'] ?? '');
+        }
+
+        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $guestCheckout) {
             $products = Product::query()->whereIn('id', array_column(array_column($items, 'product'), 'id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $quantities = collect($items)->groupBy('product.id')->map(fn ($rows) => $rows->sum('qty'));
@@ -149,12 +126,28 @@ class CheckoutOrders
             $sellingTotal = collect($items)->sum(fn ($item) => $item['product']['price'] * $item['qty']);
             $mrpTotal = collect($items)->sum(fn ($item) => max($item['product']['mrp'], $item['product']['price']) * $item['qty']);
             $tax = round($sellingTotal * 0.03);
-            $customer = auth()->user();
+            $customer = $guestCheckout ? self::resolveCustomer($address) : auth()->user();
+
+            if (! $customer->is_active) {
+                throw ValidationException::withMessages(['email' => 'Please use an active customer account.']);
+            }
+
+            if ($guestCheckout) {
+                $savedAddress = $customer->addresses()->firstOrCreate(
+                    collect($address)->only([
+                        'type', 'name', 'email', 'phone', 'line1', 'line2', 'landmark',
+                        'city', 'district', 'state', 'pincode', 'country',
+                    ])->all(),
+                    ['is_default' => ! $customer->addresses()->exists()],
+                );
+                $address = $savedAddress->toStorefront();
+            }
+
             $order = $customer->orders()->create([
                 'order_number' => 'ORD-'.now()->format('Y').'-'.Str::upper(Str::random(12)),
-                'customer_name' => $customer->name,
-                'customer_email' => $customer->email,
-                'customer_phone' => $customer->phone,
+                'customer_name' => $guestCheckout ? $address['name'] : $customer->name,
+                'customer_email' => $guestCheckout ? mb_strtolower(trim($address['email'])) : $customer->email,
+                'customer_phone' => $guestCheckout ? $address['phone'] : $customer->phone,
                 'status' => 'processing',
                 'payment_status' => $data['payment'] === 'cod' ? 'cod' : 'pending',
                 'payment_method' => self::paymentMethod($data['payment']),
@@ -187,7 +180,13 @@ class CheckoutOrders
             $order->statusHistories()->create(['status' => 'processing', 'remark' => 'Order placed by customer.', 'updated_by' => $customer->id]);
 
             return $order;
-        });
+        }, 3);
+
+        if ($guestCheckout) {
+            $orderIds = session(self::GUEST_ORDER_IDS_KEY, []);
+            $orderIds[] = $order->order_number;
+            session()->put(self::GUEST_ORDER_IDS_KEY, array_slice(array_unique($orderIds), -10));
+        }
 
         session()->put(self::LATEST_ORDER_KEY, $order->order_number);
 
@@ -244,20 +243,56 @@ class CheckoutOrders
     private static function paymentMethod(string $payment): string
     {
         return [
-            'upi' => 'UPI',
-            'card' => 'Credit / Debit Card',
-            'netbanking' => 'Net Banking',
-            'wallet' => 'Wallet',
-            'cod' => 'Cash On Delivery',
-        ][$payment] ?? 'UPI';
+            'online' => 'Online Payment',
+            'cod' => 'Cash on Delivery',
+        ][$payment] ?? 'Online Payment';
     }
 
-    private static function nextOrderId(): string
+    private static function resolveCustomer(array $address): User
     {
-        do {
-            $orderId = 'ORD-'.now()->format('Y').'-'.random_int(10000, 99999);
-        } while (self::find($orderId));
+        $email = mb_strtolower(trim($address['email'] ?? ''));
+        $phone = trim($address['phone'] ?? '');
+        Validator::make(['email' => $email, 'phone' => $phone], [
+            'email' => ['required', 'email', 'max:254'],
+            'phone' => ['required', 'string', 'max:30'],
+        ])->validate();
 
-        return $orderId;
+        $phoneDigits = preg_replace('/\D+/', '', $phone);
+        $phoneVariants = [$phoneDigits];
+
+        if (strlen($phoneDigits) === 10) {
+            $phoneVariants[] = '91'.$phoneDigits;
+        } elseif (strlen($phoneDigits) === 12 && str_starts_with($phoneDigits, '91')) {
+            $phoneVariants[] = substr($phoneDigits, 2);
+        }
+
+        $customers = User::query()->where(function (Builder $query) use ($email, $phone, $phoneDigits, $phoneVariants) {
+            $query->whereRaw('LOWER(email) = ?', [$email])->orWhere('phone', $phone);
+
+            if ($phoneDigits !== '') {
+                $normalizedPhone = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+', ''), '-', ''), '(', ''), ')', ''), '.', '')";
+                $query->orWhereIn(DB::raw($normalizedPhone), $phoneVariants);
+            }
+        })->orderBy('id')->lockForUpdate()->get();
+
+        if ($customers->count() > 1) {
+            throw ValidationException::withMessages([
+                'email' => 'This email and mobile number match different accounts. Please use contact details for one account.',
+            ]);
+        }
+
+        $customer = $customers->first() ?? User::firstOrCreate(['email' => $email], [
+            'name' => trim($address['name']),
+            'phone' => $phone,
+            'password' => $phone,
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+
+        if ($customer->role !== 'customer' || ! $customer->is_active) {
+            throw ValidationException::withMessages(['email' => 'Please use contact details for an active customer account.']);
+        }
+
+        return $customer;
     }
 }

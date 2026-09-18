@@ -8,6 +8,7 @@ use App\Mail\RegisterMail;
 use App\Models\User;
 use App\Models\WebsiteSetting;
 use App\Support\ShoppingCart;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -44,14 +45,16 @@ class AuthPageController extends Controller
             $identifier = mb_strtolower($identifier);
         }
 
-        $credentials = [
-            $field => $identifier,
-            'password' => $data['password'],
-            'role' => 'customer',
-            'is_active' => true,
-        ];
+        $authenticated = $field === 'email'
+            ? Auth::attempt([
+                'email' => $identifier,
+                'password' => $data['password'],
+                'role' => 'customer',
+                'is_active' => true,
+            ], $request->boolean('remember'))
+            : $this->attemptPhoneLogin($identifier, $data['password'], $request->boolean('remember'));
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! $authenticated) {
             return back()
                 ->withErrors(['login' => 'These credentials do not match an active customer account.'])
                 ->onlyInput('login');
@@ -148,11 +151,16 @@ class AuthPageController extends Controller
         $identifier = trim($data['login']);
         $field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
 
-        $user = User::query()
-            ->customers()
-            ->where('is_active', true)
-            ->where($field, $field === 'email' ? mb_strtolower($identifier) : $identifier)
-            ->first();
+        if ($field === 'email') {
+            $user = User::query()
+                ->customers()
+                ->where('is_active', true)
+                ->where('email', mb_strtolower($identifier))
+                ->first();
+        } else {
+            $customers = $this->activeCustomersByPhone($identifier);
+            $user = $customers->count() === 1 ? $customers->first() : null;
+        }
 
         if (! $user) {
             return back()
@@ -259,6 +267,49 @@ class AuthPageController extends Controller
     private function isStorefrontCustomer(): bool
     {
         return Auth::check() && Auth::user()->role === 'customer';
+    }
+
+    private function attemptPhoneLogin(string $phone, string $password, bool $remember): bool
+    {
+        $customer = $this->activeCustomersByPhone($phone)
+            ->first(fn (User $candidate) => Hash::check($password, $candidate->password));
+
+        if (! $customer) {
+            return false;
+        }
+
+        Auth::login($customer, $remember);
+
+        return true;
+    }
+
+    private function activeCustomersByPhone(string $phone): \Illuminate\Database\Eloquent\Collection
+    {
+        $phone = trim($phone);
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        if ($digits === '') {
+            return User::newCollection();
+        }
+
+        $variants = [$digits];
+
+        if (strlen($digits) === 10) {
+            $variants[] = '91'.$digits;
+        } elseif (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+            $variants[] = substr($digits, 2);
+        }
+
+        $normalizedPhone = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+', ''), '-', ''), '(', ''), ')', ''), '.', '')";
+
+        return User::query()
+            ->customers()
+            ->where('is_active', true)
+            ->where(function (Builder $query) use ($phone, $variants, $normalizedPhone) {
+                $query->where('phone', $phone)->orWhereIn(DB::raw($normalizedPhone), array_unique($variants));
+            })
+            ->orderBy('id')
+            ->get();
     }
 
     private function syncCustomerSession(Request $request, User $user): void

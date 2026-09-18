@@ -210,8 +210,11 @@
                 </div>
 
                 <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-                    <button @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" class="btn-primary flex-1">Add to Cart</button>
-                    <a href="{{ route('checkout') }}" class="btn-secondary flex-1">Buy Now</a>
+                    <button type="button" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow" class="btn-primary flex-1">Add to Cart</button>
+                    <button type="button" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow" class="btn-secondary flex-1">
+                        <span x-show="!$store.ui.buyingNow">Buy Now</span>
+                        <span x-show="$store.ui.buyingNow" x-cloak>Processing...</span>
+                    </button>
                 </div>
 
                 {{-- Trust badges --}}
@@ -533,8 +536,11 @@
         {{-- Mobile sticky CTA --}}
         <div class="h-20 lg:hidden" aria-hidden="true"></div>
         <div class="fixed inset-x-0 bottom-16 z-30 flex gap-3 border-t border-line bg-paper p-3 lg:hidden" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
-            <button @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" class="btn-primary flex-1 !py-3">Add to Cart</button>
-            <a href="{{ route('checkout') }}" class="btn-secondary flex-1 !py-3 text-center">Buy Now</a>
+            <button type="button" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow" class="btn-primary flex-1 !py-3">Add to Cart</button>
+            <button type="button" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow" class="btn-secondary flex-1 !py-3 text-center">
+                <span x-show="!$store.ui.buyingNow">Buy Now</span>
+                <span x-show="$store.ui.buyingNow" x-cloak>Processing...</span>
+            </button>
         </div>
     </div>
 </x-layouts.app>
