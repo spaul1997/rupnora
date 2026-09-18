@@ -69,12 +69,12 @@ class ProductPromotionExpiryTest extends TestCase
         $this->travelTo(Carbon::parse('2026-09-17 12:00:00', 'UTC'));
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $data = $this->adminData();
-        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Offer Price Expiry Date')->assertSee('Discount Expiry Date');
+        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Offer Expiry Date')->assertDontSee('Discount Expiry Date');
         $this->post(route('admin.products.store'), $data)->assertSessionHasNoErrors();
         $product = Product::where('sku', $data['sku'])->firstOrFail();
         $this->assertSame('2026-09-17', $product->offer_expiry_date->toDateString());
         $this->assertSame('2026-09-18', $product->discount_expiry_date->toDateString());
-        $this->get(route('admin.products.edit', $product))->assertOk()->assertSee('value="2026-09-17"', escape: false)->assertSee('value="2026-09-18"', escape: false);
+        $this->get(route('admin.products.edit', $product))->assertOk()->assertSee('value="2026-09-17"', escape: false)->assertDontSee('value="2026-09-18"', escape: false);
 
         $data['offer_expiry_date'] = '2026-09-16';
         $data['discount_expiry_date'] = '2026-09-16';
@@ -99,6 +99,9 @@ class ProductPromotionExpiryTest extends TestCase
         $data['discount_expiry_date'] = 'not-a-date';
         $this->actingAs($admin)->post(route('admin.products.store'), $data)->assertSessionHasErrors(['offer_expiry_date', 'discount_expiry_date']);
         $this->assertDatabaseMissing('products', ['sku' => $data['sku']]);
+        $this->get(route('admin.products.create'))
+            ->assertOk()
+            ->assertSee('The product was not saved. Please fix the following:');
         $this->post(route('admin.products.store'), $valid)->assertSessionHasNoErrors();
         $product = Product::where('sku', $data['sku'])->firstOrFail();
         $this->put(route('admin.products.update', $product), $data)->assertSessionHasErrors(['offer_expiry_date', 'discount_expiry_date']);

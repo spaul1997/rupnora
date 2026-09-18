@@ -11,6 +11,7 @@
         enctype="multipart/form-data"
         x-data="{ submitting: false }"
         x-on:submit="if (submitting) { $event.preventDefault(); return; } submitting = true; if (window.CKEDITOR) { Object.values(CKEDITOR.instances).forEach((editor) => editor.updateElement()) }"
+        x-on:invalid.capture="submitting = false"
     >
         @include('admin.products._form')
     </form>

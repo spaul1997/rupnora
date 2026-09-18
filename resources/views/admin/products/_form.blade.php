@@ -31,6 +31,23 @@
     }"
     class="grid grid-cols-1 gap-6 lg:grid-cols-3"
 >
+    @if ($errors->any())
+        <div
+            x-ref="validationSummary"
+            x-init="$nextTick(() => { $el.focus(); $el.scrollIntoView({ behavior: 'smooth', block: 'start' }) })"
+            tabindex="-1"
+            role="alert"
+            class="rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error outline-none lg:col-span-3"
+        >
+            <p class="font-semibold">The product was not saved. Please fix the following:</p>
+            <ul class="mt-2 list-inside list-disc space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="space-y-6 lg:col-span-2">
 
         {{-- Basic Information --}}
@@ -116,7 +133,6 @@
                         <svg class="ml-auto h-4 w-4 shrink-0 text-gray-400 transition-transform" :class="collectionOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
                     </button>
 
-                    <input type="checkbox" class="sr-only" tabindex="-1" :checked="selectedCollections.length > 0" required>
                     <template x-for="slug in selectedCollections" :key="'collection-input-' + slug">
                         <input type="hidden" name="collection[]" :value="slug">
                     </template>
@@ -165,9 +181,6 @@
                     <x-admin.form.input label="Colour" name="metal_colour" :value="$product->metal_colour ?? null" />
                     <x-admin.form.input label="Stone Type" name="gemstone_type" :value="$product->gemstone_type ?? null" />
                     <x-admin.form.input label="Stone Colour" name="gemstone_colour" :value="$product->gemstone_colour ?? null" />
-                    @if (isset($product))
-                        <x-admin.form.select label="Occasion" name="occasion" :value="$product->occasion ?? null" :options="$occasionOptions" placeholder="Select occasion" />
-                    @endif
                     <x-admin.form.select label="Gender" name="gender" :value="$product->gender ?? null" :options="$genderOptions" placeholder="Select gender" />
                     <x-admin.form.input label="Gross Weight (g)" name="gross_weight" type="number" step="0.001" :value="$product->gross_weight ?? null" />
                     <div class="product-jewellery-toggles">
@@ -194,31 +207,26 @@
 
         {{-- Pricing --}}
         <div class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
-            <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
-            <p class="text-xs text-gray-500">Offers and discounts apply through the selected date ({{ config('app.timezone') }}). Leave an expiry date blank for no expiry.</p>
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
+                    <p class="text-xs text-gray-500">Offer expiry uses {{ config('app.timezone') }}. Leave blank for no expiry.</p>
+                </div>
+                @if (isset($product))
+                    <p class="rounded-lg bg-ivory-soft px-3 py-1.5 text-xs text-gray-600">Final Price: <span class="font-semibold text-gray-900">₹{{ number_format($product->final_price, 2) }}</span></p>
+                @endif
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <x-admin.form.input label="MRP (₹)" name="mrp" type="number" step="0.01" required :value="$product->mrp ?? null" />
                 <x-admin.form.input label="Selling Price (₹)" name="selling_price" type="number" step="0.01" required :value="$product->selling_price ?? null" />
-                <div class="space-y-3">
-                    <x-admin.form.input label="Offer Price (₹)" name="offer_price" type="number" step="0.01" :value="$product->offer_price ?? null" />
-                    <x-admin.form.input label="Offer Price Expiry Date" name="offer_expiry_date" type="date" :value="isset($product) ? $product->offer_expiry_date?->format('Y-m-d') : null" />
+                <x-admin.form.input label="Offer Price (₹)" name="offer_price" type="number" step="0.01" :value="$product->offer_price ?? null" />
+                <div>
+                    <x-admin.form.input label="Offer Expiry Date" name="offer_expiry_date" type="date" :value="isset($product) ? $product->offer_expiry_date?->format('Y-m-d') : null" />
                     @if (isset($product) && $product->offer_price !== null && $product->offerHasExpired())
-                        <p class="text-xs text-error">Offer expired. The selling price is used.</p>
-                    @endif
-                </div>
-                <x-admin.form.input label="Making Charge (₹)" name="making_charge" type="number" step="0.01" :value="$product->making_charge ?? 0" />
-                <x-admin.form.select label="Discount Type" name="discount_type" :value="$product->discount_type ?? null" :options="['percentage' => 'Percentage', 'fixed' => 'Fixed Amount']" placeholder="No Discount" />
-                <div class="space-y-3">
-                    <x-admin.form.input label="Discount Value" name="discount_value" type="number" step="0.01" :value="$product->discount_value ?? null" />
-                    <x-admin.form.input label="Discount Expiry Date" name="discount_expiry_date" type="date" :value="isset($product) ? $product->discount_expiry_date?->format('Y-m-d') : null" />
-                    @if (isset($product) && $product->discount_type && $product->discount_value > 0 && $product->discountHasExpired())
-                        <p class="text-xs text-error">Discount expired. It is no longer applied.</p>
+                        <p class="mt-1 text-xs text-error">Offer expired; selling price applies.</p>
                     @endif
                 </div>
                 <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 0" />
-                @if (isset($product))
-                    <p class="self-end rounded-lg bg-ivory-soft px-3 py-2 text-xs text-gray-600">Current Final Price: <span class="font-semibold text-gray-900">₹{{ number_format($product->final_price, 2) }}</span></p>
-                @endif
             </div>
         </div>
 
@@ -288,6 +296,12 @@
                 <label class="admin-label">Upload New Images</label>
                 <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
                 <p class="mt-1 text-xs text-gray-400">JPG, PNG, WebP or AVIF only. Max 5MB each. Uploads are optimized to responsive AVIF/WebP files.</p>
+                @error('images')
+                    <p class="mt-1 text-xs text-error">{{ $message }}</p>
+                @enderror
+                @error('images.*')
+                    <p class="mt-1 text-xs text-error">{{ $message }}</p>
+                @enderror
             </div>
         </div>
 

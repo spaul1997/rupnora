@@ -1,5 +1,92 @@
 <x-layouts.app :title="$title ?? null">
 
+    {{-- Home offer popup: stays dismissed for 24 hours in this browser. --}}
+    <div
+        x-data="{
+            open: false,
+            storageKey: 'rupnora-home-offer-dismissed-at',
+            dismissalPeriod: 24 * 60 * 60 * 1000,
+            init() {
+                let dismissedAt = 0;
+
+                try {
+                    dismissedAt = Number(window.localStorage.getItem(this.storageKey) || 0);
+                } catch (error) {}
+
+                if (!dismissedAt || Date.now() - dismissedAt >= this.dismissalPeriod) {
+                    this.$nextTick(() => {
+                        this.open = true;
+                        this.$nextTick(() => this.$refs.closeButton?.focus());
+                    });
+                }
+            },
+            dismiss() {
+                try {
+                    window.localStorage.setItem(this.storageKey, String(Date.now()));
+                } catch (error) {}
+
+                this.open = false;
+            },
+        }"
+        x-effect="document.body.classList.toggle('overflow-hidden', open)"
+        @keydown.escape.window="if (open) dismiss()"
+    >
+        <div
+            x-cloak
+            x-show="open"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @click.self="dismiss()"
+            class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-charcoal/75 p-4 backdrop-blur-sm sm:p-6"
+        >
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="home-offer-title"
+                class="relative grid max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[1.75rem] bg-paper shadow-2xl sm:grid-cols-[0.9fr_1.1fr] sm:overflow-hidden"
+            >
+                <button
+                    x-ref="closeButton"
+                    type="button"
+                    @click="dismiss()"
+                    aria-label="Close offer"
+                    class="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-paper/90 text-charcoal shadow-sm transition hover:bg-paper hover:text-champagne-dark focus:outline-none focus:ring-2 focus:ring-champagne-dark focus:ring-offset-2"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+                </button>
+
+                <div class="relative h-48 overflow-hidden sm:h-auto sm:min-h-[430px]">
+                    <x-ui.optimized-image
+                        :src="asset('images/her.png')"
+                        alt="Woman wearing Rupnora jewellery"
+                        sizes="(min-width: 640px) 340px, 100vw"
+                        loading="eager"
+                        class="h-full w-full object-cover object-[center_32%]"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-charcoal/10"></div>
+                    <span class="absolute bottom-4 left-4 rounded-full border border-ivory/30 bg-charcoal/45 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ivory backdrop-blur-sm sm:bottom-6 sm:left-6">Limited Time</span>
+                </div>
+
+                <div class="flex flex-col justify-center px-6 py-7 text-center sm:px-10 sm:py-10 sm:text-left">
+                    <span class="eyebrow">The Sparkle Sale</span>
+                    <h2 id="home-offer-title" class="font-display mt-2 text-3xl leading-tight text-charcoal sm:text-4xl">A little luxury,<br class="hidden sm:block"> for a lot less.</h2>
+                    <div class="mt-5 flex items-baseline justify-center gap-2 sm:justify-start">
+                        <span class="font-display text-5xl font-semibold leading-none text-champagne-dark sm:text-6xl">10–60%</span>
+                        <span class="text-sm font-semibold uppercase tracking-[0.18em] text-charcoal">Off</span>
+                    </div>
+                    <p class="mt-3 text-sm leading-relaxed text-muted">Save on selected jewellery styles while the offer lasts.</p>
+                    <a href="{{ route('best-sellers') }}" @click="dismiss()" class="btn-primary mt-6 w-full sm:w-auto">Shop the Offer</a>
+                    <button type="button" @click="dismiss()" class="mt-3 text-xs font-medium text-muted underline-offset-4 hover:text-charcoal hover:underline">No thanks, maybe later</button>
+                    <p class="mt-4 text-[10px] uppercase tracking-[0.12em] text-muted-light">Selected styles only. Terms apply.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
     {{-- A. Hero Banner --}}
     <x-ui.hero-slider :slides="$heroSlides" />
 

@@ -74,16 +74,24 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        $product = DB::transaction(function () use ($request) {
-            $data = $this->prepareData($request);
+        try {
+            $product = DB::transaction(function () use ($request) {
+                $data = $this->prepareData($request);
 
-            $product = Product::create($data);
+                $product = Product::create($data);
 
-            $this->syncImages($product, $request);
-            $this->syncVariants($product, $request->input('variants', []));
+                $this->syncImages($product, $request);
+                $this->syncVariants($product, $request->input('variants', []));
 
-            return $product;
-        });
+                return $product;
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'The product could not be created. Please verify the details and uploaded images, then try again.');
+        }
 
         return redirect()->route('admin.products.edit', $product)->with('success', 'Product created successfully.');
     }
@@ -116,7 +124,6 @@ class ProductController extends Controller
             'collections' => $collections,
             'metalTypes' => $metalTypes,
             'purities' => self::PURITIES,
-            'occasionOptions' => Product::OCCASIONS,
             'genderOptions' => Product::GENDERS,
         ]);
     }

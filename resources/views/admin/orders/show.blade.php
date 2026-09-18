@@ -18,11 +18,23 @@
                     <x-admin.status-badge :status="$order->status" />
                     <x-admin.status-badge :status="$order->payment_status" />
                 </div>
-                <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div><p class="text-xs text-gray-400">Order Date</p><p class="font-medium text-gray-900">{{ $order->created_at->format('d M Y, h:i A') }}</p></div>
-                    <div><p class="text-xs text-gray-400">Customer</p><p class="font-medium text-gray-900">{{ $order->customer_name }}</p></div>
-                    <div><p class="text-xs text-gray-400">Email</p><p class="font-medium text-gray-900">{{ $order->customer_email }}</p></div>
-                    <div><p class="text-xs text-gray-400">Phone</p><p class="font-medium text-gray-900">{{ $order->customer_phone }}</p></div>
+                <div class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,0.9fr)]">
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-400">Order Date</p>
+                        <p class="mt-0.5 font-medium leading-snug text-gray-900">{{ $order->created_at->format('d M Y, h:i A') }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-400">Customer</p>
+                        <p class="mt-0.5 break-words font-medium leading-snug text-gray-900">{{ $order->customer_name }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-400">Email</p>
+                        <a href="mailto:{{ $order->customer_email }}" class="mt-0.5 block break-all font-medium leading-snug text-gray-900 hover:text-champagne-dark">{{ $order->customer_email }}</a>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-400">Phone</p>
+                        <a href="tel:{{ $order->customer_phone }}" class="mt-0.5 block whitespace-nowrap font-medium leading-snug text-gray-900 hover:text-champagne-dark">{{ $order->customer_phone }}</a>
+                    </div>
                 </div>
             </div>
 
