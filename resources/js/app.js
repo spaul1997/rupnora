@@ -147,6 +147,53 @@ Alpine.store('ui', {
     },
 });
 
+Alpine.data('newsletterForm', (url) => ({
+    email: '',
+    submitting: false,
+    subscribed: false,
+    error: '',
+    statusMessage: '',
+
+    async subscribe() {
+        if (this.submitting || this.subscribed) {
+            return;
+        }
+
+        this.error = '';
+        this.statusMessage = '';
+        this.submitting = true;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ email: this.email }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                const firstError = Object.values(data.errors || {})[0]?.[0];
+                throw new Error(firstError || data.message || 'Unable to subscribe.');
+            }
+
+            this.email = '';
+            this.subscribed = true;
+            this.statusMessage = data.message;
+            Alpine.store('ui').notify(data.message, 'success');
+
+            setTimeout(() => {
+                this.subscribed = false;
+                this.statusMessage = '';
+            }, 3000);
+        } catch (error) {
+            this.error = error.message || 'Unable to subscribe. Please try again.';
+            Alpine.store('ui').notify(this.error, 'error');
+        } finally {
+            this.submitting = false;
+        }
+    },
+}));
+
 window.cartPage = (initialItems = []) => ({
     items: initialItems.map((item) => ({
         ...item,

@@ -9,6 +9,13 @@
     $galleryCount = count($gallery);
     $shareUrl = route('product.show', $product['slug'] ?? $product['id']);
     $productUrlKey = $product['slug'] ?? $product['id'];
+    $customerReview = $customerReview ?? null;
+    $canReview = auth()->check() && auth()->user()->role === 'customer' && auth()->user()->is_active;
+    $reviewReturnPath = route('product.show', $productUrlKey, false).'?review=1#customer-reviews';
+    $reviewLoginUrl = route('login', ['redirect' => $reviewReturnPath]);
+    $reviewErrors = $errors->getBag('reviewSubmission');
+    $openReviewModal = $canReview && (request()->boolean('review') || $reviewErrors->any());
+    $reviewRating = (int) old('rating', $customerReview?->rating ?? 5);
     $whatsappShareText = rawurlencode($product['name'].' - '.$shareUrl);
     $sizeOptions = collect($product['sizes'] ?? [])->filter()->values();
     $variantRows = collect($product['variants'] ?? [])
@@ -22,6 +29,72 @@
         return filled($value) ? $value : $fallback;
     };
     $formatStockStatus = fn ($value) => $value ? ucfirst(str_replace('_', ' ', $value)) : 'Not specified';
+    $hasProductData = function ($value): bool {
+        if (is_array($value)) {
+            return collect($value)->contains(fn ($item) => filled($item));
+        }
+
+        return filled($value);
+    };
+    $onlyPopulated = fn (array $rows) => collect($rows)
+        ->filter(fn ($value) => $hasProductData($value))
+        ->all();
+    $productDetailRows = $onlyPopulated([
+        'Product Name' => $product['name'] ?? null,
+        'SKU' => $product['sku'] ?? null,
+        'Barcode' => $product['barcode'] ?? null,
+        'Brand' => $product['brand'] ?? null,
+        'Category' => $product['category_name'] ?? null,
+        'Collection' => $product['collection_names'] ?? [],
+        'Jewellery Type' => $product['type'] ?? null,
+        'Gender' => $product['gender'] ?? null,
+        'Stock Status' => filled($product['stock_status'] ?? null) ? $formatStockStatus($product['stock_status']) : null,
+    ]);
+    $metalDetailRows = $onlyPopulated([
+        'Material' => $product['metal'] ?? null,
+        'Finish / Plating' => $product['finish_plating'] ?? null,
+        'Colour' => $product['colour'] ?? null,
+        'Purity' => $product['purity'] ?? null,
+        'Stone Type' => $product['stone_type'] ?? null,
+        'Stone Colour' => $product['stone_colour'] ?? null,
+        'Gross Weight' => $product['weight']['gross'] ?? null,
+        'Net Weight' => $product['weight']['net'] ?? null,
+        'Metal Weight' => $product['weight']['metal'] ?? null,
+        'Stone Weight' => $product['weight']['stone'] ?? null,
+        'Adjustable' => array_key_exists('is_adjustable', $product) ? ($product['is_adjustable'] ? 'Yes' : 'No') : null,
+        'Water Resistant' => array_key_exists('is_water_resistant', $product) ? ($product['is_water_resistant'] ? 'Yes' : 'No') : null,
+        'Return Available' => array_key_exists('is_return_available', $product) ? ($product['is_return_available'] ? 'Yes' : 'No') : null,
+        'Refund Available' => array_key_exists('is_refund_available', $product) ? ($product['is_refund_available'] ? 'Yes' : 'No') : null,
+    ]);
+    $diamondDetailRows = $onlyPopulated([
+        'Diamond Carat' => $product['diamond']['carat'] ?? null,
+        'Diamond Colour' => $product['diamond']['colour'] ?? null,
+        'Diamond Clarity' => $product['diamond']['clarity'] ?? null,
+        'Diamond Cut' => $product['diamond']['cut'] ?? null,
+        'Diamond Shape' => $product['diamond']['shape'] ?? null,
+        'Diamond Count' => $product['diamond']['count'] ?? null,
+    ]);
+    $gemstoneDetailRows = $onlyPopulated([
+        'Gemstone Type' => $product['gemstone']['type'] ?? null,
+        'Gemstone Colour' => $product['gemstone']['colour'] ?? null,
+        'Gemstone Weight' => $product['gemstone']['weight'] ?? null,
+    ]);
+    $dimensionDetailRows = $onlyPopulated([
+        'Available Sizes' => $sizeOptions->all(),
+        'Adjustable' => array_key_exists('is_adjustable', $product) ? ($product['is_adjustable'] ? 'Yes' : 'No') : null,
+        'Gross Weight' => $product['weight']['gross'] ?? null,
+        'Net Weight' => $product['weight']['net'] ?? null,
+        'Metal Weight' => $product['weight']['metal'] ?? null,
+        'Stone Weight' => $product['weight']['stone'] ?? null,
+    ]);
+    $certificationDetailRows = $onlyPopulated([
+        'SKU' => $product['sku'] ?? null,
+        'Barcode' => $product['barcode'] ?? null,
+        'Material' => $product['metal'] ?? null,
+        'Purity' => $product['purity'] ?? null,
+        'Diamond Certified' => array_key_exists('has_diamond', $product) ? ($product['has_diamond'] ? 'Yes' : 'No') : null,
+        'Gemstone Included' => array_key_exists('has_gemstone', $product) ? ($product['has_gemstone'] ? 'Yes' : 'No') : null,
+    ]);
     $cartPayload = [
         'id' => $product['id'],
         'name' => $product['name'],
@@ -35,6 +108,7 @@
             activeImg: 0,
             lightbox: false,
             sizeGuide: false,
+            reviewModal: {{ Illuminate\Support\Js::from($openReviewModal) }},
             zoomActive: false, zoomX: 50, zoomY: 50,
             qty: 1,
             diamondTier: 0,
@@ -120,7 +194,7 @@
                 </div>
 
                 <div class="mt-3">
-                    <x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" size="lg" />
+                    <x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" size="lg" />
                 </div>
 
                 <div class="mt-5 rounded-xl bg-ivory-soft p-4">
@@ -236,15 +310,15 @@
                 <div class="mt-6 divide-y divide-line rounded-2xl border border-line" x-data="{ open: 'description' }">
                     @php
                         $sections = [
-                            'description' => ['label' => 'Description', 'content' => 'text'],
-                            'details' => ['label' => 'Product Details', 'content' => 'details'],
-                            'metal' => ['label' => 'Metal Details', 'content' => 'metal'],
-                            'diamond' => ['label' => 'Diamond Details', 'content' => 'diamond', 'show' => (bool) $product['diamond']],
-                            'gemstone' => ['label' => 'Gemstone Details', 'content' => 'gemstone', 'show' => (bool) ($product['gemstone'] ?? null)],
-                            'dimensions' => ['label' => 'Dimensions', 'content' => 'dimensions'],
+                            'description' => ['label' => 'Description', 'content' => 'text', 'show' => filled(trim(strip_tags((string) ($product['description'] ?? ''))))],
+                            'details' => ['label' => 'Product Details', 'content' => 'details', 'show' => count($productDetailRows) > 0],
+                            'metal' => ['label' => 'Metal Details', 'content' => 'metal', 'show' => count($metalDetailRows) > 0],
+                            'diamond' => ['label' => 'Diamond Details', 'content' => 'diamond', 'show' => count($diamondDetailRows) > 0],
+                            'gemstone' => ['label' => 'Gemstone Details', 'content' => 'gemstone', 'show' => count($gemstoneDetailRows) > 0],
+                            'dimensions' => ['label' => 'Dimensions', 'content' => 'dimensions', 'show' => count($dimensionDetailRows) > 0 || $variantRows->isNotEmpty()],
                             'care' => ['label' => 'Care Instructions', 'content' => 'care'],
                             'shipping' => ['label' => 'Shipping & Returns', 'content' => 'shipping'],
-                            'certification' => ['label' => 'Certification', 'content' => 'certification'],
+                            'certification' => ['label' => 'Certification', 'content' => 'certification', 'show' => count($certificationDetailRows) > 0],
                         ];
                     @endphp
                     @foreach ($sections as $key => $section)
@@ -260,65 +334,31 @@
                                         <div class="space-y-3 text-sm leading-relaxed text-muted [&_a]:text-champagne-dark [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-champagne [&_blockquote]:pl-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-charcoal [&_ul]:list-disc [&_ul]:pl-5">
                                             {!! $product['description'] !!}
                                         </div>
-                                        @break
+                                    @break
                                     @case('details')
                                         <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                            @foreach ([
-                                                'Product Name' => $product['name'],
-                                                'SKU' => $product['sku'],
-                                                'Barcode' => $product['barcode'] ?? null,
-                                                'Brand' => $product['brand'] ?? null,
-                                                'Category' => $product['category_name'],
-                                                'Collection' => $product['collection_names'] ?? [],
-                                                'Jewellery Type' => $product['type'],
-                                                'Occasion' => collect($product['occasion'])->map(fn($occasion) => ucfirst($occasion))->all(),
-                                                'Gender' => $product['gender'],
-                                                'Stock Status' => $formatStockStatus($product['stock_status'] ?? null),
-                                                'Available Quantity' => $product['stock_quantity'] ?? null,
-                                            ] as $label => $value)
+                                            @foreach ($productDetailRows as $label => $value)
                                                 <div>
                                                     <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
                                                     <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
                                                 </div>
                                             @endforeach
                                         </dl>
-                                        @break
+                                    @break
                                     @case('metal')
                                         <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                            @foreach ([
-                                                'Material' => $product['metal'],
-                                                'Finish / Plating' => $product['finish_plating'] ?? null,
-                                                'Colour' => $product['colour'] ?? null,
-                                                'Purity' => $product['purity'] ?? null,
-                                                'Stone Type' => $product['stone_type'] ?? null,
-                                                'Stone Colour' => $product['stone_colour'] ?? null,
-                                                'Gross Weight' => $product['weight']['gross'],
-                                                'Net Weight' => $product['weight']['net'],
-                                                'Metal Weight' => $product['weight']['metal'],
-                                                'Stone Weight' => $product['weight']['stone'],
-                                                'Adjustable' => $product['is_adjustable'] ? 'Yes' : 'No',
-                                                'Water Resistant' => $product['is_water_resistant'] ? 'Yes' : 'No',
-                                                'Return Available' => $product['is_return_available'] ? 'Yes' : 'No',
-                                                'Refund Available' => $product['is_refund_available'] ? 'Yes' : 'No',
-                                            ] as $label => $value)
+                                            @foreach ($metalDetailRows as $label => $value)
                                                 <div>
                                                     <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
                                                     <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
                                                 </div>
                                             @endforeach
                                         </dl>
-                                        @break
+                                    @break
                                     @case('diamond')
-                                        @if ($product['diamond'])
+                                        @if (count($diamondDetailRows) > 0)
                                             <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                                @foreach ([
-                                                    'Diamond Carat' => $product['diamond']['carat'] ?? null,
-                                                    'Diamond Colour' => $product['diamond']['colour'] ?? null,
-                                                    'Diamond Clarity' => $product['diamond']['clarity'] ?? null,
-                                                    'Diamond Cut' => $product['diamond']['cut'] ?? null,
-                                                    'Diamond Shape' => $product['diamond']['shape'] ?? null,
-                                                    'Diamond Count' => $product['diamond']['count'] ?? null,
-                                                ] as $label => $value)
+                                                @foreach ($diamondDetailRows as $label => $value)
                                                     <div>
                                                         <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
                                                         <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
@@ -326,15 +366,11 @@
                                                 @endforeach
                                             </dl>
                                         @endif
-                                        @break
+                                    @break
                                     @case('gemstone')
-                                        @if ($product['gemstone'])
+                                        @if (count($gemstoneDetailRows) > 0)
                                             <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                                @foreach ([
-                                                    'Gemstone Type' => $product['gemstone']['type'] ?? null,
-                                                    'Gemstone Colour' => $product['gemstone']['colour'] ?? null,
-                                                    'Gemstone Weight' => $product['gemstone']['weight'] ?? null,
-                                                ] as $label => $value)
+                                                @foreach ($gemstoneDetailRows as $label => $value)
                                                     <div>
                                                         <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
                                                         <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
@@ -345,21 +381,16 @@
                                         @break
                                     @case('dimensions')
                                         <div class="space-y-4">
-                                            <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                                @foreach ([
-                                                    'Available Sizes' => $sizeOptions->all(),
-                                                    'Adjustable' => ($product['is_adjustable'] ?? false) ? 'Yes' : 'No',
-                                                    'Gross Weight' => $product['weight']['gross'] ?? null,
-                                                    'Net Weight' => $product['weight']['net'] ?? null,
-                                                    'Metal Weight' => $product['weight']['metal'] ?? null,
-                                                    'Stone Weight' => $product['weight']['stone'] ?? null,
-                                                ] as $label => $value)
-                                                    <div>
-                                                        <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
-                                                        <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
-                                                    </div>
-                                                @endforeach
-                                            </dl>
+                                            @if (count($dimensionDetailRows) > 0)
+                                                <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+                                                    @foreach ($dimensionDetailRows as $label => $value)
+                                                        <div>
+                                                            <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
+                                                            <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
+                                                        </div>
+                                                    @endforeach
+                                                </dl>
+                                            @endif
 
                                             @if ($variantRows->isNotEmpty())
                                                 <div class="overflow-x-auto rounded-xl border border-line">
@@ -408,17 +439,10 @@
                                             <li>Return: <span class="font-medium text-charcoal">{{ ($product['is_return_available'] ?? false) ? 'Available' : 'Not available' }}</span>.</li>
                                             <li>Refund: <span class="font-medium text-charcoal">{{ ($product['is_refund_available'] ?? false) ? 'Available' : 'Not available' }}</span>. See our <a href="{{ route('refund-policy') }}" class="font-medium text-champagne-dark hover:underline">Refund Policy</a>.</li>
                                         </ul>
-                                        @break
+                                    @break
                                     @case('certification')
                                         <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                            @foreach ([
-                                                'SKU' => $product['sku'] ?? null,
-                                                'Barcode' => $product['barcode'] ?? null,
-                                                'Material' => $product['metal'] ?? null,
-                                                'Purity' => $product['purity'] ?? null,
-                                                'Diamond Certified' => ($product['has_diamond'] ?? false) ? 'Yes' : 'No',
-                                                'Gemstone Included' => ($product['has_gemstone'] ?? false) ? 'Yes' : 'No',
-                                            ] as $label => $value)
+                                            @foreach ($certificationDetailRows as $label => $value)
                                                 <div>
                                                     <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
                                                     <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
@@ -473,15 +497,34 @@
         </section>
 
         {{-- Customer Reviews --}}
-        <section class="section-pad border-t border-line bg-ivory-soft">
+        <section id="customer-reviews" class="section-pad scroll-mt-24 border-t border-line bg-ivory-soft">
             <div class="container-luxe">
                 <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h2 class="font-display text-2xl text-charcoal sm:text-3xl">Customer Reviews</h2>
-                        <div class="mt-2"><x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" /></div>
+                        <div class="mt-2"><x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" /></div>
                     </div>
-                    <button class="btn-secondary">Write a Review</button>
+                    <div class="text-right">
+                        @if ($canReview)
+                            <button type="button" @click="reviewModal = true" class="btn-secondary">
+                                {{ $customerReview ? 'Edit Your Review' : 'Write a Review' }}
+                            </button>
+                            @if ($customerReview && $customerReview->status === 'pending')
+                                <p class="mt-2 text-xs text-muted">Your review is awaiting approval.</p>
+                            @endif
+                        @else
+                            <a href="{{ $reviewLoginUrl }}" class="btn-secondary">Sign In to Review</a>
+                        @endif
+                    </div>
                 </div>
+
+                @if (session('review_success'))
+                    <div class="mb-6 flex items-start gap-2 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success" role="status">
+                        <svg class="mt-0.5 h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        <p>{{ session('review_success') }}</p>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach (array_slice($reviews, 0, 6) as $review)
                         <x-ui.review-card :review="$review" />
@@ -489,6 +532,83 @@
                 </div>
             </div>
         </section>
+
+        {{-- Customer review modal --}}
+        @if ($canReview)
+            <div
+                x-cloak
+                x-show="reviewModal"
+                x-transition.opacity
+                class="fixed inset-0 z-[120] flex items-center justify-center bg-charcoal/60 p-4"
+                @click.self="reviewModal = false"
+                @keydown.escape.window="reviewModal = false"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="review-modal-title"
+            >
+                <div x-show="reviewModal" x-transition.scale.origin.bottom class="w-full max-w-lg overflow-hidden rounded-2xl bg-paper shadow-lift">
+                    <div class="flex items-start justify-between border-b border-line px-5 py-4 sm:px-6">
+                        <div>
+                            <p class="eyebrow">Share your experience</p>
+                            <h2 id="review-modal-title" class="font-display mt-1 text-xl text-charcoal">
+                                {{ $customerReview ? 'Edit Your Review' : 'Review '.$product['name'] }}
+                            </h2>
+                        </div>
+                        <button type="button" @click="reviewModal = false" class="icon-btn" aria-label="Close review form">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke-linecap="round" /></svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('product.reviews.store', $productUrlKey) }}" class="space-y-5 p-5 sm:p-6" x-data="{ rating: {{ $reviewRating }}, hoverRating: 0 }">
+                        @csrf
+
+                        <div>
+                            <label class="label-luxe">Your rating</label>
+                            <div class="flex items-center gap-1" role="radiogroup" aria-label="Choose a rating from 1 to 5 stars">
+                                @for ($star = 1; $star <= 5; $star++)
+                                    <button
+                                        type="button"
+                                        @click="rating = {{ $star }}"
+                                        @mouseenter="hoverRating = {{ $star }}"
+                                        @mouseleave="hoverRating = 0"
+                                        :aria-checked="rating === {{ $star }}"
+                                        class="rounded-md p-1 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-champagne-dark/40"
+                                        role="radio"
+                                        aria-label="{{ $star }} {{ Str::plural('star', $star) }}"
+                                    >
+                                        <svg class="h-8 w-8" :class="{{ $star }} <= (hoverRating || rating) ? 'text-champagne-dark' : 'text-line'" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path d="M10 1.5l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L10 15l-5.4 3 1.3-6.1L1.3 7.7l6.1-.6L10 1.5z" />
+                                        </svg>
+                                    </button>
+                                @endfor
+                                <span class="ml-2 text-sm text-muted" x-text="`${rating} out of 5`"></span>
+                            </div>
+                            <input type="hidden" name="rating" :value="rating">
+                            @error('rating', 'reviewSubmission') <p class="mt-1 text-xs text-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label for="review-title" class="label-luxe">Review title <span class="font-normal normal-case text-muted">(optional)</span></label>
+                            <input id="review-title" type="text" name="title" value="{{ old('title', $customerReview?->title) }}" maxlength="120" class="input-luxe" placeholder="Summarise your experience">
+                            @error('title', 'reviewSubmission') <p class="mt-1 text-xs text-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label for="review-text" class="label-luxe">Your review</label>
+                            <textarea id="review-text" name="review" rows="5" required minlength="10" maxlength="2000" class="input-luxe resize-none" placeholder="Tell others what you liked about this piece...">{{ old('review', $customerReview?->review) }}</textarea>
+                            @error('review', 'reviewSubmission') <p class="mt-1 text-xs text-error">{{ $message }}</p> @enderror
+                        </div>
+
+                        <p class="text-xs leading-5 text-muted">Reviews are checked before publishing. Updating a published review sends it back for approval.</p>
+
+                        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button type="button" @click="reviewModal = false" class="btn-ghost">Cancel</button>
+                            <button type="submit" class="btn-primary">{{ $customerReview ? 'Update Review' : 'Submit Review' }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
 
         {{-- Lightbox --}}
         <div x-cloak x-show="lightbox" x-transition.opacity class="fixed inset-0 z-[110] flex items-center justify-center bg-charcoal/90 p-4" @click.self="lightbox = false" @keydown.window.escape="lightbox = false">

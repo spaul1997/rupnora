@@ -7,21 +7,22 @@
         <div class="mx-auto max-w-5xl my-2">
             <span class="eyebrow">Rupnora Policies</span>
             <h1 class="font-display mt-2 text-4xl text-charcoal sm:text-5xl">Privacy Policy</h1>
-            <p class="mt-3 text-sm text-muted">Last updated: September 13, 2026</p>
+            <p class="mt-3 text-sm text-muted">Last updated: September 21, 2026</p>
             <p class="mt-6 text-base leading-relaxed text-charcoal-soft">
-                Rupnora respects your privacy. This policy explains how we collect, use, and protect information when you browse our website, create an account, place an order, or contact our support team.
+                Rupnora respects your privacy. This policy explains how we collect, use, and protect information when you browse our website, create an account, place an order, contact our support team, or submit a career application.
             </p>
 
             <div class="mt-10 space-y-8 text-sm leading-relaxed text-muted sm:text-base">
                 <section class="border-t border-line pt-8">
                     <h2 class="font-display text-2xl text-charcoal">Information We Collect</h2>
                     <p class="mt-3">We may collect your name, phone number, email address, billing and shipping address, order details, wishlist activity, and account information. When you make a payment, payment details are handled by secure payment partners; Rupnora does not store full card or UPI credentials.</p>
+                    <p class="mt-3">If you submit a career application, we collect the details you provide, such as your location, professional experience, profile links, introduction, area of interest, and CV.</p>
                     <p class="mt-3">We may also collect basic technical information such as device type, browser, pages visited, and site interactions to improve performance and shopping experience.</p>
                 </section>
 
                 <section class="border-t border-line pt-8">
                     <h2 class="font-display text-2xl text-charcoal">How We Use Information</h2>
-                    <p class="mt-3">We use your information to process orders, arrange delivery, send order updates, support returns or refunds, respond to questions, prevent misuse, improve our store, and share offers or updates when you choose to receive them.</p>
+                    <p class="mt-3">We use your information to process orders, arrange delivery, send order updates, support returns or refunds, respond to questions, prevent misuse, improve our store, and share offers or updates when you choose to receive them. Career application information is used to review your profile, consider you for relevant opportunities, and communicate with you about recruitment.</p>
                 </section>
 
                 <section class="border-t border-line pt-8">
@@ -36,7 +37,7 @@
 
                 <section class="border-t border-line pt-8">
                     <h2 class="font-display text-2xl text-charcoal">Data Security And Retention</h2>
-                    <p class="mt-3">We use reasonable technical and organisational safeguards to protect customer information. We retain order and account information for as long as needed for service, accounting, fraud prevention, legal obligations, and dispute resolution.</p>
+                    <p class="mt-3">We use reasonable technical and organisational safeguards to protect customer and applicant information. We retain order, account, and recruitment information only for as long as needed for service, recruitment, accounting, fraud prevention, legal obligations, and dispute resolution.</p>
                 </section>
 
                 <section class="border-t border-line pt-8">

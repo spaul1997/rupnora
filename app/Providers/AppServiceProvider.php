@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Observers\ContactMessageObserver;
 use App\Observers\OrderObserver;
+use App\Support\StorefrontCatalog;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('admin.layouts.app', function ($view) {
             $view->with('adminNotifications', $this->adminNotifications());
+        });
+
+        View::composer('components.layout.footer', function ($view) {
+            $view->with('footerCategories', StorefrontCatalog::topCategoriesByProductCount(4));
         });
     }
 

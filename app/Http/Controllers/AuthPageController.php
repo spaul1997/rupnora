@@ -21,10 +21,16 @@ use Illuminate\View\View;
 
 class AuthPageController extends Controller
 {
-    public function login(): View|RedirectResponse
+    public function login(Request $request): View|RedirectResponse
     {
         if ($this->isStorefrontCustomer()) {
             return redirect()->route('account.dashboard');
+        }
+
+        $redirect = (string) $request->query('redirect', '');
+
+        if (str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+            $request->session()->put('url.intended', url('/').$redirect);
         }
 
         return view('auth.login', ['title' => 'Sign In']);

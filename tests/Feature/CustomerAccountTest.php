@@ -25,7 +25,7 @@ class CustomerAccountTest extends TestCase
         foreach (['dashboard', 'orders', 'addresses', 'profile', 'change-password', 'notifications', 'support'] as $page) {
             $this->get(route('account.'.$page))->assertRedirect(route('login'));
         }
-        $this->get(route('account.wishlist'))->assertOk();
+        $this->get(route('account.wishlist'))->assertRedirect(route('login'));
         $this->actingAs($customer);
         foreach (['dashboard', 'orders', 'wishlist', 'addresses', 'profile', 'change-password', 'notifications', 'support'] as $page) {
             $this->get(route('account.'.$page))->assertOk();

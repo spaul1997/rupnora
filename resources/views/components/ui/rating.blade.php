@@ -1,6 +1,7 @@
 @props([
     'value' => 4.5,
     'count' => null,
+    'ratingCount' => null,
     'size' => 'sm',
 ])
 
@@ -10,15 +11,23 @@
     $gap = $size === 'xs' ? 'gap-1' : 'gap-1.5';
 @endphp
 
-<div class="flex items-center {{ $gap }}">
-    <div class="flex items-center gap-0.5">
+<div class="flex flex-wrap items-center {{ $gap }}">
+    <div class="flex items-center gap-0.5" aria-label="{{ number_format($value, 1) }} out of 5 stars">
         @for ($i = 1; $i <= 5; $i++)
-            <svg class="{{ $sizeClasses }} {{ $i <= round($value) ? 'text-champagne-dark' : 'text-line' }}" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="{{ $sizeClasses }} {{ $i <= round($value) ? 'text-champagne-dark' : 'text-line' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path d="M10 1.5l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L10 15l-5.4 3 1.3-6.1L1.3 7.7l6.1-.6L10 1.5z" />
             </svg>
         @endfor
     </div>
-    @if ($count !== null)
-        <span class="{{ $textSize }} text-muted">{{ number_format($value, 1) }} · {{ $count }} {{ Str::plural('review', $count) }}</span>
+    @if ($ratingCount !== null || $count !== null)
+        <span class="{{ $textSize }} text-muted">
+            {{ number_format($value, 1) }}
+            @if ($ratingCount !== null)
+                &middot; {{ number_format($ratingCount) }} {{ Str::plural('rating', $ratingCount) }}
+            @endif
+            @if ($count !== null)
+                &middot; {{ number_format($count) }} {{ Str::plural('review', $count) }}
+            @endif
+        </span>
     @endif
 </div>

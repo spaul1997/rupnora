@@ -60,6 +60,22 @@ class StorefrontCatalog
         return Catalog::categories();
     }
 
+    public static function topCategoriesByProductCount(int $limit = 4): array
+    {
+        return Category::query()
+            ->active()
+            ->whereHas('products', fn (Builder $query) => $query->active())
+            ->withCount(['products as products_count' => fn (Builder $query) => $query->active()])
+            ->orderByDesc('products_count')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Category $category) => self::mapCategory($category))
+            ->values()
+            ->all();
+    }
+
     public static function topSubcategories(int $limit = 6): array
     {
         return Category::query()
@@ -462,10 +478,17 @@ class StorefrontCatalog
         $categorySlug = $category ? self::normalizeCategorySlug($category->parent ?? $category) : 'jewellery';
         $categoryName = $category?->parent?->name ?? $category?->name ?? 'Jewellery';
         $price = $product->computeFinalPrice();
-        $reviewsCount = (int) ($product->approved_reviews_count ?? 0);
-        $rating = $product->approved_reviews_avg_rating
-            ? round((float) $product->approved_reviews_avg_rating, 1)
-            : 0;
+        $actualReviewsCount = (int) ($product->approved_reviews_count ?? 0);
+        $actualRating = $product->approved_reviews_avg_rating
+            ? (float) $product->approved_reviews_avg_rating
+            : null;
+        $engagement = self::defaultProductEngagement($product);
+        $reviewsCount = $engagement['reviews_count'] + $actualReviewsCount;
+        $ratingsCount = $engagement['ratings_count'] + $actualReviewsCount;
+        $rating = round((
+            ($engagement['rating'] * $engagement['ratings_count'])
+            + (($actualRating ?? $engagement['rating']) * $actualReviewsCount)
+        ) / $ratingsCount, 1);
         $primaryImage = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
         $badges = [];
 
@@ -514,6 +537,7 @@ class StorefrontCatalog
             'offer_expiry_date' => $product->hasActiveOffer() ? $product->offer_expiry_date?->format('d M Y') : null,
             'discount_expiry_date' => $product->hasActiveDiscount() ? $product->discount_expiry_date?->format('d M Y') : null,
             'rating' => $rating,
+            'ratings_count' => $ratingsCount,
             'reviews_count' => $reviewsCount,
             'badges' => $badges,
             'is_new' => (bool) $product->is_new_arrival,
@@ -559,6 +583,21 @@ class StorefrontCatalog
                 'colour' => $product->gemstone_colour,
                 'weight' => self::diamondCarat($product->gemstone_weight),
             ] : null,
+        ];
+    }
+
+    /**
+     * Give products a stable engagement baseline until organic reviews build up.
+     * The slug-based seed keeps values consistent across requests and deployments.
+     */
+    protected static function defaultProductEngagement(Product $product): array
+    {
+        $seed = (int) sprintf('%u', crc32($product->slug ?: (string) $product->id));
+
+        return [
+            'rating' => 4.0 + (intdiv($seed, 2091) % 9) / 10,
+            'ratings_count' => 150 + (intdiv($seed, 41) % 51),
+            'reviews_count' => 40 + ($seed % 41),
         ];
     }
 

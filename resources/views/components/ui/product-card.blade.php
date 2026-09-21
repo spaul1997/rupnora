@@ -59,7 +59,7 @@
         <a href="{{ route('product.show', $productUrlKey) }}" class="block min-h-[2.5em] font-display text-[12.5px] leading-tight text-charcoal hover:text-champagne-dark transition-colors line-clamp-2 sm:min-h-0 sm:line-clamp-1">
             {{ $product['name'] }}
         </a>
-        <x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" size="xs" />
+        <x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" size="xs" />
         <div class="pt-0.5"><x-ui.price :price="$product['price']" :mrp="$product['mrp']" size="xs" /></div>
     </div>
 
@@ -88,7 +88,7 @@
                     <button @click="quickView = false" class="icon-btn absolute right-6 top-6 hidden sm:inline-flex"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg></button>
                     <p class="eyebrow">{{ $categoryLabel }}</p>
                     <h3 class="mt-1 font-display text-2xl text-charcoal">{{ $product['name'] }}</h3>
-                    <div class="mt-2"><x-ui.rating :value="$product['rating']" :count="$product['reviews_count']" /></div>
+                    <div class="mt-2"><x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" /></div>
                     <div class="mt-3"><x-ui.price :price="$product['price']" :mrp="$product['mrp']" size="lg" /></div>
                     <p class="mt-4 text-sm leading-relaxed text-muted">{{ $product['short_desc'] }}</p>
                     <div class="mt-5 flex flex-wrap gap-2 text-xs text-muted">
@@ -97,9 +97,9 @@
                             <span class="rounded-full border border-line px-3 py-1">{{ $product['diamond']['carat'] }}</span>
                         @endif
                     </div>
-                    <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-                        <a href="{{ route('product.show', $productUrlKey) }}" class="btn-secondary flex-1">View Full Details</a>
-                        <button @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})" class="btn-primary flex-1">Add to Cart</button>
+                    <div class="mt-5 grid grid-cols-[1.2fr_1fr] gap-2">
+                        <a href="{{ route('product.show', $productUrlKey) }}" class="btn-secondary whitespace-nowrap !px-3 !py-2.5 !text-[10.5px]">View Full Details</a>
+                        <button @click.stop.prevent="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})" class="btn-primary whitespace-nowrap !px-3 !py-2.5 !text-[10.5px]">Add to Cart</button>
                     </div>
                 </div>
             </div>

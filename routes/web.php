@@ -3,12 +3,15 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthPageController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CareerApplicationController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterSubscriptionController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\SearchController;
 use App\Mail\ForgotPasswordOtpMail;
 use App\Mail\OrderFailedMail;
@@ -104,6 +107,13 @@ Route::get('/about', function () {
 Route::get('/careers', function () {
     return view('pages.careers', ['title' => 'Careers']);
 })->name('careers');
+Route::post('/careers/applications', [CareerApplicationController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('career-applications.store');
+
+Route::get('/size-guide', function () {
+    return view('pages.size-guide', ['title' => 'Jewellery Size Guide']);
+})->name('size-guide');
 
 Route::get('/influencer', function () {
     return view('pages.influencer', ['title' => 'Influencer Program']);
@@ -122,7 +132,10 @@ Route::get('/refund-policy', function () {
 })->name('refund-policy');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
+Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('newsletter-subscriptions.store');
 
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
 Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('collection.show');
@@ -135,6 +148,9 @@ Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('categ
 Route::get('/recipient/{slug}', [CategoryController::class, 'recipient'])->name('recipient.show');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::post('/product/{product:slug}/reviews', [ProductReviewController::class, 'store'])
+    ->middleware(['storefront.customer', 'throttle:5,1'])
+    ->name('product.reviews.store');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 
@@ -163,13 +179,13 @@ Route::post('/reset-password', [AuthPageController::class, 'resetPassword'])->mi
 require __DIR__.'/admin.php';
 
 Route::prefix('account')->name('account.')->group(function () {
-    Route::get('/wishlist', [AccountController::class, 'wishlist'])->name('wishlist');
     Route::post('/wishlist', [AccountController::class, 'addWishlist'])->name('wishlist.store');
     Route::delete('/wishlist/{product}', [AccountController::class, 'removeWishlist'])->name('wishlist.destroy');
 
     Route::middleware('storefront.customer')->group(function () {
         Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
+        Route::get('/wishlist', [AccountController::class, 'wishlist'])->name('wishlist');
         Route::get('/orders/{id}', [AccountController::class, 'orderShow'])->name('orders.show');
         Route::get('/orders/{id}/invoice', [AccountController::class, 'invoice'])->name('orders.invoice');
         Route::post('/orders/{id}/cancel', [AccountController::class, 'cancelOrder'])->name('orders.cancel');
