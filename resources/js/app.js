@@ -22,6 +22,54 @@ Alpine.store('ui', {
     wishlistIds: (initialState.wishlistIds || []).map((id) => String(id)),
     toasts: [],
     toastId: 0,
+    socialProofItems: Array.isArray(initialState.socialProofItems) ? initialState.socialProofItems : [],
+    socialProof: null,
+    socialProofTimer: null,
+    socialProofDismissTimer: null,
+    lastSocialProofIndex: -1,
+
+    init() {
+        this.scheduleSocialProof();
+    },
+
+    scheduleSocialProof() {
+        if (this.socialProofItems.length === 0) {
+            return;
+        }
+
+        window.clearTimeout(this.socialProofTimer);
+        const delay = 60000 + Math.floor(Math.random() * 30001);
+
+        this.socialProofTimer = window.setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+                this.showSocialProof();
+            } else {
+                this.scheduleSocialProof();
+            }
+        }, delay);
+    },
+
+    showSocialProof() {
+        const count = this.socialProofItems.length;
+        let index = Math.floor(Math.random() * count);
+
+        if (count > 1 && index === this.lastSocialProofIndex) {
+            index = (index + 1 + Math.floor(Math.random() * (count - 1))) % count;
+        }
+
+        this.lastSocialProofIndex = index;
+        this.socialProof = this.socialProofItems[index];
+
+        window.clearTimeout(this.socialProofDismissTimer);
+        this.socialProofDismissTimer = window.setTimeout(() => this.dismissSocialProof(), 8000);
+        this.scheduleSocialProof();
+    },
+
+    dismissSocialProof() {
+        window.clearTimeout(this.socialProofDismissTimer);
+        this.socialProofDismissTimer = null;
+        this.socialProof = null;
+    },
 
     setCartCount(count) {
         this.cartCount = Math.max(0, Number(count) || 0);

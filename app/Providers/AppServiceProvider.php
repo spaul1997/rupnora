@@ -37,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
         View::composer('components.layout.footer', function ($view) {
             $view->with('footerCategories', StorefrontCatalog::topCategoriesByProductCount(4));
         });
+
+        View::composer('components.layouts.app', function ($view) {
+            $view->with('socialProofItems', StorefrontCatalog::socialProofItems());
+        });
     }
 
     protected function adminNotifications(): array

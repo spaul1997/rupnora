@@ -21,6 +21,7 @@
         window.rupnoraInitialState = {
             cartCount: {{ \App\Support\ShoppingCart::count() }},
             wishlistIds: {{ Illuminate\Support\Js::from(\App\Support\ShoppingCart::wishlistIds()) }},
+            socialProofItems: {{ Illuminate\Support\Js::from($socialProofItems ?? []) }},
         };
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

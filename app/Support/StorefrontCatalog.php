@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Category;
 use App\Models\JewelleryCollection;
 use App\Models\JewelleryType;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -314,6 +315,53 @@ class StorefrontCatalog
         );
     }
 
+    /**
+     * Build a privacy-safe set of products for storefront social-proof toasts.
+     *
+     * Real, non-cancelled purchases are preferred. Unsold products are only
+     * presented as popular picks, so the storefront never fabricates a sale.
+     */
+    public static function socialProofItems(int $limit = 8): array
+    {
+        if ($limit < 1) {
+            return [];
+        }
+
+        $purchased = OrderItem::query()
+            ->whereNotNull('product_id')
+            ->whereHas('order', fn (Builder $query) => $query->whereIn('status', [
+                'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered',
+            ]))
+            ->whereHas('product', fn (Builder $query) => $query->active())
+            ->with(['product.images'])
+            ->latest('order_items.created_at')
+            ->limit(max($limit * 4, 20))
+            ->get()
+            ->unique('product_id')
+            ->shuffle()
+            ->take($limit)
+            ->map(fn (OrderItem $item) => self::mapSocialProofProduct($item->product, true))
+            ->values();
+
+        $remaining = $limit - $purchased->count();
+
+        if ($remaining < 1) {
+            return $purchased->all();
+        }
+
+        $popular = Product::query()
+            ->active()
+            ->where('stock_quantity', '>', 0)
+            ->whereNotIn('id', $purchased->pluck('id'))
+            ->with('images')
+            ->inRandomOrder()
+            ->limit($remaining)
+            ->get()
+            ->map(fn (Product $product) => self::mapSocialProofProduct($product, false));
+
+        return $purchased->concat($popular)->values()->all();
+    }
+
     public static function byCategory(string $slug): array
     {
         if ($slug === 'new-arrivals') {
@@ -583,6 +631,19 @@ class StorefrontCatalog
                 'colour' => $product->gemstone_colour,
                 'weight' => self::diamondCarat($product->gemstone_weight),
             ] : null,
+        ];
+    }
+
+    protected static function mapSocialProofProduct(Product $product, bool $recentlyPurchased): array
+    {
+        $primaryImage = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'image' => $primaryImage ? self::storageUrl($primaryImage->image_path) : null,
+            'url' => route('product.show', $product->slug ?: $product->id),
+            'recentlyPurchased' => $recentlyPurchased,
         ];
     }
 
