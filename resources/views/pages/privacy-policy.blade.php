@@ -17,7 +17,7 @@
                     <h2 class="font-display text-2xl text-charcoal">Information We Collect</h2>
                     <p class="mt-3">We may collect your name, phone number, email address, billing and shipping address, order details, wishlist activity, and account information. When you make a payment, payment details are handled by secure payment partners; Rupnora does not store full card or UPI credentials.</p>
                     <p class="mt-3">If you submit a career application, we collect the details you provide, such as your location, professional experience, profile links, introduction, area of interest, and CV.</p>
-                    <p class="mt-3">We may also collect basic technical information such as device type, browser, pages visited, and site interactions to improve performance and shopping experience.</p>
+                    <p class="mt-3">We may also collect basic technical information such as IP address, device type, browser details, pages and products visited, visit date and time, and site interactions to improve performance and shopping experience.</p>
                 </section>
 
                 <section class="border-t border-line pt-8">

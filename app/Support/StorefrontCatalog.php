@@ -525,6 +525,8 @@ class StorefrontCatalog
         $category = $product->category;
         $categorySlug = $category ? self::normalizeCategorySlug($category->parent ?? $category) : 'jewellery';
         $categoryName = $category?->parent?->name ?? $category?->name ?? 'Jewellery';
+        $subcategorySlug = $category?->parent ? $category->slug : null;
+        $subcategoryName = $category?->parent ? $category->name : null;
         $price = $product->computeFinalPrice();
         $actualReviewsCount = (int) ($product->approved_reviews_count ?? 0);
         $actualRating = $product->approved_reviews_avg_rating
@@ -561,6 +563,8 @@ class StorefrontCatalog
             'brand' => $product->brand,
             'category' => $categorySlug,
             'category_name' => $categoryName,
+            'subcategory' => $subcategorySlug,
+            'subcategory_name' => $subcategoryName,
             'type' => $product->jewellery_type,
             'metal' => $product->metal_type,
             'finish_plating' => $product->finish_plating,

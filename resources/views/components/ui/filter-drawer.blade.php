@@ -3,6 +3,7 @@
     'sections' => null,
     'priceMin' => 0,
     'priceMax' => 500000,
+    'reset' => null,
 ])
 
 <button type="button" @click="$store.ui.filterDrawerOpen = true" class="flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2.5 text-sm font-medium text-charcoal lg:hidden">
@@ -28,6 +29,6 @@
         <h3 class="font-display text-lg text-charcoal">Filters</h3>
         <button @click="$store.ui.filterDrawerOpen = false" class="icon-btn"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg></button>
     </div>
-    <x-ui.filter-panel :model="$model" :sections="$sections" :price-min="$priceMin" :price-max="$priceMax" />
+    <x-ui.filter-panel :model="$model" :sections="$sections" :price-min="$priceMin" :price-max="$priceMax" :reset="$reset" />
     <button type="button" @click="$store.ui.filterDrawerOpen = false" class="btn-primary mt-6 w-full">Show Results</button>
 </div>

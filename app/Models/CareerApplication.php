@@ -8,6 +8,14 @@ use Illuminate\Support\Str;
 
 class CareerApplication extends Model
 {
+    public const STATUSES = [
+        'new' => 'New',
+        'reviewing' => 'Reviewing',
+        'shortlisted' => 'Shortlisted',
+        'rejected' => 'Rejected',
+        'hired' => 'Hired',
+    ];
+
     public const AREAS = [
         'jewellery-curation' => 'Jewellery & Curation',
         'brand-content' => 'Brand & Content',

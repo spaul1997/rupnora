@@ -1,49 +1,44 @@
 @php
-    $meta = collect($products)->map(fn ($p, $i) => [
-        'i' => $i, 'category' => $p['category'], 'type' => $p['type'], 'metal' => $p['metal'], 'purity' => $p['purity'],
-        'gender' => $p['gender'], 'occasion' => $p['occasion'], 'price' => $p['price'],
-        'rating' => $p['rating'], 'reviews' => $p['reviews_count'], 'in_stock' => $p['in_stock'],
-        'is_new' => $p['is_new'], 'is_bestseller' => $p['is_bestseller'],
-        'discount' => $p['mrp'] > $p['price'] ? round((($p['mrp'] - $p['price']) / $p['mrp']) * 100) : 0,
-    ])->values();
+    $meta = collect($meta ?? []);
     $showBanner = $showBanner ?? true;
-    $productCollection = collect($products);
+    $productCollection = collect($filterProducts ?? $products);
+    $totalProducts = $totalProducts ?? count($products);
     $priceMin = max(0, (int) floor($productCollection->min('price') ?? 0));
     $priceMax = max(1000, (int) ceil($productCollection->max('price') ?? 500000));
-    $categoryOptions = \App\Models\Category::query()
+    $currentCategory = \App\Models\Category::query()
         ->active()
-        ->parents()
-        ->with([
-            'children' => fn ($query) => $query
-                ->active()
-                ->withCount(['products as products_count' => fn ($products) => $products->active()]),
-        ])
-        ->withCount(['products as products_count' => fn ($query) => $query->active()])
-        ->orderBy('sort_order')
-        ->orderBy('name')
-        ->get()
-        ->mapWithKeys(fn ($category) => [
-            $category->slug => [
-                'label' => $category->name,
-                'count' => $category->products_count + $category->children->sum('products_count'),
-            ],
-        ])
+        ->where('slug', $slug)
+        ->first();
+    $subcategoryOptions = $currentCategory
+        ? \App\Models\Category::query()
+            ->active()
+            ->where('parent_id', $currentCategory->id)
+            ->withCount(['products as products_count' => fn ($query) => $query->active()])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(fn ($category) => [
+                $category->slug => [
+                    'label' => $category->name,
+                    'count' => $category->products_count,
+                ],
+            ])
+            ->filter(fn ($option) => $option['count'] > 0)
+            ->all()
+        : [];
+    $jewelleryTypeOptions = $productCollection
+        ->whereNotNull('type')
+        ->groupBy('type')
+        ->mapWithKeys(fn ($items, $value) => [$value => ['label' => $value, 'count' => $items->count()]])
+        ->filter(fn ($option) => $option['count'] > 0)
+        ->sortBy('label')
         ->all();
-    $jewelleryTypeOptions = \App\Models\JewelleryType::query()
-        ->active()
-        ->withCount(['products as products_count' => fn ($query) => $query->active()])
-        ->orderBy('sort_order')
-        ->orderBy('name')
-        ->get()
-        ->mapWithKeys(fn ($type) => [$type->name => ['label' => $type->name, 'count' => $type->products_count]])
-        ->all();
-    $metalOptions = \App\Models\MetalType::query()
-        ->active()
-        ->withCount(['products as products_count' => fn ($query) => $query->active()])
-        ->orderBy('sort_order')
-        ->orderBy('name')
-        ->get()
-        ->mapWithKeys(fn ($type) => [$type->name => ['label' => $type->name, 'count' => $type->products_count]])
+    $metalOptions = $productCollection
+        ->whereNotNull('metal')
+        ->groupBy('metal')
+        ->mapWithKeys(fn ($items, $value) => [$value => ['label' => $value, 'count' => $items->count()]])
+        ->filter(fn ($option) => $option['count'] > 0)
+        ->sortBy('label')
         ->all();
     $purityOptions = $productCollection
         ->whereNotNull('purity')
@@ -57,12 +52,32 @@
         ->mapWithKeys(fn ($items, $value) => [$value => ['label' => $value, 'count' => $items->count()]])
         ->sortBy('label')
         ->all();
-    $occasionLabels = \App\Models\Product::OCCASIONS;
-    $occasionOptions = $productCollection
-        ->flatMap(fn ($product) => $product['occasion'] ?? [])
+    $collectionCounts = $productCollection
+        ->flatMap(function ($product) {
+            $collections = collect($product['collections'] ?? [])->filter();
+
+            return $collections->isNotEmpty()
+                ? $collections
+                : collect([$product['collection'] ?? null])->filter();
+        })
         ->filter()
-        ->countBy()
-        ->mapWithKeys(fn ($count, $value) => [$value => ['label' => $occasionLabels[$value] ?? str($value)->replace('-', ' ')->title()->toString(), 'count' => $count]])
+        ->countBy();
+    $collectionLabels = collect(\App\Support\Catalog::collections())
+        ->pluck('name', 'slug')
+        ->merge(
+            \App\Models\JewelleryCollection::query()
+                ->active()
+                ->whereIn('slug', $collectionCounts->keys())
+                ->pluck('name', 'slug')
+        );
+    $collectionOptions = $collectionCounts
+        ->mapWithKeys(fn ($count, $value) => [
+            $value => [
+                'label' => $collectionLabels[$value] ?? str($value)->replace('-', ' ')->title()->toString(),
+                'count' => $count,
+            ],
+        ])
+        ->filter(fn ($option) => $option['count'] > 0)
         ->sortBy('label')
         ->all();
     $ratingOptions = collect([4 => '4★ & above', 3 => '3★ & above'])
@@ -78,32 +93,42 @@
         'discount' => ['label' => 'On Discount', 'count' => $meta->where('discount', '>', 0)->count()],
     ])->filter(fn ($option) => $option['count'] > 0)->all();
     $filterSections = collect([
-        'category' => ['label' => 'Parent Category', 'type' => 'checkbox', 'options' => $categoryOptions],
+        'subcategory' => ['label' => 'Sub-Category', 'type' => 'checkbox', 'options' => $subcategoryOptions],
         'type' => ['label' => 'Jewellery Type', 'type' => 'checkbox', 'options' => $jewelleryTypeOptions],
         'metal' => ['label' => 'Material Type', 'type' => 'checkbox', 'options' => $metalOptions],
         'purity' => ['label' => 'Gold Purity', 'type' => 'checkbox', 'options' => $purityOptions],
         'gender' => ['label' => 'Gender', 'type' => 'checkbox', 'options' => $genderOptions],
-        'occasion' => ['label' => 'Occasion', 'type' => 'checkbox', 'options' => $occasionOptions],
+        'collection' => ['label' => 'Collection', 'type' => 'checkbox', 'options' => $collectionOptions],
         'rating' => ['label' => 'Rating', 'type' => 'checkbox', 'options' => $ratingOptions],
         'availability' => ['label' => 'Availability', 'type' => 'checkbox', 'options' => $availabilityOptions],
         'flags' => ['label' => 'Highlights', 'type' => 'checkbox', 'options' => $flagOptions],
     ])->filter(fn ($section) => filled($section['options']))->all();
+    $filterReset = [
+        'subcategory' => [], 'type' => [], 'metal' => [], 'purity' => [], 'gender' => [], 'collection' => [],
+        'rating' => [], 'availability' => [], 'flags' => [], 'priceMin' => $priceMin, 'priceMax' => $priceMax,
+    ];
 @endphp
 
 <x-layouts.app :title="$title">
     <div
         x-data="{
             loading: true,
+            loadingMore: false,
+            loadingAll: false,
+            loadError: '',
+            hasMore: {{ Illuminate\Support\Js::from($hasMore ?? false) }},
+            nextPage: {{ Illuminate\Support\Js::from($nextPage ?? null) }},
+            loadUrl: {{ Illuminate\Support\Js::from($loadUrl ?? request()->url()) }},
             sort: 'recommended',
-            filters: { category: [], type: [], metal: [], purity: [], gender: {{ Illuminate\Support\Js::from($initialGenderFilter ?? []) }}, occasion: [], rating: [], availability: [], flags: [], priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }} },
+            filters: { subcategory: [], type: [], metal: [], purity: [], gender: {{ Illuminate\Support\Js::from($initialGenderFilter ?? []) }}, collection: [], rating: [], availability: [], flags: [], priceMin: {{ $priceMin }}, priceMax: {{ $priceMax }} },
             meta: {{ Illuminate\Support\Js::from($meta) }},
             matches(p) {
-                if (this.filters.category.length && !this.filters.category.includes(p.category)) return false;
+                if (this.filters.subcategory.length && !this.filters.subcategory.includes(p.subcategory)) return false;
                 if (this.filters.type.length && !this.filters.type.includes(p.type)) return false;
                 if (this.filters.metal.length && !this.filters.metal.includes(p.metal)) return false;
                 if (this.filters.purity.length && !this.filters.purity.includes(p.purity)) return false;
                 if (this.filters.gender.length && !this.filters.gender.includes(p.gender)) return false;
-                if (this.filters.occasion.length && !this.filters.occasion.some(o => p.occasion.includes(o))) return false;
+                if (this.filters.collection.length && !this.filters.collection.some(collection => p.collections.includes(collection))) return false;
                 if (this.filters.availability.includes('in_stock') && !p.in_stock) return false;
                 if (this.filters.flags.includes('new') && !p.is_new) return false;
                 if (this.filters.flags.includes('bestseller') && !p.is_bestseller) return false;
@@ -126,9 +151,75 @@
                     default: return p.i;
                 }
             },
-            get visibleCount() { return this.meta.filter(p => this.matches(p)).length; }
+            get visibleCount() { return this.meta.filter(p => this.matches(p)).length; },
+            init() {
+                setTimeout(() => this.loading = false, 500);
+                this.$watch('filters', () => this.loadRemaining());
+                this.$watch('sort', () => this.loadRemaining());
+                this.$nextTick(() => {
+                    this.observer = new IntersectionObserver((entries) => {
+                        if (entries.some(entry => entry.isIntersecting)) this.loadMore();
+                    }, { rootMargin: '600px 0px' });
+                    this.observer.observe(this.$refs.loadSentinel);
+                });
+            },
+            async loadMore() {
+                if (this.loadingMore || !this.hasMore || !this.nextPage) return;
+
+                this.loadingMore = true;
+                this.loadError = '';
+
+                try {
+                    const url = new URL(this.loadUrl, window.location.origin);
+                    url.searchParams.set('page', this.nextPage);
+                    const response = await fetch(url, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) throw new Error('Unable to load more products.');
+
+                    const data = await response.json();
+                    this.meta.push(...data.meta);
+                    this.$refs.productGrid.insertAdjacentHTML('beforeend', data.html);
+                    this.hasMore = data.has_more;
+                    this.nextPage = data.next_page;
+                } catch (error) {
+                    this.loadError = error.message || 'Unable to load more products.';
+                } finally {
+                    this.loadingMore = false;
+                    this.queueNextPageIfNeeded();
+                }
+            },
+            async loadRemaining() {
+                if (this.loadingAll || !this.hasMore) return;
+
+                this.loadingAll = true;
+                try {
+                    while (this.hasMore) {
+                        if (this.loadingMore) {
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            continue;
+                        }
+
+                        await this.loadMore();
+                        if (this.loadError) break;
+                    }
+                } finally {
+                    this.loadingAll = false;
+                }
+            },
+            queueNextPageIfNeeded() {
+                this.$nextTick(() => {
+                    const sentinel = this.$refs.loadSentinel;
+                    if (this.hasMore && !this.loadingMore && !this.loadError && sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + 600) {
+                        this.loadMore();
+                    }
+                });
+            }
         }"
-        x-init="setTimeout(() => loading = false, 500)"
     >
         <div class="container-luxe pt-6">
             <x-ui.breadcrumb :trail="[['label' => 'Jewellery', 'url' => route('collections.index')], ['label' => $category['name']]]" />
@@ -159,16 +250,18 @@
         <div class="container-luxe {{ $showBanner ? 'py-8 sm:py-10' : 'pb-8 sm:pb-10' }}">
             <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
                 <p class="text-sm text-muted">
-                    <span x-text="visibleCount" class="font-semibold text-charcoal"></span> Products
+                    <span x-text="visibleCount" class="font-semibold text-charcoal"></span>
+                    <span x-show="hasMore && !loadingAll"> of {{ number_format($totalProducts) }}</span>
+                    Products
                 </p>
                 <div class="flex items-center gap-3">
-                    <x-ui.filter-drawer :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" />
+                    <x-ui.filter-drawer :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" :reset="$filterReset" />
                     <x-ui.sort-dropdown />
                 </div>
             </div>
 
             <div class="mt-8 flex gap-10">
-                <x-ui.filter-sidebar :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" />
+                <x-ui.filter-sidebar :sections="$filterSections" :price-min="$priceMin" :price-max="$priceMax" :reset="$filterReset" />
 
                 <div class="min-w-0 flex-1">
                     {{-- Loading skeleton --}}
@@ -177,7 +270,7 @@
                     </div>
 
                     {{-- Empty state --}}
-                    <div x-show="!loading && visibleCount === 0" x-cloak>
+                    <div x-show="!loading && !loadingAll && visibleCount === 0" x-cloak>
                         <x-ui.empty-state
                             icon="search"
                             title="No products match your filters"
@@ -186,19 +279,23 @@
                     </div>
 
                     {{-- Product grid --}}
-                    <div x-show="!loading && visibleCount > 0" x-cloak class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        @foreach ($products as $i => $product)
-                            <div x-show="matches(meta[{{ $i }}])" :style="`order: ${rank(meta[{{ $i }}]) + 100000}`">
-                                <x-ui.product-card :product="$product" />
-                            </div>
-                        @endforeach
+                    <div x-ref="productGrid" x-show="!loading && visibleCount > 0" x-cloak class="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        @include('pages.partials.category-products', ['products' => $products, 'startIndex' => 0])
                     </div>
 
-                    @if (count($products) > 0)
-                        <div class="mt-14">
-                            <x-ui.pagination :current="1" :total="3" />
+                    <div x-ref="loadSentinel" x-show="hasMore || loadingMore || loadError || meta.length > 20" x-cloak class="mt-10 flex min-h-12 items-center justify-center" aria-live="polite">
+                        <div x-show="loadingMore" x-cloak class="flex items-center gap-2 text-sm text-muted">
+                            <svg class="h-5 w-5 animate-spin text-champagne-dark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" />
+                                <path class="opacity-75" fill="currentColor" d="M12 3a9 9 0 00-9 9h3a6 6 0 016-6V3z" />
+                            </svg>
+                            <span>Loading more products...</span>
                         </div>
-                    @endif
+                        <button x-show="loadError && hasMore" x-cloak type="button" @click="loadMore" class="btn-ghost text-sm">
+                            <span x-text="loadError"></span> Retry
+                        </button>
+                        <p x-show="!hasMore && meta.length > 20 && visibleCount > 0" x-cloak class="text-sm text-muted">You have viewed all products.</p>
+                    </div>
                 </div>
             </div>
         </div>

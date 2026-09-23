@@ -1,6 +1,7 @@
 @props([
     'title' => null,
     'description' => null,
+    'trackingProductId' => null,
 ])
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
@@ -22,6 +23,11 @@
             cartCount: {{ \App\Support\ShoppingCart::count() }},
             wishlistIds: {{ Illuminate\Support\Js::from(\App\Support\ShoppingCart::wishlistIds()) }},
             socialProofItems: {{ Illuminate\Support\Js::from($socialProofItems ?? []) }},
+            visitorTracking: {{ Illuminate\Support\Js::from([
+                'endpoint' => route('visitor-tracking.store'),
+                'routeName' => request()->route()?->getName(),
+                'productId' => $trackingProductId,
+            ]) }},
         };
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

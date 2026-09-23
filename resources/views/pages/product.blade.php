@@ -102,7 +102,7 @@
     ];
 @endphp
 
-<x-layouts.app :title="$product['name']" :description="$product['short_desc']">
+<x-layouts.app :title="$product['name']" :description="$product['short_desc']" :tracking-product-id="$product['id']">
     <div
         x-data="{
             activeImg: 0,

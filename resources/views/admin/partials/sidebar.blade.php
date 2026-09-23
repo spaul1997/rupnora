@@ -36,6 +36,7 @@
 
     $simple = [
         ['label' => 'Customers', 'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 3.6-7 8-7s8 3 8 7', 'url' => route('admin.customers.index'), 'active' => request()->routeIs('admin.customers.*')],
+        ['label' => 'Career Applications', 'icon' => 'M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2m-12 4h16m-14-4h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z', 'url' => route('admin.career-applications.index'), 'active' => request()->routeIs('admin.career-applications.*')],
     ];
 
     $groups['feedback'] = [
@@ -69,6 +70,7 @@
     ];
 
     $simple[] = ['label' => 'Reports', 'icon' => 'M9 17V9m4 8V5m4 12v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z', 'url' => route('admin.reports.index'), 'active' => request()->routeIs('admin.reports.*')];
+    $simple[] = ['label' => 'Visitor Tracking', 'icon' => 'M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12zm10-3a3 3 0 100 6 3 3 0 000-6z', 'url' => route('admin.visitor-tracking.index'), 'active' => request()->routeIs('admin.visitor-tracking.*')];
     $simple[] = ['label' => 'Settings', 'icon' => 'M12 15v2m-5 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2zM8 11V8a4 4 0 118 0v3', 'url' => route('admin.settings.edit'), 'active' => request()->routeIs('admin.settings.*')];
 
     $openGroup = collect($groups)->filter(fn ($g) => $g['active'])->keys()->first();

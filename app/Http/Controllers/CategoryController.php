@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CategoryController extends Controller
 {
+    private const PRODUCTS_PER_PAGE = 20;
+
     public function index()
     {
         return view('pages.categories', [
@@ -32,10 +34,10 @@ class CategoryController extends Controller
 
         abort_if(! $category, Response::HTTP_NOT_FOUND);
 
-        return $this->categoryView($slug, $category);
+        return $this->categoryView($request, $slug, $category);
     }
 
-    public function recipient(string $slug)
+    public function recipient(Request $request, string $slug)
     {
         $recipient = collect(Catalog::recipients())->firstWhere('slug', $slug);
 
@@ -47,59 +49,132 @@ class CategoryController extends Controller
             ->values()
             ->all();
 
-        return view('pages.category', [
-            'title' => $recipient['name'],
-            'slug' => $slug,
-            'category' => $recipient,
-            'products' => $products,
-            'showBanner' => false,
-            'initialGenderFilter' => [$gender],
-        ]);
+        return $this->renderCategory(
+            $request,
+            $slug,
+            $recipient,
+            $products,
+            false,
+            [$gender],
+        );
     }
 
-    public function newArrivals()
+    public function newArrivals(Request $request)
     {
-        return $this->categoryView('new-arrivals', [
+        return $this->categoryView($request, 'new-arrivals', [
             'name' => 'New Arrivals',
             'blurb' => 'The latest additions to our collection, freshly crafted.',
             'art' => 'diamond',
         ], false);
     }
 
-    public function bestSellers()
+    public function bestSellers(Request $request)
     {
-        return $this->categoryView('best-sellers', [
+        return $this->categoryView($request, 'best-sellers', [
             'name' => 'Best Sellers',
             'blurb' => 'Our most loved pieces, chosen again and again.',
             'art' => 'ring',
         ], false);
     }
 
-    public function jewelleryType(string $slug)
+    public function jewelleryType(Request $request, string $slug)
     {
         $type = StorefrontCatalog::jewelleryType($slug);
 
         abort_if(! $type, Response::HTTP_NOT_FOUND);
 
-        return view('pages.category', [
-            'title' => $type['name'],
-            'slug' => $slug,
-            'category' => $type,
-            'products' => StorefrontCatalog::byJewelleryType($slug),
-            'showBanner' => false,
-        ]);
+        return $this->renderCategory(
+            $request,
+            $slug,
+            $type,
+            StorefrontCatalog::byJewelleryType($slug),
+            false,
+        );
     }
 
-    protected function categoryView(string $slug, array $category, bool $showBanner = true)
+    protected function categoryView(Request $request, string $slug, array $category, bool $showBanner = true)
     {
-        $products = StorefrontCatalog::byCategory($slug);
+        return $this->renderCategory(
+            $request,
+            $slug,
+            $category,
+            StorefrontCatalog::byCategory($slug),
+            $showBanner,
+        );
+    }
+
+    protected function renderCategory(
+        Request $request,
+        string $slug,
+        array $category,
+        array $products,
+        bool $showBanner = true,
+        array $initialGenderFilter = [],
+    ) {
+        $page = $request->expectsJson() ? max(1, $request->integer('page', 1)) : 1;
+        $offset = ($page - 1) * self::PRODUCTS_PER_PAGE;
+        $visibleProducts = array_slice($products, $offset, self::PRODUCTS_PER_PAGE);
+        $totalProducts = count($products);
+        $loadedCount = min($offset + count($visibleProducts), $totalProducts);
+        $hasMore = $loadedCount < $totalProducts;
+        $meta = $this->productMeta($visibleProducts, $offset);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('pages.partials.category-products', [
+                    'products' => $visibleProducts,
+                    'startIndex' => $offset,
+                ])->render(),
+                'meta' => $meta,
+                'has_more' => $hasMore,
+                'next_page' => $hasMore ? $page + 1 : null,
+                'loaded_count' => $loadedCount,
+                'total' => $totalProducts,
+            ]);
+        }
 
         return view('pages.category', [
             'title' => $category['name'],
             'slug' => $slug,
             'category' => $category,
-            'products' => $products,
+            'products' => $visibleProducts,
+            'filterProducts' => $products,
+            'meta' => $meta,
+            'totalProducts' => $totalProducts,
+            'hasMore' => $hasMore,
+            'nextPage' => $hasMore ? 2 : null,
+            'loadUrl' => $request->url(),
             'showBanner' => $showBanner,
+            'initialGenderFilter' => $initialGenderFilter,
         ]);
+    }
+
+    protected function productMeta(array $products, int $offset = 0): array
+    {
+        return collect($products)
+            ->values()
+            ->map(fn (array $product, int $index) => [
+                'i' => $offset + $index,
+                'category' => $product['category'],
+                'subcategory' => $product['subcategory'] ?? null,
+                'type' => $product['type'],
+                'metal' => $product['metal'],
+                'purity' => $product['purity'],
+                'gender' => $product['gender'],
+                'occasion' => $product['occasion'],
+                'collections' => count($product['collections'] ?? []) > 0
+                    ? $product['collections']
+                    : array_values(array_filter([$product['collection'] ?? null])),
+                'price' => $product['price'],
+                'rating' => $product['rating'],
+                'reviews' => $product['reviews_count'],
+                'in_stock' => $product['in_stock'],
+                'is_new' => $product['is_new'],
+                'is_bestseller' => $product['is_bestseller'],
+                'discount' => $product['mrp'] > $product['price']
+                    ? round((($product['mrp'] - $product['price']) / $product['mrp']) * 100)
+                    : 0,
+            ])
+            ->all();
     }
 }

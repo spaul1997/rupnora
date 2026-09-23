@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\CareerApplicationController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\CouponController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\VisitorTrackingController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +73,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('customers', CustomerController::class)->only(['index', 'show', 'edit', 'update']);
         Route::patch('customers/{customer}/toggle-active', [CustomerController::class, 'toggleActive'])->name('customers.toggle-active');
 
+        // Career applications
+        Route::get('career-applications', [CareerApplicationController::class, 'index'])->name('career-applications.index');
+        Route::get('career-applications/{careerApplication}', [CareerApplicationController::class, 'show'])->name('career-applications.show');
+        Route::patch('career-applications/{careerApplication}/status', [CareerApplicationController::class, 'updateStatus'])->name('career-applications.update-status');
+        Route::get('career-applications/{careerApplication}/cv', [CareerApplicationController::class, 'downloadCv'])->name('career-applications.cv');
+
         // Reviews
         Route::resource('reviews', ReviewController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::patch('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
@@ -115,6 +123,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
         Route::get('reports/refunds', [ReportController::class, 'refunds'])->name('reports.refunds');
         Route::get('reports/{type}/export/{format}', [ReportController::class, 'export'])->name('reports.export');
+
+        // Visitor tracking
+        Route::get('visitor-tracking', [VisitorTrackingController::class, 'index'])->name('visitor-tracking.index');
 
         // Settings
         Route::get('settings', [WebsiteSettingController::class, 'edit'])->name('settings.edit');

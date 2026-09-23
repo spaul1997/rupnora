@@ -187,6 +187,11 @@ class Product extends Model
         return $this->hasMany(StockAdjustment::class);
     }
 
+    public function visitorLogs(): HasMany
+    {
+        return $this->hasMany(VisitorLog::class);
+    }
+
     public function coupons()
     {
         return $this->belongsToMany(Coupon::class, 'coupon_products');

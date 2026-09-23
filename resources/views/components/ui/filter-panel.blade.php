@@ -3,6 +3,7 @@
     'sections' => null,
     'priceMin' => 0,
     'priceMax' => 500000,
+    'reset' => null,
 ])
 
 @php
@@ -17,12 +18,16 @@
         'availability' => ['label' => 'Availability', 'type' => 'checkbox', 'options' => ['in_stock' => 'In Stock Only']],
         'flags' => ['label' => 'Highlights', 'type' => 'checkbox', 'options' => ['new' => 'New Arrivals', 'bestseller' => 'Best Sellers', 'discount' => 'On Discount']],
     ];
+    $reset ??= [
+        'category' => [], 'type' => [], 'metal' => [], 'purity' => [], 'gender' => [], 'occasion' => [],
+        'rating' => [], 'availability' => [], 'flags' => [], 'priceMin' => (int) $priceMin, 'priceMax' => (int) $priceMax,
+    ];
 @endphp
 
 <div class="divide-y divide-line">
     <div class="flex items-center justify-between pb-4">
         <span class="text-sm font-semibold text-charcoal">Filters</span>
-        <button type="button" @click="{{ $model }} = { category: [], type: [], metal: [], purity: [], gender: [], occasion: [], rating: [], availability: [], flags: [], priceMin: {{ (int) $priceMin }}, priceMax: {{ (int) $priceMax }} }" class="text-xs font-medium text-champagne-dark hover:underline">
+        <button type="button" @click="{{ $model }} = {{ Illuminate\Support\Js::from($reset) }}" class="text-xs font-medium text-champagne-dark hover:underline">
             Clear All
         </button>
     </div>
@@ -43,7 +48,7 @@
     </div>
 
     @foreach ($sections as $key => $section)
-        <div class="py-4" x-data="{ open: {{ $key === 'category' ? 'true' : 'false' }} }">
+        <div class="py-4" x-data="{ open: {{ in_array($key, ['category', 'subcategory'], true) ? 'true' : 'false' }} }">
             <button type="button" @click="open = !open" class="flex w-full items-center justify-between">
                 <span class="text-sm font-medium text-charcoal">{{ $section['label'] }}</span>
                 <svg class="h-3.5 w-3.5 text-muted transition-transform" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>

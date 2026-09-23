@@ -86,13 +86,15 @@
                     </button>
                     <span class="sr-only" aria-live="polite" x-text="error || statusMessage"></span>
                 </form>
-                <div class="flex flex-shrink-0 items-center justify-center gap-2 sm:justify-end" aria-label="Social media links">
-                    @foreach (['instagram' => 'M12 2c2.7 0 3 0 4.1.06 1.1.05 1.8.22 2.5.47.7.27 1.2.6 1.8 1.16.6.6.9 1.1 1.16 1.8.25.7.42 1.4.47 2.5.06 1.1.06 1.4.06 4.1s0 3-.06 4.1c-.05 1.1-.22 1.8-.47 2.5a5 5 0 01-1.16 1.8 5 5 0 01-1.8 1.16c-.7.25-1.4.42-2.5.47-1.1.06-1.4.06-4.1.06s-3 0-4.1-.06c-1.1-.05-1.8-.22-2.5-.47a5 5 0 01-1.8-1.16 5 5 0 01-1.16-1.8c-.25-.7-.42-1.4-.47-2.5C2 15 2 14.7 2 12s0-3 .06-4.1c.05-1.1.22-1.8.47-2.5.27-.7.6-1.2 1.16-1.8.6-.6 1.1-.9 1.8-1.16.7-.25 1.4-.42 2.5-.47C9 2 9.3 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm0 8.2a3.2 3.2 0 110-6.4 3.2 3.2 0 010 6.4zm5.3-8.4a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4z', 'facebook' => 'M14 9h3V6h-3c-1.7 0-3 1.3-3 3v2H9v3h2v7h3v-7h3l1-3h-4V9c0-.6.4-1 1-1z', 'pinterest' => 'M12 2a10 10 0 00-3.6 19.3c0-.8 0-1.8.2-2.6l1.4-6s-.4-.7-.4-1.8c0-1.7 1-3 2.2-3 1 0 1.5.8 1.5 1.7 0 1-.7 2.6-1 4-.3 1.2.6 2.2 1.8 2.2 2.1 0 3.7-2.3 3.7-5.5 0-2.9-2-5-4.9-5-3.4 0-5.3 2.5-5.3 5.1 0 1 .4 2.1.9 2.7a.4.4 0 01.1.4l-.3 1.4c-.1.2-.2.3-.4.2-1.6-.7-2.6-3-2.6-4.8 0-3.9 2.9-7.6 8.3-7.6 4.3 0 7.7 3.1 7.7 7.2 0 4.3-2.7 7.7-6.4 7.7-1.3 0-2.5-.6-2.9-1.5l-.8 3c-.3 1-1 2.4-1.5 3.1A10 10 0 1012 2z'] as $name => $path)
-                        <a href="#" aria-label="{{ ucfirst($name) }}" class="flex h-10 w-10 items-center justify-center rounded-full border border-ivory/20 text-ivory/70 transition-colors hover:border-champagne-light hover:text-champagne-light">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{ $path }}" /></svg>
-                        </a>
-                    @endforeach
-                </div>
+                @if (! empty($footerSocialLinks))
+                    <div class="flex flex-shrink-0 items-center justify-center gap-2 sm:justify-end" aria-label="Social media links">
+                        @foreach ($footerSocialLinks as $social)
+                            <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social['label'] }}" class="flex h-10 w-10 items-center justify-center rounded-full border border-ivory/20 text-ivory/70 transition-colors hover:border-champagne-light hover:text-champagne-light">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{ $social['icon'] }}" /></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
 

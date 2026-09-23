@@ -7,11 +7,19 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProductReviewSubmissionTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('local');
+    }
 
     public function test_guest_is_asked_to_sign_in_and_cannot_submit_a_review(): void
     {
@@ -130,6 +138,45 @@ class ProductReviewSubmissionTest extends TestCase
             ->assertOk()
             ->assertSee('Kavya Rao')
             ->assertSee('A genuinely lovely piece with a beautiful finish.');
+
+        Storage::disk('local')->assertMissing('product-reviews.json');
+    }
+
+    public function test_products_without_database_reviews_get_distinct_saved_jewellery_reviews(): void
+    {
+        $ring = $this->createProduct();
+        $earrings = Product::create([
+            'name' => 'Moonbeam Gold Earrings',
+            'slug' => 'moonbeam-gold-earrings',
+            'sku' => 'REVIEW-002',
+            'category_id' => $ring->category_id,
+            'jewellery_type' => 'Earrings',
+            'metal_type' => 'Gold',
+            'mrp' => 7000,
+            'selling_price' => 6500,
+            'stock_quantity' => 8,
+            'is_active' => true,
+        ]);
+
+        $this->get(route('product.show', $ring->slug))
+            ->assertOk()
+            ->assertSee('The fit of', false);
+
+        $this->get(route('product.show', $earrings->slug))
+            ->assertOk()
+            ->assertSee('Moonbeam Gold Earrings');
+
+        Storage::disk('local')->assertExists('product-reviews.json');
+
+        $saved = json_decode(Storage::disk('local')->get('product-reviews.json'), true);
+        $ringReviews = $saved['products'][$ring->slug]['reviews'];
+        $earringReviews = $saved['products'][$earrings->slug]['reviews'];
+
+        $this->assertCount(6, $ringReviews);
+        $this->assertCount(6, $earringReviews);
+        $this->assertNotSame($ringReviews, $earringReviews);
+        $this->assertStringContainsString('ring', strtolower(implode(' ', array_column($ringReviews, 'text'))));
+        $this->assertStringContainsString('earring', strtolower(implode(' ', array_column($earringReviews, 'text'))));
     }
 
     private function createProduct(): Product

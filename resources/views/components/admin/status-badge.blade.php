@@ -32,6 +32,11 @@
         'open' => 'bg-blue-100 text-blue-700',
         'waiting_customer' => 'bg-purple-100 text-purple-700',
 
+        // career application status
+        'reviewing' => 'bg-amber-100 text-amber-700',
+        'shortlisted' => 'bg-purple-100 text-purple-700',
+        'hired' => 'bg-green-100 text-green-700',
+
         // priority
         'low' => 'bg-gray-100 text-gray-600',
         'normal' => 'bg-blue-100 text-blue-700',

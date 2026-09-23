@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthPageController;
-use App\Http\Controllers\CartController;
 use App\Http\Controllers\CareerApplicationController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CollectionController;
@@ -13,6 +13,7 @@ use App\Http\Controllers\NewsletterSubscriptionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\VisitorTrackingController;
 use App\Mail\ForgotPasswordOtpMail;
 use App\Mail\OrderFailedMail;
 use App\Mail\OrderSuccessMail;
@@ -136,6 +137,9 @@ Route::post('/contact', [ContactController::class, 'store'])->middleware('thrott
 Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('newsletter-subscriptions.store');
+Route::post('/visitor-tracking', [VisitorTrackingController::class, 'store'])
+    ->middleware('throttle:120,1')
+    ->name('visitor-tracking.store');
 
 Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
 Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('collection.show');

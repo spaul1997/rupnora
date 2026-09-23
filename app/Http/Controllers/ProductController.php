@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
-use App\Support\Catalog;
+use App\Support\ProductReviewFallbacks;
 use App\Support\StorefrontCatalog;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
-    public function show(string $slug)
+    public function show(string $slug, ProductReviewFallbacks $fallbackReviews)
     {
         $product = StorefrontCatalog::product($slug);
 
@@ -35,11 +35,9 @@ class ProductController extends Controller
                 'text' => $review->review,
             ]);
 
-        $displayReviews = $approvedReviews
-            ->concat(collect(Catalog::reviews()))
-            ->take(6)
-            ->values()
-            ->all();
+        $displayReviews = $approvedReviews->isNotEmpty()
+            ? $approvedReviews->all()
+            : $fallbackReviews->forProduct($product);
 
         $customerReview = auth()->check() && auth()->user()->role === 'customer'
             ? Review::query()

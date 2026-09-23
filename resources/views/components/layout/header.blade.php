@@ -105,16 +105,18 @@
                                 x-transition:enter="transition ease-out duration-150"
                                 x-transition:enter-start="opacity-0 translate-y-1"
                                 x-transition:enter-end="opacity-100 translate-y-0"
-                                class="absolute left-0 top-full z-40 mt-2 w-56 rounded-xl border border-line bg-paper p-2 shadow-lift"
+                                class="absolute left-0 top-full z-40 w-56 pt-2"
                             >
-                                <a href="{{ $item['url'] }}" class="block rounded-lg px-3 py-2 text-sm font-medium text-charcoal hover:bg-ivory-soft">View all {{ $item['label'] }}</a>
-                                <div class="my-1.5 border-t border-line"></div>
-                                @foreach ($item['children'] as $child)
-                                    <a href="{{ route('category.show', $child['slug']) }}" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">
-                                        <span>{{ $child['name'] }}</span>
-                                        <span class="text-xs text-muted">{{ $child['count'] }}</span>
-                                    </a>
-                                @endforeach
+                                <div class="rounded-xl border border-line bg-paper p-2 shadow-lift">
+                                    <a href="{{ $item['url'] }}" class="block rounded-lg px-3 py-2 text-sm font-medium text-charcoal hover:bg-ivory-soft">View all {{ $item['label'] }}</a>
+                                    <div class="my-1.5 border-t border-line"></div>
+                                    @foreach ($item['children'] as $child)
+                                        <a href="{{ route('category.show', $child['slug']) }}" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-charcoal hover:bg-ivory-soft">
+                                            <span>{{ $child['name'] }}</span>
+                                            <span class="text-xs text-muted">{{ $child['count'] }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     </li>
