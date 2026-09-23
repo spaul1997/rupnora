@@ -230,9 +230,9 @@
             @php
                 $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
             @endphp
-            <div class="relative mt-5 h-56 overflow-hidden">
+            <div class="relative mt-5 w-full overflow-hidden">
                 @if ($categoryHeroImage)
-                    <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="h-full w-full object-contain" />
+                    <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full object-cover object-top sm:aspect-[16/4]" />
                 @else
                     <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
                 @endif
