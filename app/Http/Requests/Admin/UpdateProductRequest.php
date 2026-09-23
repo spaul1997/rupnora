@@ -108,6 +108,7 @@ class UpdateProductRequest extends FormRequest
             'discount_expiry_date' => ['nullable', 'date_format:Y-m-d'],
             'making_charge' => ['nullable', 'numeric', 'min:0'],
             'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'price_change_note' => ['nullable', 'string', 'max:500'],
 
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'minimum_stock' => ['nullable', 'integer', 'min:0'],

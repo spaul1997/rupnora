@@ -34,6 +34,9 @@
             expressDeliveryCharge: {{ Illuminate\Support\Js::from($expressDeliveryCharge) }},
             codOrderLimit: {{ Illuminate\Support\Js::from($codOrderLimit) }},
             baseTotal: {{ Illuminate\Support\Js::from($sellingTotal + $tax) }},
+            giftWrapCharge: {{ Illuminate\Support\Js::from($giftWrapCharge) }},
+            giftMessageLimit: {{ Illuminate\Support\Js::from($giftMessageLimit) }},
+            giftMessageTemplates: {{ Illuminate\Support\Js::from($giftMessageTemplates) }},
         })"
         x-effect="if (payment === 'cod' && !codAvailable) payment = 'online'"
         class="container-luxe py-8"
@@ -148,6 +151,67 @@
                             </div>
                         </label>
                     </div>
+
+                    {{-- Gift wrap --}}
+                    <div class="mt-6 rounded-2xl border border-line bg-paper p-4 sm:p-5">
+                        <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-charcoal">
+                            <input type="checkbox" x-model="giftWrap" class="h-5 w-5 rounded border-line accent-champagne-dark focus:ring-champagne-dark/30">
+                            <span>Add a gift wrap (+{{ '₹'.number_format($giftWrapCharge, $giftWrapCharge == floor($giftWrapCharge) ? 0 : 2) }})</span>
+                        </label>
+
+                        <div x-show="giftWrap" x-collapse x-cloak class="pt-5">
+                            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Gift message categories">
+                                <template x-for="category in giftCategories" :key="category">
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        @click="giftCategory = category"
+                                        :aria-selected="giftCategory === category"
+                                        :class="giftCategory === category ? 'bg-ivory text-charcoal' : 'text-charcoal-soft hover:bg-ivory/70'"
+                                        class="rounded-xl px-5 py-3 text-sm transition-colors"
+                                        x-text="category"
+                                    ></button>
+                                </template>
+                            </div>
+
+                            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <template x-for="message in activeGiftMessages" :key="message">
+                                    <button
+                                        type="button"
+                                        @click="selectGiftMessage(message)"
+                                        :class="giftMessage === message ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line hover:border-champagne'"
+                                        class="min-h-28 rounded-lg border p-4 text-left text-sm leading-relaxed text-charcoal transition-colors"
+                                        x-text="`&quot;${message}&quot;`"
+                                    ></button>
+                                </template>
+                            </div>
+
+                            <p class="mt-5 text-sm text-charcoal">Tap to select from above or type your own</p>
+                            <textarea
+                                x-model="giftMessage"
+                                :maxlength="giftMessageLimit"
+                                rows="5"
+                                placeholder="Enter your message here"
+                                aria-label="Gift message"
+                                class="input-luxe mt-3 resize-none"
+                            ></textarea>
+                            <p class="mt-1 text-right text-xs text-muted"><span x-text="giftMessage.length">0</span>/<span x-text="giftMessageLimit">248</span> characters</p>
+
+                            <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <label class="text-sm text-charcoal">
+                                    <span class="mb-1.5 block">To:</span>
+                                    <input type="text" x-model.trim="giftTo" maxlength="100" placeholder="eg. John" class="input-luxe">
+                                </label>
+                                <label class="text-sm text-charcoal">
+                                    <span class="mb-1.5 block">From:</span>
+                                    <input type="text" x-model.trim="giftFrom" maxlength="100" placeholder="eg. John" class="input-luxe">
+                                </label>
+                            </div>
+
+                            <button type="button" @click="updateGiftWrapDetails()" class="btn-primary mt-5">Update</button>
+                        </div>
+                    </div>
+
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 1" class="btn-secondary">Back</button>
                         <button @click="step = 3" class="btn-primary flex-1 sm:flex-initial">Continue to Payment</button>
@@ -194,6 +258,18 @@
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Payment Method</p>
                             <p class="mt-1.5 text-sm text-charcoal" x-text="payment === 'cod' ? 'Cash on Delivery' : 'Online Payment'"></p>
                         </div>
+                        <div x-show="giftWrap" x-cloak class="rounded-xl border border-line p-4">
+                            <div class="flex items-center justify-between gap-4">
+                                <p class="text-xs font-medium uppercase tracking-wide text-muted">Gift Wrap</p>
+                                <p class="text-sm font-medium text-charcoal" x-text="formatMoney(giftWrapCharge)"></p>
+                            </div>
+                            <p x-show="giftTo || giftFrom" class="mt-2 text-sm text-charcoal">
+                                <span x-show="giftTo">To: <span x-text="giftTo"></span></span>
+                                <span x-show="giftTo && giftFrom" class="text-muted"> &middot; </span>
+                                <span x-show="giftFrom">From: <span x-text="giftFrom"></span></span>
+                            </p>
+                            <p x-show="giftMessage" class="mt-2 whitespace-pre-line text-sm italic leading-relaxed text-muted" x-text="`&quot;${giftMessage}&quot;`"></p>
+                        </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Items</p>
                             <div class="divide-y divide-line">
@@ -227,7 +303,7 @@
 
             <div>
                 <div class="lg:sticky lg:top-28">
-                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :shipping="0" :tax="$tax" :showCoupon="false" :dynamicDelivery="true" ctaLabel="" />
+                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :shipping="0" :tax="$tax" :giftWrapCharge="$giftWrapCharge" :showCoupon="false" :dynamicDelivery="true" :dynamicGiftWrap="true" ctaLabel="" />
                 </div>
             </div>
         </div>

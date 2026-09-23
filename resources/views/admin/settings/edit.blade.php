@@ -28,6 +28,7 @@
 
             <div class="admin-card space-y-5 p-6">
                 <h3 class="text-sm font-semibold text-gray-900">Delivery</h3>
+                <x-admin.form.input label="Free Shipping Order Threshold (INR)" name="free_shipping_threshold" type="number" :value="$settings->free_shipping_threshold" :required="true" min="0" max="99999999.99" step="0.01" help="Displayed in the storefront announcement bar. Enter 0 to advertise free shipping on every order." />
                 <x-admin.form.input label="Express Delivery Price (INR)" name="express_delivery_charge" type="number" :value="$settings->express_delivery_charge" :required="true" min="0" max="99999999.99" step="0.01" help="Charged when customers choose Express Delivery. Enter 0 for free express delivery." />
                 <x-admin.form.input label="Cash on Delivery Order Limit (INR)" name="cod_order_limit" type="number" :value="$settings->cod_order_limit" :required="true" min="0" max="99999999.99" step="0.01" help="Cash on Delivery is available when the final order total, including tax and delivery, is below this amount. Enter 0 to disable Cash on Delivery." />
             </div>

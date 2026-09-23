@@ -117,7 +117,7 @@ class CategoryController extends Controller
         $totalProducts = count($products);
         $loadedCount = min($offset + count($visibleProducts), $totalProducts);
         $hasMore = $loadedCount < $totalProducts;
-        $meta = $this->productMeta($visibleProducts, $offset);
+        $meta = StorefrontCatalog::productMeta($visibleProducts, $offset);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -147,34 +147,5 @@ class CategoryController extends Controller
             'showBanner' => $showBanner,
             'initialGenderFilter' => $initialGenderFilter,
         ]);
-    }
-
-    protected function productMeta(array $products, int $offset = 0): array
-    {
-        return collect($products)
-            ->values()
-            ->map(fn (array $product, int $index) => [
-                'i' => $offset + $index,
-                'category' => $product['category'],
-                'subcategory' => $product['subcategory'] ?? null,
-                'type' => $product['type'],
-                'metal' => $product['metal'],
-                'purity' => $product['purity'],
-                'gender' => $product['gender'],
-                'occasion' => $product['occasion'],
-                'collections' => count($product['collections'] ?? []) > 0
-                    ? $product['collections']
-                    : array_values(array_filter([$product['collection'] ?? null])),
-                'price' => $product['price'],
-                'rating' => $product['rating'],
-                'reviews' => $product['reviews_count'],
-                'in_stock' => $product['in_stock'],
-                'is_new' => $product['is_new'],
-                'is_bestseller' => $product['is_bestseller'],
-                'discount' => $product['mrp'] > $product['price']
-                    ? round((($product['mrp'] - $product['price']) / $product['mrp']) * 100)
-                    : 0,
-            ])
-            ->all();
     }
 }

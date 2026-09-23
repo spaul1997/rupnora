@@ -23,6 +23,10 @@ class StoreProductRequest extends FormRequest
                 'slug' => Str::slug($slugSource),
             ]);
         }
+
+        if (! $this->has('is_new_arrival')) {
+            $this->merge(['is_new_arrival' => true]);
+        }
     }
 
     public function rules(): array

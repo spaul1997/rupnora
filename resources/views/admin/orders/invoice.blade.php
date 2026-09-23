@@ -75,6 +75,7 @@
                 <div class="flex justify-between"><span class="text-gray-500">Discount</span><span>−₹{{ number_format($order->discount_amount + $order->coupon_discount, 2) }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Shipping</span><span>₹{{ number_format($order->shipping_charge, 2) }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">GST</span><span>₹{{ number_format($order->gst_amount, 2) }}</span></div>
+                @if ($order->gift_wrap)<div class="flex justify-between"><span class="text-gray-500">Gift Wrap</span><span>₹{{ number_format($order->gift_wrap_charge, 2) }}</span></div>@endif
                 <div class="flex justify-between border-t border-gray-200 pt-1.5 text-base font-semibold"><span>Grand Total</span><span>₹{{ number_format($order->grand_total, 2) }}</span></div>
             </div>
         </div>

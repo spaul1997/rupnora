@@ -96,6 +96,8 @@ class CheckoutOrders
         $items = ShoppingCart::items();
         $address = self::address((string) $data['address_id']);
         $shipping = $data['delivery'] === 'express' ? (float) WebsiteSetting::current()->express_delivery_charge : 0;
+        $giftWrap = (bool) ($data['gift_wrap'] ?? false);
+        $giftWrapCharge = $giftWrap ? (float) config('checkout.gift_wrap.charge', 50) : 0;
         $guestCheckout = auth()->user()?->role !== 'customer';
 
         if ($guestCheckout) {
@@ -103,7 +105,7 @@ class CheckoutOrders
             $address['phone'] = trim($address['phone'] ?? '');
         }
 
-        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $guestCheckout) {
+        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $giftWrap, $giftWrapCharge, $guestCheckout) {
             $products = Product::query()->whereIn('id', array_column(array_column($items, 'product'), 'id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $quantities = collect($items)->groupBy('product.id')->map(fn ($rows) => $rows->sum('qty'));
@@ -155,7 +157,13 @@ class CheckoutOrders
                 'discount_amount' => $mrpTotal - $sellingTotal,
                 'shipping_charge' => $shipping,
                 'gst_amount' => $tax,
-                'grand_total' => $sellingTotal + $shipping + $tax,
+                'gift_wrap' => $giftWrap,
+                'gift_wrap_charge' => $giftWrapCharge,
+                'gift_message_category' => $giftWrap ? self::nullableTrimmed($data['gift_message_category'] ?? null) : null,
+                'gift_message' => $giftWrap ? self::nullableTrimmed($data['gift_message'] ?? null) : null,
+                'gift_to' => $giftWrap ? self::nullableTrimmed($data['gift_to'] ?? null) : null,
+                'gift_from' => $giftWrap ? self::nullableTrimmed($data['gift_from'] ?? null) : null,
+                'grand_total' => $sellingTotal + $shipping + $tax + $giftWrapCharge,
                 'shipping_address' => $address,
                 'billing_address' => $address,
                 'estimated_delivery' => now()->addDays($data['delivery'] === 'express' ? 3 : 7),
@@ -219,6 +227,14 @@ class CheckoutOrders
             'subtotal' => (float) $order->subtotal, 'discount' => (float) $order->discount_amount,
             'coupon' => $order->coupon_code, 'coupon_discount' => (float) $order->coupon_discount,
             'shipping' => (float) $order->shipping_charge, 'tax' => (float) $order->gst_amount, 'total' => (float) $order->grand_total,
+            'gift_wrap' => [
+                'enabled' => (bool) $order->gift_wrap,
+                'charge' => (float) $order->gift_wrap_charge,
+                'category' => $order->gift_message_category,
+                'message' => $order->gift_message,
+                'to' => $order->gift_to,
+                'from' => $order->gift_from,
+            ],
             'expected_delivery' => $order->estimated_delivery?->format('d M Y'),
             'address' => [...$addressDefaults, ...($order->shipping_address ?? [])],
             'billing_address' => [...$addressDefaults, ...($order->billing_address ?? $order->shipping_address ?? [])],
@@ -246,6 +262,13 @@ class CheckoutOrders
             'online' => 'Online Payment',
             'cod' => 'Cash on Delivery',
         ][$payment] ?? 'Online Payment';
+    }
+
+    private static function nullableTrimmed(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 
     private static function resolveCustomer(array $address): User

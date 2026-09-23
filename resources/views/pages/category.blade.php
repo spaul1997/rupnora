@@ -1,6 +1,7 @@
 @php
     $meta = collect($meta ?? []);
     $showBanner = $showBanner ?? true;
+    $hideCollectionFilter = $hideCollectionFilter ?? false;
     $productCollection = collect($filterProducts ?? $products);
     $totalProducts = $totalProducts ?? count($products);
     $priceMin = max(0, (int) floor($productCollection->min('price') ?? 0));
@@ -102,7 +103,10 @@
         'rating' => ['label' => 'Rating', 'type' => 'checkbox', 'options' => $ratingOptions],
         'availability' => ['label' => 'Availability', 'type' => 'checkbox', 'options' => $availabilityOptions],
         'flags' => ['label' => 'Highlights', 'type' => 'checkbox', 'options' => $flagOptions],
-    ])->filter(fn ($section) => filled($section['options']))->all();
+    ])
+        ->when($hideCollectionFilter, fn ($sections) => $sections->forget('collection'))
+        ->filter(fn ($section) => filled($section['options']))
+        ->all();
     $filterReset = [
         'subcategory' => [], 'type' => [], 'metal' => [], 'purity' => [], 'gender' => [], 'collection' => [],
         'rating' => [], 'availability' => [], 'flags' => [], 'priceMin' => $priceMin, 'priceMax' => $priceMax,

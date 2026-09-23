@@ -30,6 +30,19 @@
             </td>
         </tr>
     @endforeach
+    @if ($order->gift_wrap)
+        <tr>
+            <td style="padding:14px 20px; border-top:1px solid #e3e3e3; font-family:Arial,sans-serif; font-size:13px; color:#231535; line-height:19px;">
+                <strong>Gift wrap</strong>
+                @if ($order->gift_to || $order->gift_from)
+                    <br><span style="color:#9e9fa5;">@if ($order->gift_to) To: {{ $order->gift_to }} @endif @if ($order->gift_to && $order->gift_from) &middot; @endif @if ($order->gift_from) From: {{ $order->gift_from }} @endif</span>
+                @endif
+                @if ($order->gift_message)
+                    <br><span style="color:#9e9fa5; font-style:italic;">&ldquo;{{ $order->gift_message }}&rdquo;</span>
+                @endif
+            </td>
+        </tr>
+    @endif
     <tr>
         <td style="padding:16px 20px; border-top:1px solid #e3e3e3;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif; font-size:13px;">
@@ -51,6 +64,12 @@
                     <td style="padding:2px 0; color:#9e9fa5;">GST</td>
                     <td align="right" style="padding:2px 0; color:#231535;">&#8377;{{ number_format((float) $order->gst_amount, 2) }}</td>
                 </tr>
+                @if ($order->gift_wrap)
+                    <tr>
+                        <td style="padding:2px 0; color:#9e9fa5;">Gift Wrap</td>
+                        <td align="right" style="padding:2px 0; color:#231535;">&#8377;{{ number_format((float) $order->gift_wrap_charge, 2) }}</td>
+                    </tr>
+                @endif
                 <tr>
                     <td style="padding:10px 0 0; border-top:1px solid #e3e3e3; font-weight:700; color:#231535; font-size:14px;">Grand Total</td>
                     <td align="right" style="padding:10px 0 0; border-top:1px solid #e3e3e3; font-weight:700; color:#231535; font-size:14px;">&#8377;{{ number_format((float) $order->grand_total, 2) }}</td>

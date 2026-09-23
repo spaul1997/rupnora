@@ -130,21 +130,21 @@
             ]" />
         </div>
 
-        <div class="container-luxe grid grid-cols-1 gap-10 py-8 lg:grid-cols-2 lg:items-start lg:gap-14">
+        <div class="container-luxe grid grid-cols-1 gap-8 py-6 lg:grid-cols-5 lg:items-start lg:gap-10 xl:gap-12">
 
             {{-- Gallery --}}
-            <div class="lg:sticky lg:top-24 lg:self-start">
-                <div class="relative overflow-hidden rounded-2xl border border-line">
+            <div class="mx-auto w-full max-w-md lg:sticky lg:top-24 lg:col-span-2 lg:mx-0 lg:self-start">
+                <div class="relative overflow-hidden rounded-xl border border-line bg-paper">
                     <div
-                        class="relative aspect-square cursor-zoom-in overflow-hidden"
+                        class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
                         @mousemove="zoomActive = true; const r = $el.getBoundingClientRect(); zoomX = ((event.clientX - r.left) / r.width) * 100; zoomY = ((event.clientY - r.top) / r.height) * 100;"
                         @mouseleave="zoomActive = false"
                         @click="lightbox = true"
                     >
                         @foreach ($gallery as $i => $image)
-                            <div x-show="activeImg === {{ $i }}" x-cloak class="absolute inset-0 transition-transform duration-200" :style="zoomActive ? `transform: scale(1.8); transform-origin: ${zoomX}% ${zoomY}%;` : ''">
+                            <div x-show="activeImg === {{ $i }}" x-cloak class="absolute inset-0 transition-transform duration-200" :style="zoomActive ? `transform: scale(1.3); transform-origin: ${zoomX}% ${zoomY}%;` : ''">
                                 @if ($image)
-                                    <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="(min-width: 1024px) 50vw, 100vw" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" fetchpriority="{{ $i === 0 ? 'high' : null }}" class="h-full w-full object-cover" />
+                                    <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="(min-width: 1024px) 448px, 100vw" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" fetchpriority="{{ $i === 0 ? 'high' : null }}" class="h-full w-full object-contain" />
                                 @else
                                     <x-ui.product-art :art="$product['art']" :tone="$i % 2 === 0 ? 1 : 2" class="aspect-auto h-full" />
                                 @endif
@@ -162,13 +162,13 @@
                     </button>
                 </div>
 
-                <div class="mt-4 grid grid-cols-4 gap-3">
+                <div class="mt-3 flex gap-2 overflow-x-auto pb-1">
                     @foreach ($gallery as $i => $image)
-                        <button @click="activeImg = {{ $i }}" class="overflow-hidden rounded-xl border-2 transition-colors" :class="activeImg === {{ $i }} ? 'border-champagne-dark' : 'border-line'">
+                        <button @click="activeImg = {{ $i }}" class="h-16 w-16 flex-none overflow-hidden rounded-lg border-2 bg-paper transition-colors sm:h-20 sm:w-20" :class="activeImg === {{ $i }} ? 'border-champagne-dark' : 'border-line'">
                             @if ($image)
-                                <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="120px" class="aspect-square w-full object-cover" />
+                                <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="80px" class="h-full w-full object-cover" />
                             @else
-                                <x-ui.product-art :art="$product['art']" :tone="$i % 2 === 0 ? 1 : 2" />
+                                <x-ui.product-art :art="$product['art']" :tone="$i % 2 === 0 ? 1 : 2" class="h-full w-full" />
                             @endif
                         </button>
                     @endforeach
@@ -176,7 +176,7 @@
             </div>
 
             {{-- Info --}}
-            <div class="product-details-scrollbar lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
+            <div class="product-details-scrollbar lg:col-span-3 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
                 <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
                 <div class="mt-1.5 flex items-start justify-between gap-4">
                     <h1 class="font-display text-[28px] leading-tight text-charcoal sm:text-[32px]">{{ $product['name'] }}</h1>

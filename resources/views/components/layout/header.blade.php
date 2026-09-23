@@ -22,7 +22,7 @@
     {{-- Announcement bar --}}
     <div class="bg-charcoal text-ivory">
         <div class="container-luxe flex flex-col items-center justify-center gap-0.5 py-1 text-center text-[10.5px] tracking-wide sm:flex-row sm:gap-4 sm:text-[11px]">
-            <span>Free Shipping on Orders Above Rs. 2,999</span>
+            <span>Free Shipping on Orders Above Rs. {{ number_format($freeShippingThreshold, $freeShippingThreshold == floor($freeShippingThreshold) ? 0 : 2) }}</span>
             <span class="hidden h-3 w-px bg-ivory/25 sm:block"></span>
             <span>Certified Jewellery &middot; Easy Returns &middot; Secure Payments</span>
         </div>

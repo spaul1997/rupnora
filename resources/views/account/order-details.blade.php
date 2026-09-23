@@ -60,6 +60,27 @@
             </div>
         </div>
 
+        @if (($order['gift_wrap']['enabled'] ?? false))
+            <div class="mt-8 rounded-2xl border border-line p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-4">
+                    <h2 class="font-display text-lg text-charcoal">Gift Wrap</h2>
+                    @if ($order['gift_wrap']['category'])
+                        <span class="badge-luxe bg-champagne-light text-champagne-dark">{{ $order['gift_wrap']['category'] }}</span>
+                    @endif
+                </div>
+                @if ($order['gift_wrap']['to'] || $order['gift_wrap']['from'])
+                    <p class="mt-3 text-sm text-charcoal">
+                        @if ($order['gift_wrap']['to']) To: {{ $order['gift_wrap']['to'] }} @endif
+                        @if ($order['gift_wrap']['to'] && $order['gift_wrap']['from']) <span class="text-muted">&middot;</span> @endif
+                        @if ($order['gift_wrap']['from']) From: {{ $order['gift_wrap']['from'] }} @endif
+                    </p>
+                @endif
+                @if ($order['gift_wrap']['message'])
+                    <p class="mt-3 whitespace-pre-line text-sm italic leading-relaxed text-muted">&ldquo;{{ $order['gift_wrap']['message'] }}&rdquo;</p>
+                @endif
+            </div>
+        @endif
+
         {{-- Price summary --}}
         <div class="mt-8 rounded-2xl border border-line p-5 sm:p-6">
             <h2 class="font-display text-lg text-charcoal">Price Summary</h2>
@@ -69,6 +90,9 @@
                 <div class="flex justify-between text-muted"><span>Coupon {{ $order['coupon'] }}</span><span class="text-charcoal">{{ $order['coupon_discount'] ? '−₹'.number_format($order['coupon_discount']) : '—' }}</span></div>
                 <div class="flex justify-between text-muted"><span>Shipping</span><span class="text-charcoal">{{ $shipping ? '₹'.number_format($shipping) : 'Free' }}</span></div>
                 <div class="flex justify-between text-muted"><span>Tax (GST incl.)</span><span class="text-charcoal">₹{{ number_format($tax) }}</span></div>
+                @if (($order['gift_wrap']['enabled'] ?? false))
+                    <div class="flex justify-between text-muted"><span>Gift Wrap</span><span class="text-charcoal">₹{{ number_format($order['gift_wrap']['charge']) }}</span></div>
+                @endif
             </div>
             <div class="mt-4 flex justify-between border-t border-line pt-4">
                 <span class="font-display text-lg text-charcoal">Grand Total</span>

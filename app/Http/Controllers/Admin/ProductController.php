@@ -99,8 +99,13 @@ class ProductController extends Controller
     public function show(Product $product): View
     {
         $product->load(['category', 'images', 'variants', 'reviews.customer']);
+        $priceHistory = $product->priceHistories()
+            ->with('changedBy:id,name')
+            ->limit(100)
+            ->get();
+        $priceHistoryTotal = $product->priceHistories()->count();
 
-        return view('admin.products.show', compact('product'));
+        return view('admin.products.show', compact('product', 'priceHistory', 'priceHistoryTotal'));
     }
 
     public function edit(Product $product): View
@@ -133,6 +138,7 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $product) {
             $data = $this->prepareData($request);
 
+            $product->priceChangeNote = $request->input('price_change_note');
             $product->update($data);
 
             $this->syncImages($product, $request);

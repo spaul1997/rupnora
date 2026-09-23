@@ -48,6 +48,25 @@
                 </p>
             </div>
 
+            @if (($order['gift_wrap']['enabled'] ?? false))
+                <div class="mt-6 border-t border-line pt-6 text-left">
+                    <div class="flex items-center justify-between gap-4">
+                        <p class="text-xs font-medium uppercase tracking-wide text-muted">Gift Wrap</p>
+                        <p class="text-sm font-medium text-charcoal">₹{{ number_format($order['gift_wrap']['charge']) }}</p>
+                    </div>
+                    @if ($order['gift_wrap']['to'] || $order['gift_wrap']['from'])
+                        <p class="mt-2 text-sm text-charcoal">
+                            @if ($order['gift_wrap']['to']) To: {{ $order['gift_wrap']['to'] }} @endif
+                            @if ($order['gift_wrap']['to'] && $order['gift_wrap']['from']) <span class="text-muted">&middot;</span> @endif
+                            @if ($order['gift_wrap']['from']) From: {{ $order['gift_wrap']['from'] }} @endif
+                        </p>
+                    @endif
+                    @if ($order['gift_wrap']['message'])
+                        <p class="mt-2 whitespace-pre-line text-sm italic leading-relaxed text-muted">&ldquo;{{ $order['gift_wrap']['message'] }}&rdquo;</p>
+                    @endif
+                </div>
+            @endif
+
             <div class="mt-6 border-t border-line pt-6">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Order Summary</p>
                 <div class="divide-y divide-line">

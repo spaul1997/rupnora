@@ -5,6 +5,7 @@
 @php
     $categoryLabel = $product['category_name'] ?? ucfirst(str_replace('-', ' ', $product['category']));
     $productUrlKey = $product['slug'] ?? $product['id'];
+    $primaryImage = $product['primary_image'] ?? $product['image'] ?? null;
     $cartPayload = [
         'id' => $product['id'],
         'name' => $product['name'],
@@ -16,8 +17,8 @@
     <a href="{{ route('product.show', $productUrlKey) }}" class="block">
         <div class="relative overflow-hidden rounded-lg border border-line">
             <div class="relative aspect-square">
-                @if (! empty($product['image']))
-                    <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                @if ($primaryImage)
+                    <x-ui.optimized-image :src="$primaryImage" :alt="$product['name']" sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 @else
                     <div class="absolute inset-0 transition-opacity duration-500 group-hover:opacity-0">
                         <x-ui.product-art :art="$product['art']" :tone="1" class="aspect-auto h-full" />
@@ -79,8 +80,8 @@
                 <button @click="quickView = false" class="icon-btn"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg></button>
             </div>
             <div class="grid gap-6 sm:grid-cols-2">
-                @if (! empty($product['image']))
-                    <x-ui.optimized-image :src="$product['image']" :alt="$product['name']" sizes="(min-width: 640px) 384px, 100vw" class="aspect-square rounded-xl object-cover" />
+                @if ($primaryImage)
+                    <x-ui.optimized-image :src="$primaryImage" :alt="$product['name']" sizes="(min-width: 640px) 384px, 100vw" class="aspect-square rounded-xl object-cover" />
                 @else
                     <x-ui.product-art :art="$product['art']" class="aspect-square rounded-xl" />
                 @endif

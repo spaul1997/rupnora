@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\WebsiteSetting;
 use App\Observers\ContactMessageObserver;
 use App\Observers\OrderObserver;
+use App\Observers\ProductObserver;
 use App\Support\StorefrontCatalog;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Order::observe(OrderObserver::class);
         ContactMessage::observe(ContactMessageObserver::class);
+        Product::observe(ProductObserver::class);
 
         View::composer('admin.layouts.app', function ($view) {
             $view->with('adminNotifications', $this->adminNotifications());
@@ -66,6 +68,10 @@ class AppServiceProvider extends ServiceProvider
                     ])
                     ->all(),
             ]);
+        });
+
+        View::composer('components.layout.header', function ($view) {
+            $view->with('freeShippingThreshold', (float) WebsiteSetting::current()->free_shipping_threshold);
         });
 
         View::composer('components.layouts.app', function ($view) {

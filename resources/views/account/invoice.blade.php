@@ -35,6 +35,18 @@
                 <p>{{ $order->shipping_address['country'] ?? '' }}</p>
             </div>
         </div>
+        @if ($order->gift_wrap)
+            <div class="mt-6 rounded-lg border border-line p-4 text-sm">
+                <div class="flex justify-between gap-4">
+                    <h2 class="font-semibold">Gift Wrap</h2>
+                    <span>₹{{ number_format($order->gift_wrap_charge, 2) }}</span>
+                </div>
+                @if ($order->gift_to || $order->gift_from)
+                    <p class="mt-2">@if ($order->gift_to) To: {{ $order->gift_to }} @endif @if ($order->gift_to && $order->gift_from) &middot; @endif @if ($order->gift_from) From: {{ $order->gift_from }} @endif</p>
+                @endif
+                @if ($order->gift_message)<p class="mt-2 whitespace-pre-line italic text-muted">&ldquo;{{ $order->gift_message }}&rdquo;</p>@endif
+            </div>
+        @endif
         <table class="mt-8 w-full text-sm">
             <thead><tr class="border-b border-line text-left"><th class="py-3">Product</th><th>Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead>
             <tbody>
@@ -51,6 +63,7 @@
             <p class="flex justify-between"><span>Discount</span><span>−₹{{ number_format($order->discount_amount + $order->coupon_discount, 2) }}</span></p>
             <p class="flex justify-between"><span>Shipping</span><span>₹{{ number_format($order->shipping_charge, 2) }}</span></p>
             <p class="flex justify-between"><span>GST</span><span>₹{{ number_format($order->gst_amount, 2) }}</span></p>
+            @if ($order->gift_wrap)<p class="flex justify-between"><span>Gift Wrap</span><span>₹{{ number_format($order->gift_wrap_charge, 2) }}</span></p>@endif
             <p class="flex justify-between border-t border-line pt-3 font-semibold"><span>Grand Total</span><span>₹{{ number_format($order->grand_total, 2) }}</span></p>
         </div>
         @if ($settings->support_email) <p class="mt-10 text-center text-xs text-muted">For queries, contact {{ $settings->support_email }}.</p> @endif

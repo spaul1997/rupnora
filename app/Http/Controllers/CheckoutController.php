@@ -12,6 +12,7 @@ use App\Support\ShoppingCart;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
@@ -26,6 +27,9 @@ class CheckoutController extends Controller
             'addresses' => CheckoutAddresses::all(),
             'expressDeliveryCharge' => (float) $settings->express_delivery_charge,
             'codOrderLimit' => (float) $settings->cod_order_limit,
+            'giftWrapCharge' => (float) config('checkout.gift_wrap.charge', 50),
+            'giftMessageLimit' => (int) config('checkout.gift_wrap.message_limit', 248),
+            'giftMessageTemplates' => config('checkout.gift_wrap.templates', []),
         ]);
     }
 
@@ -55,7 +59,24 @@ class CheckoutController extends Controller
             'address_id' => ['required'],
             'delivery' => ['required', 'in:standard,express'],
             'payment' => ['required', 'in:online,cod'],
+            'gift_wrap' => ['sometimes', 'boolean'],
+            'gift_message_category' => [
+                Rule::excludeIf(fn () => ! $request->boolean('gift_wrap')),
+                'nullable',
+                'string',
+                Rule::in(array_keys(config('checkout.gift_wrap.templates', []))),
+            ],
+            'gift_message' => [
+                Rule::excludeIf(fn () => ! $request->boolean('gift_wrap')),
+                'nullable',
+                'string',
+                'max:'.config('checkout.gift_wrap.message_limit', 248),
+            ],
+            'gift_to' => [Rule::excludeIf(fn () => ! $request->boolean('gift_wrap')), 'nullable', 'string', 'max:100'],
+            'gift_from' => [Rule::excludeIf(fn () => ! $request->boolean('gift_wrap')), 'nullable', 'string', 'max:100'],
         ]);
+
+        $data['gift_wrap'] = (bool) ($data['gift_wrap'] ?? false);
 
         if (count(ShoppingCart::items()) === 0) {
             throw ValidationException::withMessages([
@@ -75,7 +96,8 @@ class CheckoutController extends Controller
         if ($data['payment'] === 'cod') {
             $settings = WebsiteSetting::current();
             $shipping = $data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0;
-            $orderTotal = round(ShoppingCart::summary()['total'] + $shipping, 2);
+            $giftWrapCharge = $data['gift_wrap'] ? (float) config('checkout.gift_wrap.charge', 50) : 0;
+            $orderTotal = round(ShoppingCart::summary()['total'] + $shipping + $giftWrapCharge, 2);
             $limit = (float) $settings->cod_order_limit;
 
             if ($orderTotal >= $limit) {

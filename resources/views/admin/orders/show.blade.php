@@ -60,6 +60,26 @@
                 </div>
             </div>
 
+            @if ($order->gift_wrap)
+                <div class="admin-card p-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="text-sm font-semibold text-gray-900">Gift Wrap</h3>
+                        @if ($order->gift_message_category)
+                            <span class="rounded-full bg-champagne-light px-2.5 py-1 text-xs font-medium text-champagne-dark">{{ $order->gift_message_category }}</span>
+                        @endif
+                    </div>
+                    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                        <div><dt class="text-gray-400">To</dt><dd class="font-medium text-gray-800">{{ $order->gift_to ?: '—' }}</dd></div>
+                        <div><dt class="text-gray-400">From</dt><dd class="font-medium text-gray-800">{{ $order->gift_from ?: '—' }}</dd></div>
+                    </dl>
+                    @if ($order->gift_message)
+                        <div class="mt-4 rounded-lg bg-gray-50 p-4">
+                            <p class="whitespace-pre-line text-sm italic leading-relaxed text-gray-700">&ldquo;{{ $order->gift_message }}&rdquo;</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             {{-- Items --}}
             <x-admin.table :headers="['Product', 'SKU', 'Metal / Purity', 'Size', 'Qty', 'Price', '!Total']">
                 @foreach ($order->items as $item)
@@ -84,6 +104,9 @@
                     <div class="flex justify-between"><span class="text-gray-500">Coupon Discount @if($order->coupon_code)({{ $order->coupon_code }})@endif</span><span class="text-gray-900">−₹{{ number_format($order->coupon_discount, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">Shipping</span><span class="text-gray-900">₹{{ number_format($order->shipping_charge, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">GST</span><span class="text-gray-900">₹{{ number_format($order->gst_amount, 2) }}</span></div>
+                    @if ($order->gift_wrap)
+                        <div class="flex justify-between"><span class="text-gray-500">Gift Wrap</span><span class="text-gray-900">₹{{ number_format($order->gift_wrap_charge, 2) }}</span></div>
+                    @endif
                     <div class="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold"><span>Grand Total</span><span>₹{{ number_format($order->grand_total, 2) }}</span></div>
                     <div class="flex justify-between text-gray-500"><span>Paid Amount</span><span>₹{{ number_format($order->paid_amount, 2) }}</span></div>
                     @if ($order->refund_amount > 0)

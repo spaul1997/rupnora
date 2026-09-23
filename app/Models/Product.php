@@ -13,6 +13,8 @@ class Product extends Model
 {
     use HasFactory;
 
+    public ?string $priceChangeNote = null;
+
     public const OCCASIONS = [
         'everyday' => 'Everyday',
         'office' => 'Office',
@@ -84,6 +86,12 @@ class Product extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Product $product) {
+            if (! array_key_exists('is_new_arrival', $product->getAttributes())) {
+                $product->is_new_arrival = true;
+            }
+        });
+
         static::saving(function (Product $product) {
             $product->final_price = $product->computeFinalPrice();
             $product->stock_status = $product->computeStockStatus();
@@ -185,6 +193,11 @@ class Product extends Model
     public function stockAdjustments(): HasMany
     {
         return $this->hasMany(StockAdjustment::class);
+    }
+
+    public function priceHistories(): HasMany
+    {
+        return $this->hasMany(ProductPriceHistory::class)->latest('recorded_at')->latest('id');
     }
 
     public function visitorLogs(): HasMany

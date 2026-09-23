@@ -495,7 +495,7 @@ const blankCheckoutAddress = () => ({
     country: 'India',
 });
 
-window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, codOrderLimit = 0, baseTotal = 0 } = {}) => ({
+window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, codOrderLimit = 0, baseTotal = 0, giftWrapCharge = 0, giftMessageLimit = 248, giftMessageTemplates = {} } = {}) => ({
     step: 1,
     selectedAddress: selectedAddressId ?? addresses[0]?.id ?? null,
     addresses: addresses.map((address) => ({ ...address })),
@@ -505,6 +505,14 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     expressDeliveryCharge: Math.max(0, Number(expressDeliveryCharge) || 0),
     codOrderLimit: Math.max(0, Number(codOrderLimit) || 0),
     baseTotal: Number(baseTotal) || 0,
+    giftWrapCharge: Math.max(0, Number(giftWrapCharge) || 0),
+    giftMessageLimit: Math.max(1, Number(giftMessageLimit) || 248),
+    giftMessageTemplates,
+    giftWrap: false,
+    giftCategory: Object.keys(giftMessageTemplates)[0] || '',
+    giftMessage: '',
+    giftTo: '',
+    giftFrom: '',
     delivery: 'standard',
     payment: 'online',
     addingAddress: false,
@@ -523,8 +531,20 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         return this.delivery === 'express' ? this.expressDeliveryCharge : 0;
     },
 
+    get giftWrapCost() {
+        return this.giftWrap ? this.giftWrapCharge : 0;
+    },
+
     get orderTotal() {
-        return Math.round((this.baseTotal + this.shippingCost) * 100) / 100;
+        return Math.round((this.baseTotal + this.shippingCost + this.giftWrapCost) * 100) / 100;
+    },
+
+    get giftCategories() {
+        return Object.keys(this.giftMessageTemplates);
+    },
+
+    get activeGiftMessages() {
+        return this.giftMessageTemplates[this.giftCategory] || [];
     },
 
     get codAvailable() {
@@ -554,6 +574,15 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
             minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
             maximumFractionDigits: 2,
         }).format(amount);
+    },
+
+    selectGiftMessage(message) {
+        this.giftMessage = String(message || '').slice(0, this.giftMessageLimit);
+    },
+
+    updateGiftWrapDetails() {
+        this.giftMessage = this.giftMessage.slice(0, this.giftMessageLimit);
+        Alpine.store('ui').notify('Gift wrap details updated', 'success');
     },
 
     get canSaveAddress() {
@@ -734,6 +763,11 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
                     address_id: this.selectedAddress,
                     delivery: this.delivery,
                     payment: this.payment,
+                    gift_wrap: this.giftWrap,
+                    gift_message_category: this.giftWrap ? this.giftCategory : null,
+                    gift_message: this.giftWrap ? this.giftMessage : null,
+                    gift_to: this.giftWrap ? this.giftTo : null,
+                    gift_from: this.giftWrap ? this.giftFrom : null,
                 }),
             });
 

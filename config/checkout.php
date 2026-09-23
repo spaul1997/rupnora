@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'gift_wrap' => [
+        'charge' => 50,
+        'message_limit' => 248,
+        'templates' => [
+            'Romantic' => [
+                'Hey! To the person who means the world to me. Thank you for supporting me through the ups and downs of life. I cherish every moment spent with you. You are a gem!',
+                "Hey! I choose you. And I'll choose you over and over and over. Without pause, without a doubt, in a heartbeat. I'll keep choosing you.",
+            ],
+            'Birthday' => [
+                'Wishing you a birthday filled with joy, laughter, and everything you love. May this little gift make your day even brighter!',
+                'Another year, another reason to celebrate the wonderful person you are. Happy Birthday and many happy returns!',
+            ],
+            'Anniversary' => [
+                'Happy Anniversary! Here is to all the beautiful memories we have made and the many more still waiting for us.',
+                'Every day with you is worth celebrating. Thank you for making this journey so special. Happy Anniversary!',
+            ],
+        ],
+    ],
+
     'states' => [
         'Andaman and Nicobar Islands',
         'Andhra Pradesh',

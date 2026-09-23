@@ -266,6 +266,35 @@ class StorefrontCatalog
             ->all();
     }
 
+    public static function productMeta(array $products, int $offset = 0): array
+    {
+        return collect($products)
+            ->values()
+            ->map(fn (array $product, int $index) => [
+                'i' => $offset + $index,
+                'category' => $product['category'],
+                'subcategory' => $product['subcategory'] ?? null,
+                'type' => $product['type'],
+                'metal' => $product['metal'],
+                'purity' => $product['purity'],
+                'gender' => $product['gender'],
+                'occasion' => $product['occasion'],
+                'collections' => count($product['collections'] ?? []) > 0
+                    ? $product['collections']
+                    : array_values(array_filter([$product['collection'] ?? null])),
+                'price' => $product['price'],
+                'rating' => $product['rating'],
+                'reviews' => $product['reviews_count'],
+                'in_stock' => $product['in_stock'],
+                'is_new' => $product['is_new'],
+                'is_bestseller' => $product['is_bestseller'],
+                'discount' => $product['mrp'] > $product['price']
+                    ? round((($product['mrp'] - $product['price']) / $product['mrp']) * 100)
+                    : 0,
+            ])
+            ->all();
+    }
+
     public static function product(string|int $id): ?array
     {
         $query = self::baseProductQuery()
@@ -540,6 +569,7 @@ class StorefrontCatalog
             + (($actualRating ?? $engagement['rating']) * $actualReviewsCount)
         ) / $ratingsCount, 1);
         $primaryImage = $product->images->firstWhere('is_primary', true) ?? $product->images->first();
+        $primaryImageUrl = $primaryImage ? self::storageUrl($primaryImage->image_path) : null;
         $badges = [];
 
         if ($product->is_new_arrival) {
@@ -582,7 +612,8 @@ class StorefrontCatalog
             'is_return_available' => (bool) $product->is_return_available,
             'is_refund_available' => (bool) $product->is_refund_available,
             'art' => self::artFor($product->jewellery_type.' '.$categoryName.' '.$product->metal_type),
-            'image' => $primaryImage ? self::storageUrl($primaryImage->image_path) : null,
+            'primary_image' => $primaryImageUrl,
+            'image' => $primaryImageUrl,
             'gallery' => $product->images->map(fn ($image) => self::storageUrl($image->image_path))->values()->all(),
             'price' => $price,
             'mrp' => (float) $product->mrp,

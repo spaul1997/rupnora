@@ -206,7 +206,7 @@
         </div>
 
         {{-- Pricing --}}
-        <div class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
+        <div id="pricing" class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
             <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
@@ -228,6 +228,9 @@
                 </div>
                 <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 0" />
             </div>
+            @if (isset($product))
+                <x-admin.form.input label="Price Change Note (optional)" name="price_change_note" :value="old('price_change_note')" maxlength="500" placeholder="e.g. Gold rate revision or seasonal promotion" help="Saved with the price history when any pricing value changes." />
+            @endif
         </div>
 
         {{-- Variants --}}
@@ -348,12 +351,15 @@
             @foreach ([
                 ['name' => 'is_active', 'label' => 'Active', 'default' => true],
                 ['name' => 'is_featured', 'label' => 'Featured'],
-                ['name' => 'is_new_arrival', 'label' => 'New Arrival'],
+                ['name' => 'is_new_arrival', 'label' => 'New Arrival', 'default' => true],
                 ['name' => 'is_best_seller', 'label' => 'Best Seller'],
                 ['name' => 'is_trending', 'label' => 'Trending'],
                 ['name' => 'is_on_sale', 'label' => 'On Sale'],
             ] as $flag)
                 <label class="flex items-center gap-2.5 text-sm text-gray-700">
+                    @if ($flag['name'] === 'is_new_arrival')
+                        <input type="hidden" name="is_new_arrival" value="0">
+                    @endif
                     <input type="checkbox" name="{{ $flag['name'] }}" value="1" @checked(old($flag['name'], $product->{$flag['name']} ?? ($flag['default'] ?? false))) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
                     {{ $flag['label'] }}
                 </label>
