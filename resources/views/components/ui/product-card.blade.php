@@ -35,9 +35,12 @@
                 @endif
             </div>
 
-            <div class="absolute left-2 top-2 flex flex-col gap-1">
+            <div class="absolute left-1.5 top-1.5 flex flex-col items-start gap-0.5">
                 @foreach ($product['badges'] ?? [] as $badge)
-                    <x-ui.badge class="!px-2 !py-0.5 !text-[9px]" :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')">{{ $badge }}</x-ui.badge>
+                    <x-ui.badge
+                        class="!h-4 !gap-0 !rounded-md !px-1.5 !py-0 !text-[7.5px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20"
+                        :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')"
+                    >{{ $badge }}</x-ui.badge>
                 @endforeach
             </div>
 
