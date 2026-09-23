@@ -142,7 +142,7 @@
                         @click="lightbox = true"
                     >
                         @foreach ($gallery as $i => $image)
-                            <div x-show="activeImg === {{ $i }}" x-cloak class="absolute inset-0 transition-transform duration-200" :style="zoomActive ? { transform: 'scale(1.3)', transformOrigin: zoomX + '% ' + zoomY + '%' } : {}">
+                            <div x-show="activeImg === {{ $i }}" x-cloak class="absolute inset-0 transition-transform duration-200" :style="zoomActive ? { transform: 'scale(2.5)', transformOrigin: zoomX + '% ' + zoomY + '%' } : {}">
                                 @if ($image)
                                     <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="(min-width: 1024px) 448px, 100vw" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" fetchpriority="{{ $i === 0 ? 'high' : null }}" class="h-full w-full object-contain" />
                                 @else
