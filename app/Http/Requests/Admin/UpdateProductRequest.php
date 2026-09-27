@@ -98,6 +98,8 @@ class UpdateProductRequest extends FormRequest
             'is_water_resistant' => ['boolean'],
             'is_return_available' => ['boolean'],
             'is_refund_available' => ['boolean'],
+            'has_warranty' => ['boolean'],
+            'warranty_months' => ['nullable', 'required_if:has_warranty,1', 'integer', 'min:1', 'max:120'],
 
             'mrp' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],

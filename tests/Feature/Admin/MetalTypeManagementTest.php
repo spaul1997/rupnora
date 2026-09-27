@@ -251,6 +251,8 @@ class MetalTypeManagementTest extends TestCase
             'is_water_resistant' => '1',
             'is_return_available' => '1',
             'is_refund_available' => '1',
+            'has_warranty' => '1',
+            'warranty_months' => '12',
         ]);
 
         $this->actingAs($this->createAdmin())
@@ -272,6 +274,8 @@ class MetalTypeManagementTest extends TestCase
             'is_water_resistant' => true,
             'is_return_available' => true,
             'is_refund_available' => true,
+            'has_warranty' => true,
+            'warranty_months' => 12,
         ]);
     }
 

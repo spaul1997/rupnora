@@ -215,6 +215,7 @@
                     <div><dt class="text-gray-400">Water Resistant</dt><dd class="font-medium text-gray-800">{{ $product->is_water_resistant ? 'Yes' : 'No' }}</dd></div>
                     <div><dt class="text-gray-400">Return</dt><dd class="font-medium text-gray-800">{{ $product->is_return_available ? 'Available' : 'Not Available' }}</dd></div>
                     <div><dt class="text-gray-400">Refund</dt><dd class="font-medium text-gray-800">{{ $product->is_refund_available ? 'Available' : 'Not Available' }}</dd></div>
+                    <div><dt class="text-gray-400">Warranty</dt><dd class="font-medium text-gray-800">{{ $product->has_warranty ? ($product->warranty_months.' months') : 'No' }}</dd></div>
                     @if ($product->has_diamond)
                         <div><dt class="text-gray-400">Diamond Carat</dt><dd class="font-medium text-gray-800">{{ $product->diamond_carat }} ct</dd></div>
                         <div><dt class="text-gray-400">Diamond Clarity</dt><dd class="font-medium text-gray-800">{{ $product->diamond_clarity }}</dd></div>

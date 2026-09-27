@@ -254,6 +254,7 @@ class ProductController extends Controller
             'diamond_carat', 'diamond_colour', 'diamond_clarity', 'diamond_cut', 'diamond_shape', 'diamond_count',
             'gemstone_type', 'gemstone_weight', 'gemstone_colour',
             'occasion', 'gender',
+            'warranty_months',
             'mrp', 'selling_price', 'offer_price', 'offer_expiry_date', 'discount_type', 'discount_value', 'discount_expiry_date', 'making_charge', 'gst_percentage',
             'stock_quantity', 'minimum_stock',
             'meta_title', 'meta_description', 'meta_keywords',
@@ -267,6 +268,8 @@ class ProductController extends Controller
         $data['is_water_resistant'] = $request->boolean('is_water_resistant');
         $data['is_return_available'] = $request->boolean('is_return_available');
         $data['is_refund_available'] = $request->boolean('is_refund_available');
+        $data['has_warranty'] = $request->boolean('has_warranty');
+        $data['warranty_months'] = $data['has_warranty'] ? ($data['warranty_months'] ?? null) : null;
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_new_arrival'] = $request->boolean('is_new_arrival');

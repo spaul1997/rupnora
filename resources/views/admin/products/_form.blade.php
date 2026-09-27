@@ -22,6 +22,7 @@
         allCollections: {{ Illuminate\Support\Js::from($collections->map(fn($collection) => ['name' => $collection->name, 'slug' => $collection->slug])->values()) }},
         hasDiamond: {{ old('has_diamond', $product->has_diamond ?? false) ? 'true' : 'false' }},
         hasGemstone: {{ old('has_gemstone', $product->has_gemstone ?? false) ? 'true' : 'false' }},
+        hasWarranty: {{ old('has_warranty', $product->has_warranty ?? false) ? 'true' : 'false' }},
         variants: {{ Illuminate\Support\Js::from(isset($product) ? $product->variants->map(fn($v) => ['size' => $v->size, 'metal' => $v->metal, 'purity' => $v->purity, 'colour' => $v->colour, 'price' => $v->price, 'offer_price' => $v->offer_price, 'stock_quantity' => $v->stock_quantity])->values() : []) }},
         filteredSubcategories() {
             return this.allSubcategories.filter((category) => category.parent_id === this.selectedParentCategory);
@@ -200,6 +201,15 @@
                             <input type="checkbox" name="is_refund_available" value="1" @checked(old('is_refund_available', $product->is_refund_available ?? false)) class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
                             <span>Refund Available</span>
                         </label>
+                        <div class="rounded-lg border border-gray-200 px-3 py-2">
+                            <label class="flex min-h-[24px] items-center gap-2.5 text-sm text-gray-700">
+                                <input type="checkbox" name="has_warranty" value="1" x-model="hasWarranty" class="h-4 w-4 rounded border-gray-300 text-champagne-dark focus:ring-champagne-dark/40">
+                                <span>Warranty</span>
+                            </label>
+                            <div x-show="hasWarranty" x-cloak x-transition.opacity.duration.150ms class="mt-3">
+                                <x-admin.form.input label="Warranty Months" name="warranty_months" type="number" min="1" max="120" step="1" :value="$product->warranty_months ?? null" x-bind:disabled="!hasWarranty" x-bind:required="hasWarranty" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
