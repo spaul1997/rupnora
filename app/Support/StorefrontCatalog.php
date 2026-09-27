@@ -611,6 +611,8 @@ class StorefrontCatalog
             'is_water_resistant' => (bool) $product->is_water_resistant,
             'is_return_available' => (bool) $product->is_return_available,
             'is_refund_available' => (bool) $product->is_refund_available,
+            'has_warranty' => (bool) $product->has_warranty,
+            'warranty_months' => $product->has_warranty && $product->warranty_months ? (int) $product->warranty_months : null,
             'art' => self::artFor($product->jewellery_type.' '.$categoryName.' '.$product->metal_type),
             'primary_image' => $primaryImageUrl,
             'image' => $primaryImageUrl,
@@ -868,14 +870,18 @@ class StorefrontCatalog
         return 'casual-wear';
     }
 
-    protected static function weight(mixed $value): string
+    protected static function weight(mixed $value): ?string
     {
-        return $value ? number_format((float) $value, 2).'g' : '0g';
+        $weight = (float) $value;
+
+        return $weight > 0 ? number_format($weight, 2).'g' : null;
     }
 
-    protected static function diamondCarat(mixed $value): string
+    protected static function diamondCarat(mixed $value): ?string
     {
-        return $value ? number_format((float) $value, 2).' ct' : '0 ct';
+        $carat = (float) $value;
+
+        return $carat > 0 ? number_format($carat, 2).' ct' : null;
     }
 
     protected static function storageUrl(?string $path): ?string

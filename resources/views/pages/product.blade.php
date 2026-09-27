@@ -29,6 +29,10 @@
         return filled($value) ? $value : $fallback;
     };
     $formatStockStatus = fn ($value) => $value ? ucfirst(str_replace('_', ' ', $value)) : 'Not specified';
+    $warrantyMonths = (int) ($product['warranty_months'] ?? 0);
+    $warrantyText = ($product['has_warranty'] ?? false) && $warrantyMonths > 0
+        ? $warrantyMonths.' '.($warrantyMonths === 1 ? 'month' : 'months')
+        : null;
     $hasProductData = function ($value): bool {
         if (is_array($value)) {
             return collect($value)->contains(fn ($item) => filled($item));
@@ -49,6 +53,7 @@
         'Jewellery Type' => $product['type'] ?? null,
         'Gender' => $product['gender'] ?? null,
         'Stock Status' => filled($product['stock_status'] ?? null) ? $formatStockStatus($product['stock_status']) : null,
+        'Warranty' => $warrantyText,
     ]);
     $metalDetailRows = $onlyPopulated([
         'Material' => $product['metal'] ?? null,
@@ -86,14 +91,6 @@
         'Net Weight' => $product['weight']['net'] ?? null,
         'Metal Weight' => $product['weight']['metal'] ?? null,
         'Stone Weight' => $product['weight']['stone'] ?? null,
-    ]);
-    $certificationDetailRows = $onlyPopulated([
-        'SKU' => $product['sku'] ?? null,
-        'Barcode' => $product['barcode'] ?? null,
-        'Material' => $product['metal'] ?? null,
-        'Purity' => $product['purity'] ?? null,
-        'Diamond Certified' => array_key_exists('has_diamond', $product) ? ($product['has_diamond'] ? 'Yes' : 'No') : null,
-        'Gemstone Included' => array_key_exists('has_gemstone', $product) ? ($product['has_gemstone'] ? 'Yes' : 'No') : null,
     ]);
     $cartPayload = [
         'id' => $product['id'],
@@ -318,7 +315,6 @@
                             'dimensions' => ['label' => 'Dimensions', 'content' => 'dimensions', 'show' => count($dimensionDetailRows) > 0 || $variantRows->isNotEmpty()],
                             'care' => ['label' => 'Care Instructions', 'content' => 'care'],
                             'shipping' => ['label' => 'Shipping & Returns', 'content' => 'shipping'],
-                            'certification' => ['label' => 'Certification', 'content' => 'certification', 'show' => count($certificationDetailRows) > 0],
                         ];
                     @endphp
                     @foreach ($sections as $key => $section)
@@ -436,20 +432,13 @@
                                         <ul class="list-disc space-y-2 pl-5">
                                             <li>Stock status: <span class="font-medium text-charcoal">{{ $formatStockStatus($product['stock_status'] ?? null) }}</span>.</li>
                                             <li>{{ ($product['in_stock'] ?? false) ? 'Orders are dispatched after confirmation and usually arrive within 4–7 business days.' : 'This product is currently out of stock. Delivery will be available once stock is updated.' }}</li>
+                                            @if ($warrantyText)
+                                                <li>Warranty: <span class="font-medium text-charcoal">{{ $warrantyText }}</span>.</li>
+                                            @endif
                                             <li>Return: <span class="font-medium text-charcoal">{{ ($product['is_return_available'] ?? false) ? 'Available' : 'Not available' }}</span>.</li>
                                             <li>Refund: <span class="font-medium text-charcoal">{{ ($product['is_refund_available'] ?? false) ? 'Available' : 'Not available' }}</span>. See our <a href="{{ route('refund-policy') }}" class="font-medium text-champagne-dark hover:underline">Refund Policy</a>.</li>
                                         </ul>
                                     @break
-                                    @case('certification')
-                                        <dl class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
-                                            @foreach ($certificationDetailRows as $label => $value)
-                                                <div>
-                                                    <dt class="text-xs uppercase tracking-wide text-muted">{{ $label }}</dt>
-                                                    <dd class="mt-0.5 font-medium text-charcoal">{{ $formatProductValue($value) }}</dd>
-                                                </div>
-                                            @endforeach
-                                        </dl>
-                                        @break
                                 @endswitch
                             </div>
                         </div>
