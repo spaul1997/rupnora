@@ -37,6 +37,16 @@
         'shortlisted' => 'bg-purple-100 text-purple-700',
         'hired' => 'bg-green-100 text-green-700',
 
+        // influencer status
+        'suspended' => 'bg-orange-100 text-orange-700',
+
+        // email marketing status
+        'queued' => 'bg-blue-100 text-blue-700',
+        'sending' => 'bg-indigo-100 text-indigo-700',
+        'sent' => 'bg-green-100 text-green-700',
+        'partial' => 'bg-orange-100 text-orange-700',
+        'completed' => 'bg-green-100 text-green-700',
+
         // priority
         'low' => 'bg-gray-100 text-gray-600',
         'normal' => 'bg-blue-100 text-blue-700',

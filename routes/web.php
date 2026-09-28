@@ -9,6 +9,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InfluencerController;
 use App\Http\Controllers\NewsletterSubscriptionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
@@ -116,9 +117,10 @@ Route::get('/size-guide', function () {
     return view('pages.size-guide', ['title' => 'Jewellery Size Guide']);
 })->name('size-guide');
 
-Route::get('/influencer', function () {
-    return view('pages.influencer', ['title' => 'Influencer Program']);
-})->name('influencer');
+Route::get('/influencer', [InfluencerController::class, 'index'])->name('influencer');
+Route::post('/influencer/apply', [InfluencerController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('influencer.apply');
 
 Route::get('/privacy-policy', function () {
     return view('pages.privacy-policy', ['title' => 'Privacy Policy']);

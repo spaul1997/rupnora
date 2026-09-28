@@ -62,9 +62,11 @@
     $groups['marketing'] = [
         'label' => 'Marketing',
         'icon' => 'M3 7h13l1.5 12h-16z M16 10h3l2 3v4h-5z',
-        'active' => request()->routeIs('admin.coupons.*') || request()->routeIs('admin.home-banners.*'),
+        'active' => request()->routeIs('admin.coupons.*') || request()->routeIs('admin.home-banners.*') || request()->routeIs('admin.influencers.*') || request()->routeIs('admin.email-campaigns.*'),
         'items' => [
             ['label' => 'Home Banners', 'url' => route('admin.home-banners.index')],
+            ['label' => 'Influencers', 'url' => route('admin.influencers.index')],
+            ['label' => 'Email Marketing', 'url' => route('admin.email-campaigns.index')],
             ['label' => 'Coupons', 'url' => route('admin.coupons.index')],
         ],
     ];

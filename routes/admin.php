@@ -7,9 +7,11 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailCampaignController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\HomeBannerController;
+use App\Http\Controllers\Admin\InfluencerController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\JewelleryCollectionController;
 use App\Http\Controllers\Admin\JewelleryTypeController;
@@ -108,6 +110,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Coupons
         Route::resource('home-banners', HomeBannerController::class)->parameters(['home-banners' => 'homeBanner'])->except(['show']);
         Route::patch('home-banners/{homeBanner}/toggle-active', [HomeBannerController::class, 'toggleActive'])->name('home-banners.toggle-active');
+        Route::resource('influencers', InfluencerController::class);
+        Route::patch('influencers/{influencer}/status', [InfluencerController::class, 'updateStatus'])->name('influencers.update-status');
+        Route::patch('influencers/{influencer}/toggle-active', [InfluencerController::class, 'toggleActive'])->name('influencers.toggle-active');
+        Route::resource('email-campaigns', EmailCampaignController::class)
+            ->parameters(['email-campaigns' => 'emailCampaign'])
+            ->only(['index', 'create', 'store', 'show']);
+        Route::get('email-campaigns/{emailCampaign}/preview', [EmailCampaignController::class, 'preview'])->name('email-campaigns.preview');
+        Route::post('email-campaigns/{emailCampaign}/retry-failed', [EmailCampaignController::class, 'retryFailed'])->name('email-campaigns.retry-failed');
+        Route::post('email-campaigns/{emailCampaign}/recipients/{recipient}/retry', [EmailCampaignController::class, 'retryRecipient'])->name('email-campaigns.recipients.retry');
         Route::resource('coupons', CouponController::class)->except(['show']);
         Route::patch('coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
 

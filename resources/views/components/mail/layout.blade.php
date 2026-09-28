@@ -1,4 +1,5 @@
 @props([
+    'title' => 'Rupnora',
     'preheader' => '',
     'accent' => '#6144ac',
 ])
@@ -10,7 +11,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<title>{{ $title ?? 'Rupnora' }}</title>
+<title>{{ $title }}</title>
 <!--[if mso]>
 <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
 <![endif]-->
