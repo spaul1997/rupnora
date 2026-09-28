@@ -26,7 +26,7 @@ class AdminEmailMarketingTest extends TestCase
             ->assertSee('New Design Launch')
             ->assertSee('Influencer Collaboration Proposal')
             ->assertSee('Influencer Agreement')
-            ->assertSee('rupnorafachane@gmail.com');
+            ->assertSee('rupnorafashion@gmail.com');
     }
 
     public function test_admin_can_view_campaign_delivery_tracking(): void
@@ -45,7 +45,7 @@ class AdminEmailMarketingTest extends TestCase
             ->assertOk()
             ->assertSee($campaign->name)
             ->assertSee('ananya@example.com')
-            ->assertSee('rupnorafachane@gmail.com');
+            ->assertSee('rupnorafashion@gmail.com');
     }
 
     public function test_admin_can_queue_a_campaign_for_multiple_deduplicated_recipients(): void
@@ -73,7 +73,7 @@ class AdminEmailMarketingTest extends TestCase
 
         $campaign = EmailCampaign::firstOrFail();
 
-        $this->assertSame('rupnorafachane@gmail.com', $campaign->cc_email);
+        $this->assertSame('rupnorafashion@gmail.com', $campaign->cc_email);
         $this->assertSame(3, $campaign->total_recipient_count);
         $this->assertSame(3, $campaign->queued_count);
         $this->assertDatabaseHas('email_campaign_recipients', ['email' => 'ananya@example.com', 'source' => 'customer']);
@@ -115,7 +115,7 @@ class AdminEmailMarketingTest extends TestCase
 
         Mail::assertSent(MarketingCampaignMail::class, function (MarketingCampaignMail $mail) {
             return $mail->hasTo('ananya@example.com')
-                && $mail->hasCc('rupnorafachane@gmail.com');
+                && $mail->hasCc('rupnorafashion@gmail.com');
         });
 
         $this->assertDatabaseHas('email_campaign_recipients', [
@@ -196,7 +196,7 @@ class AdminEmailMarketingTest extends TestCase
         return EmailCampaign::create(array_merge([
             'created_by' => $this->admin()->id,
             ...$this->campaignData(),
-            'cc_email' => 'rupnorafachane@gmail.com',
+            'cc_email' => 'rupnorafashion@gmail.com',
             'status' => 'queued',
             'queued_at' => now(),
         ], $overrides));
