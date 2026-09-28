@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [\App\Http\Middleware\CaptureAffiliateReferral::class]);
+
         $middleware->redirectUsersTo(function (Request $request): string {
             $user = $request->user();
 

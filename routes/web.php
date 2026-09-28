@@ -32,6 +32,7 @@ use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AffiliateController;
 
 Route::get('/clear-cache', function () {
     Artisan::call('optimize:clear');
@@ -154,6 +155,7 @@ Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('categ
 Route::get('/recipient/{slug}', [CategoryController::class, 'recipient'])->name('recipient.show');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/product/{product:slug}/reviews', [ProductReviewController::class, 'store'])
     ->middleware(['storefront.customer', 'throttle:5,1'])
     ->name('product.reviews.store');
@@ -162,6 +164,8 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+Route::post('/cart/coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+Route::delete('/cart/coupon', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
 Route::patch('/cart/{key}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{key}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::post('/cart/{key}/wishlist', [CartController::class, 'moveToWishlist'])->name('cart.move-to-wishlist');
@@ -213,5 +217,14 @@ Route::prefix('account')->name('account.')->group(function () {
         Route::patch('/notifications/{notification}/read', [AccountController::class, 'readNotification'])->name('notifications.read');
         Route::get('/support', [AccountController::class, 'support'])->name('support');
         Route::post('/support', [AccountController::class, 'storeSupport'])->middleware('throttle:10,1')->name('support.store');
+        Route::get('/affiliate', [AffiliateController::class, 'dashboard'])->name('affiliate.dashboard');
+        Route::post('/affiliate/apply', [AffiliateController::class, 'apply'])->middleware('throttle:3,10')->name('affiliate.apply');
+        Route::get('/affiliate/links', [AffiliateController::class, 'links'])->name('affiliate.links');
+        Route::get('/affiliate/referrals', [AffiliateController::class, 'referrals'])->name('affiliate.referrals');
+        Route::get('/affiliate/commissions', [AffiliateController::class, 'commissions'])->name('affiliate.commissions');
+        Route::get('/affiliate/payout', [AffiliateController::class, 'payout'])->name('affiliate.payout');
+        Route::put('/affiliate/payout', [AffiliateController::class, 'updatePayout'])->name('affiliate.payout.update');
+        Route::get('/affiliate/withdrawals', [AffiliateController::class, 'withdrawals'])->name('affiliate.withdrawals');
+        Route::post('/affiliate/withdrawals', [AffiliateController::class, 'requestWithdrawal'])->middleware('throttle:5,10')->name('affiliate.withdrawals.store');
     });
 });

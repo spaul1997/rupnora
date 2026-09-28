@@ -1,0 +1,7 @@
+@extends('admin.layouts.app')
+@section('title', 'Affiliate Commissions')
+@section('content')
+<x-admin.page-header title="Affiliate Commissions" :breadcrumb="[['label' => 'Affiliates', 'url' => route('admin.affiliates.index')], ['label' => 'Commissions']]" />@include('admin.affiliates._nav')
+<form class="mb-5 flex gap-3"><select name="status" class="admin-input"><option value="">All statuses</option>@foreach(\App\Models\AffiliateCommission::STATUSES as $status)<option @selected(request('status') === $status)>{{ $status }}</option>@endforeach</select><button class="admin-btn-primary">Filter</button></form>
+<div class="admin-card overflow-x-auto"><table class="admin-table min-w-full"><thead><tr><th>Order</th><th>Affiliate</th><th>Eligible</th><th>Rule</th><th>Gross</th><th>Reversed</th><th>Status</th><th>Available at</th></tr></thead><tbody>@forelse($commissions as $row)<tr><td>{{ $row->order->order_number }}</td><td>{{ $row->affiliate->user->name }}</td><td>₹{{ number_format($row->eligible_amount, 2) }}</td><td>{{ $row->rule_type }} ({{ number_format($row->commission_rate, 2) }}%)</td><td>₹{{ number_format($row->gross_amount, 2) }}</td><td>₹{{ number_format($row->reversed_amount, 2) }}</td><td class="capitalize">{{ str_replace('_',' ',$row->status) }}</td><td>{{ $row->available_at?->format('d M Y H:i') ?? 'Awaiting delivery' }}</td></tr>@empty<tr><td colspan="8" class="py-10 text-center text-gray-400">No commissions.</td></tr>@endforelse</tbody></table></div><div class="mt-5">{{ $commissions->links() }}</div>
+@endsection

@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Coupon extends Model
 {
     protected $fillable = [
-        'code', 'description', 'discount_type', 'discount_value',
+        'affiliate_id', 'code', 'description', 'discount_type', 'discount_value',
         'minimum_order', 'maximum_discount', 'start_date', 'end_date',
         'usage_limit', 'usage_per_customer', 'used_count', 'is_active',
     ];
@@ -31,6 +32,11 @@ class Coupon extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'coupon_products');
+    }
+
+    public function affiliate(): BelongsTo
+    {
+        return $this->belongsTo(AffiliateProfile::class, 'affiliate_id');
     }
 
     public function categories(): BelongsToMany

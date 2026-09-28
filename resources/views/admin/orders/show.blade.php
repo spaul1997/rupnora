@@ -95,6 +95,20 @@
                 @endforeach
             </x-admin.table>
 
+            @if ($order->affiliate_id && in_array($order->status, ['delivered', 'return_requested', 'returned', 'refunded']))
+                <form method="POST" action="{{ route('admin.orders.update-returned-items', $order) }}" class="admin-card p-6">
+                    @csrf @method('PATCH')
+                    <h3 class="text-sm font-semibold text-gray-900">Partial return reconciliation</h3>
+                    <p class="mt-1 text-xs text-gray-400">Enter returned quantities per item. The immutable ledger records only the additional reversal.</p>
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                        @foreach ($order->items as $item)
+                            <label class="text-sm text-gray-700"><span class="mb-1 block truncate">{{ $item->product_name }} (max {{ $item->quantity }})</span><input type="number" name="returned_quantities[{{ $item->id }}]" min="{{ $item->returned_quantity }}" max="{{ $item->quantity }}" value="{{ $item->returned_quantity }}" class="admin-input w-full"></label>
+                        @endforeach
+                    </div>
+                    <button class="admin-btn-secondary mt-4">Reconcile returned items</button>
+                </form>
+            @endif
+
             {{-- Price Summary --}}
             <div class="admin-card p-6">
                 <h3 class="mb-4 text-sm font-semibold text-gray-900">Price Summary</h3>

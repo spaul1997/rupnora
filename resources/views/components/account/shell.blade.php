@@ -5,6 +5,7 @@
         ['key' => 'dashboard', 'label' => 'Dashboard', 'url' => route('account.dashboard'), 'icon' => 'M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z'],
         ['key' => 'orders', 'label' => 'My Orders', 'url' => route('account.orders'), 'icon' => 'M3 7h13l1.5 12h-16z M8 7V5.5a3 3 0 016 0V7'],
         ['key' => 'wishlist', 'label' => 'Wishlist', 'url' => route('account.wishlist'), 'icon' => 'M12 20.5s-7.5-4.9-10.1-9.6C.3 7.9 1.6 4.5 4.9 3.6c2-.5 4 .3 5.1 2 .3.4.7.4 1 0 1.1-1.7 3.1-2.5 5.1-2 3.3.9 4.6 4.3 3 7.3-2.6 4.7-10.1 9.6-10.1 9.6z'],
+        ['key' => 'affiliate', 'label' => 'Affiliate Program', 'url' => route('account.affiliate.dashboard'), 'icon' => 'M8 12h8m-4-4v8M4 5h16v14H4z'],
         ['key' => 'addresses', 'label' => 'Saved Addresses', 'url' => route('account.addresses'), 'icon' => 'M12 21s-7-6.5-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.5 12 21 12 21z'],
         ['key' => 'profile', 'label' => 'Profile', 'url' => route('account.profile'), 'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 3.6-7 8-7s8 3 8 7'],
         ['key' => 'change-password', 'label' => 'Change Password', 'url' => route('account.change-password'), 'icon' => 'M12 15v2m-5 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2zM8 11V8a4 4 0 118 0v3'],

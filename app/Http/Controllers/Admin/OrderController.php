@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Models\Order;
+use App\Services\AffiliateCommissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,6 +73,13 @@ class OrderController extends Controller
             if ($request->status === 'delivered' && ! $order->delivered_at) {
                 $order->update(['delivered_at' => now()]);
             }
+
+            if ($request->status === 'delivered') {
+                app(AffiliateCommissionService::class)->markDelivered($order->refresh());
+            }
+            if (in_array($request->status, ['cancelled', 'returned', 'refunded'], true)) {
+                app(AffiliateCommissionService::class)->reconcileReversal($order->refresh());
+            }
         });
 
         return back()->with('success', 'Order status updated successfully.');
@@ -80,7 +88,7 @@ class OrderController extends Controller
     public function updatePaymentStatus(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([
-            'payment_status' => ['required', 'in:pending,paid,failed,refunded,partial_refund,cod'],
+            'payment_status' => ['required', 'in:pending,paid,failed,refunded,partial_refund,chargeback,cod'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'refund_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
@@ -103,9 +111,52 @@ class OrderController extends Controller
                 'remark' => 'Payment status updated to '.$data['payment_status'].'.',
                 'updated_by' => auth()->id(),
             ]);
+
+            if ($data['payment_status'] === 'paid') {
+                app(AffiliateCommissionService::class)->createForPaidOrder($order->refresh());
+            }
+            if (in_array($data['payment_status'], ['refunded', 'partial_refund', 'chargeback'], true)) {
+                app(AffiliateCommissionService::class)->reconcileReversal($order->refresh());
+            }
         });
 
         return back()->with('success', 'Payment status updated successfully.');
+    }
+
+    public function updateReturnedItems(Request $request, Order $order): RedirectResponse
+    {
+        $data = $request->validate([
+            'returned_quantities' => ['required', 'array'],
+            'returned_quantities.*' => ['required', 'integer', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($order, $data) {
+            $order = Order::query()->with('items')->lockForUpdate()->findOrFail($order->id);
+            $ratios = [];
+            foreach ($order->items as $item) {
+                $quantity = (int) ($data['returned_quantities'][$item->id] ?? $item->returned_quantity);
+                if ($quantity > $item->quantity) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "returned_quantities.{$item->id}" => 'Returned quantity cannot exceed the ordered quantity.',
+                    ]);
+                }
+                if ($quantity < $item->returned_quantity) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        "returned_quantities.{$item->id}" => 'Returned quantity cannot be reduced after reconciliation.',
+                    ]);
+                }
+                $item->update(['returned_quantity' => $quantity]);
+                $ratios[$item->id] = $item->quantity > 0 ? $quantity / $item->quantity : 0;
+            }
+            app(AffiliateCommissionService::class)->reconcileReversal($order->refresh(), $ratios);
+            $order->statusHistories()->create([
+                'status' => 'partial_return_reconciled',
+                'remark' => 'Returned item quantities updated and affiliate commission reconciled.',
+                'updated_by' => auth()->id(),
+            ]);
+        });
+
+        return back()->with('success', 'Returned quantities and affiliate commissions reconciled.');
     }
 
     public function invoice(Order $order): View

@@ -1,0 +1,7 @@
+@extends('admin.layouts.app')
+@section('title', 'Affiliate Referrals')
+@section('content')
+<x-admin.page-header title="Referral Tracking" :breadcrumb="[['label' => 'Affiliates', 'url' => route('admin.affiliates.index')], ['label' => 'Referrals']]" />@include('admin.affiliates._nav')
+<div class="mb-5 flex gap-2"><a href="{{ route('admin.affiliates.referrals') }}" class="admin-btn-secondary">All clicks</a><a href="{{ route('admin.affiliates.referrals', ['flagged' => 1]) }}" class="admin-btn-secondary">Suspicious only</a></div>
+<div class="admin-card overflow-x-auto"><table class="admin-table min-w-full"><thead><tr><th>Date</th><th>Affiliate</th><th>Landing</th><th>Validity</th><th>Order</th></tr></thead><tbody>@forelse($clicks as $click)<tr class="{{ $click->is_suspicious ? 'bg-red-50' : '' }}"><td class="whitespace-nowrap">{{ $click->clicked_at->format('d M Y H:i') }}</td><td><a href="{{ route('admin.affiliates.show', $click->affiliate) }}" class="font-medium">{{ $click->affiliate->user->name }}</a><p class="font-mono text-xs text-gray-400">{{ $click->referral_code }}</p></td><td class="max-w-xs truncate">{{ $click->product?->name ?? $click->landing_url }}</td><td>{{ $click->is_suspicious ? 'Suspicious: '.$click->suspicious_reason : ($click->is_valid ? 'Valid' : 'Invalid') }}</td><td>{{ $click->attributedOrder?->order_number ?? '—' }}</td></tr>@empty<tr><td colspan="5" class="py-10 text-center text-gray-400">No referral clicks.</td></tr>@endforelse</tbody></table></div><div class="mt-5">{{ $clicks->links() }}</div>
+@endsection

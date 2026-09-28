@@ -3,7 +3,8 @@
     $sellingTotal = collect($items)->sum(fn ($i) => $i['product']['price'] * $i['qty']);
     $subtotal = $mrpTotal;
     $discount = max(0, $mrpTotal - $sellingTotal);
-    $tax = round($sellingTotal * 0.03);
+    $tax = (float) $cartSummary['tax'];
+    $couponDiscount = (float) $cartSummary['coupon_discount'];
     $steps = ['Address', 'Delivery', 'Payment', 'Confirmation'];
     $checkoutAddresses = collect($addresses)->map(fn ($address) => [
         'id' => $address['id'],
@@ -33,7 +34,7 @@
             placeOrderUrl: {{ Illuminate\Support\Js::from(route('checkout.order.store')) }},
             expressDeliveryCharge: {{ Illuminate\Support\Js::from($expressDeliveryCharge) }},
             codOrderLimit: {{ Illuminate\Support\Js::from($codOrderLimit) }},
-            baseTotal: {{ Illuminate\Support\Js::from($sellingTotal + $tax) }},
+            baseTotal: {{ Illuminate\Support\Js::from($sellingTotal - $couponDiscount + $tax) }},
             giftWrapCharge: {{ Illuminate\Support\Js::from($giftWrapCharge) }},
             giftMessageLimit: {{ Illuminate\Support\Js::from($giftMessageLimit) }},
             giftMessageTemplates: {{ Illuminate\Support\Js::from($giftMessageTemplates) }},
@@ -303,7 +304,7 @@
 
             <div>
                 <div class="lg:sticky lg:top-28">
-                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :shipping="0" :tax="$tax" :giftWrapCharge="$giftWrapCharge" :showCoupon="false" :dynamicDelivery="true" :dynamicGiftWrap="true" ctaLabel="" />
+                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :couponDiscount="$couponDiscount" :shipping="0" :tax="$tax" :giftWrapCharge="$giftWrapCharge" :showCoupon="false" :dynamicDelivery="true" :dynamicGiftWrap="true" ctaLabel="" />
                 </div>
             </div>
         </div>

@@ -17,10 +17,13 @@ class Order extends Model
         'return_requested', 'returned', 'refunded',
     ];
 
-    public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'partial_refund', 'cod'];
+    public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'partial_refund', 'chargeback', 'cod'];
 
     protected $fillable = [
         'order_number', 'user_id', 'customer_name', 'customer_email', 'customer_phone',
+        'affiliate_id', 'affiliate_referral_click_id', 'affiliate_coupon_id',
+        'affiliate_attribution_source', 'affiliate_referral_code', 'affiliate_rule_snapshot',
+        'affiliate_flagged', 'affiliate_flag_reason', 'affiliate_attributed_at',
         'status', 'payment_status', 'payment_method', 'transaction_id', 'payment_gateway', 'paid_at',
         'subtotal', 'discount_amount', 'coupon_code', 'coupon_discount', 'shipping_charge', 'gst_amount',
         'gift_wrap', 'gift_wrap_charge', 'gift_message_category', 'gift_message', 'gift_to', 'gift_from',
@@ -48,6 +51,9 @@ class Order extends Model
             'estimated_delivery' => 'date',
             'delivered_at' => 'datetime',
             'stock_reserved' => 'boolean',
+            'affiliate_rule_snapshot' => 'array',
+            'affiliate_flagged' => 'boolean',
+            'affiliate_attributed_at' => 'datetime',
         ];
     }
 
@@ -59,6 +65,26 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function affiliate(): BelongsTo
+    {
+        return $this->belongsTo(AffiliateProfile::class, 'affiliate_id');
+    }
+
+    public function affiliateReferralClick(): BelongsTo
+    {
+        return $this->belongsTo(AffiliateReferralClick::class);
+    }
+
+    public function affiliateCoupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class, 'affiliate_coupon_id');
+    }
+
+    public function affiliateCommissions(): HasMany
+    {
+        return $this->hasMany(AffiliateCommission::class);
     }
 
     public function statusHistories(): HasMany

@@ -12,6 +12,7 @@ use App\Support\CheckoutAddresses;
 use App\Support\CheckoutOrders;
 use App\Support\ShoppingCart;
 use App\Support\StorefrontCatalog;
+use App\Services\AffiliateCommissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -353,6 +354,7 @@ class AccountController extends Controller
             $this->restoreOrderStock($order);
             $order->update(['status' => 'cancelled']);
             $order->statusHistories()->create(['status' => 'cancelled', 'remark' => 'Cancelled by customer.', 'updated_by' => Auth::id()]);
+            app(AffiliateCommissionService::class)->reconcileReversal($order->refresh());
 
             return $order->paid_amount > 0;
         });

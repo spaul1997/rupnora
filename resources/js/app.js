@@ -243,7 +243,7 @@ Alpine.data('newsletterForm', (url) => ({
     },
 }));
 
-window.cartPage = (initialItems = []) => ({
+window.cartPage = (initialItems = [], options = {}) => ({
     items: initialItems.map((item) => ({
         ...item,
         price: Number(item.price) || 0,
@@ -254,6 +254,12 @@ window.cartPage = (initialItems = []) => ({
         syncing: false,
         lastSyncedQty: Number(item.qty) || 1,
     })),
+    couponCode: options.couponCode || '',
+    couponDiscount: Number(options.couponDiscount) || 0,
+    couponInput: options.couponCode || '',
+    couponBusy: false,
+    couponApplyUrl: options.couponApplyUrl || '',
+    couponRemoveUrl: options.couponRemoveUrl || '',
 
     get hasItems() {
         return this.items.some((item) => !item.removed);
@@ -276,7 +282,7 @@ window.cartPage = (initialItems = []) => ({
     },
 
     get total() {
-        return this.sellingTotal + this.tax;
+        return this.sellingTotal - this.couponDiscount + this.tax;
     },
 
     init() {
@@ -381,6 +387,46 @@ window.cartPage = (initialItems = []) => ({
         }
     },
 
+    async applyCoupon() {
+        if (!this.couponInput.trim() || this.couponBusy) return;
+        this.couponBusy = true;
+        try {
+            const response = await fetch(this.couponApplyUrl, {
+                method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ code: this.couponInput.trim() }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'Coupon could not be applied.');
+            this.syncCoupon(data.summary);
+            Alpine.store('ui').notify(data.message || 'Coupon applied', 'success');
+        } catch (error) {
+            Alpine.store('ui').notify(error.message || 'Coupon could not be applied.', 'error');
+        } finally {
+            this.couponBusy = false;
+        }
+    },
+
+    async removeCoupon() {
+        if (this.couponBusy) return;
+        this.couponBusy = true;
+        try {
+            const response = await fetch(this.couponRemoveUrl, { method: 'DELETE', headers: jsonHeaders() });
+            const data = await response.json();
+            if (!response.ok) throw new Error('Coupon could not be removed.');
+            this.syncCoupon(data.summary);
+            this.couponInput = '';
+        } catch (error) {
+            Alpine.store('ui').notify(error.message, 'error');
+        } finally {
+            this.couponBusy = false;
+        }
+    },
+
+    syncCoupon(summary = {}) {
+        this.couponCode = summary.coupon_code || '';
+        this.couponInput = this.couponCode;
+        this.couponDiscount = Number(summary.coupon_discount) || 0;
+    },
+
     async request(url, method, payload = null, index = null) {
         const item = index === null ? null : this.items[index];
 
@@ -400,6 +446,8 @@ window.cartPage = (initialItems = []) => ({
             }
 
             const data = await response.json();
+
+            this.syncCoupon(data.summary);
 
             if (typeof data.count !== 'undefined') {
                 Alpine.store('ui').setCartCount(data.count);

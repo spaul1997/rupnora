@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\ContactMessage;
+use App\Models\AffiliateProfile;
+use App\Models\AffiliateWithdrawal;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
@@ -86,6 +88,25 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $notifications = [];
+
+        $pendingAffiliates = AffiliateProfile::where('status', 'pending')->count();
+        if ($pendingAffiliates > 0) {
+            $notifications[] = [
+                'label' => "{$pendingAffiliates} affiliate application".($pendingAffiliates > 1 ? 's' : '').' awaiting review',
+                'url' => route('admin.affiliates.index', ['status' => 'pending']),
+                'icon' => 'affiliate',
+            ];
+        }
+
+        $pendingWithdrawals = AffiliateWithdrawal::whereIn('status', ['requested', 'processing'])
+            ->orWhere('reconciliation_status', 'manual_review')->count();
+        if ($pendingWithdrawals > 0) {
+            $notifications[] = [
+                'label' => "{$pendingWithdrawals} affiliate withdrawal".($pendingWithdrawals > 1 ? 's' : '').' need attention',
+                'url' => route('admin.affiliates.withdrawals'),
+                'icon' => 'payment',
+            ];
+        }
 
         $pendingOrders = Order::where('status', 'pending')->count();
         if ($pendingOrders > 0) {

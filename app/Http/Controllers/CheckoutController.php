@@ -24,6 +24,7 @@ class CheckoutController extends Controller
         return view('pages.checkout', [
             'title' => 'Checkout',
             'items' => ShoppingCart::items(),
+            'cartSummary' => ShoppingCart::summary(),
             'addresses' => CheckoutAddresses::all(),
             'expressDeliveryCharge' => (float) $settings->express_delivery_charge,
             'codOrderLimit' => (float) $settings->cod_order_limit,

@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\Product;
+use App\Services\CartCouponService;
+use Illuminate\Validation\ValidationException;
 
 class ShoppingCart
 {
@@ -104,6 +106,7 @@ class ShoppingCart
     public static function clear(): void
     {
         self::putCart([]);
+        session()->forget(CartCouponService::SESSION_KEY);
     }
 
     public static function moveToWishlist(string $key): ?array
@@ -131,14 +134,50 @@ class ShoppingCart
         $sellingTotal = $items->sum(fn (array $item) => $item['product']['price'] * $item['qty']);
         $mrpTotal = $items->sum(fn (array $item) => max($item['product']['mrp'], $item['product']['price']) * $item['qty']);
         $discount = max(0, $mrpTotal - $sellingTotal);
-        $tax = round($sellingTotal * 0.03);
+        $coupon = self::couponPricing();
+        $couponDiscount = (float) ($coupon['discount'] ?? 0);
+        $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03);
 
         return [
             'subtotal' => $mrpTotal,
             'discount' => $discount,
+            'coupon_discount' => $couponDiscount,
+            'coupon_code' => $coupon['coupon']->code ?? null,
             'tax' => $tax,
-            'total' => $mrpTotal - $discount + $tax,
+            'total' => $mrpTotal - $discount - $couponDiscount + $tax,
         ];
+    }
+
+    public static function applyCoupon(string $code): array
+    {
+        $pricing = app(CartCouponService::class)->apply($code, self::items(), auth()->user());
+        session()->put(CartCouponService::SESSION_KEY, $pricing['coupon']->code);
+
+        return $pricing;
+    }
+
+    public static function removeCoupon(): void
+    {
+        session()->forget(CartCouponService::SESSION_KEY);
+    }
+
+    public static function couponPricing(bool $throw = false): ?array
+    {
+        $code = session(CartCouponService::SESSION_KEY);
+        if (! $code) {
+            return null;
+        }
+
+        try {
+            return app(CartCouponService::class)->apply($code, self::items(), auth()->user());
+        } catch (ValidationException $exception) {
+            if ($throw) {
+                throw $exception;
+            }
+            self::removeCoupon();
+
+            return null;
+        }
     }
 
     public static function wishlistIds(): array

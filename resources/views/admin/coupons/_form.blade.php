@@ -13,6 +13,16 @@
                 <x-admin.form.select label="Discount Type" name="discount_type" required :value="$coupon?->discount_type" :options="['percentage' => 'Percentage', 'fixed' => 'Fixed Amount']" />
             </div>
             <x-admin.form.textarea label="Description" name="description" :value="$coupon?->description" :rows="2" />
+            <div>
+                <label for="affiliate_id" class="mb-1.5 block text-sm font-medium text-gray-700">Affiliate owner (optional)</label>
+                <select id="affiliate_id" name="affiliate_id" class="admin-input">
+                    <option value="">Standard coupon</option>
+                    @foreach ($affiliates as $affiliate)
+                        <option value="{{ $affiliate->id }}" @selected((string) old('affiliate_id', $coupon?->affiliate_id) === (string) $affiliate->id)>{{ $affiliate->user->name }} — {{ $affiliate->referral_code }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-gray-400">An active affiliate coupon overrides a previously captured referral link.</p>
+            </div>
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <x-admin.form.input label="Discount Value" name="discount_value" type="number" step="0.01" required :value="$coupon?->discount_value" />
                 <x-admin.form.input label="Maximum Discount (₹)" name="maximum_discount" type="number" step="0.01" :value="$coupon?->maximum_discount" help="Applicable for percentage discounts." />

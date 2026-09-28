@@ -27,7 +27,12 @@
         <x-ui.breadcrumb :trail="[['label' => 'Shopping Cart']]" />
     </div>
 
-    <div class="container-luxe py-8" x-data="cartPage({{ Illuminate\Support\Js::from($cartStateItems) }})">
+    <div class="container-luxe py-8" x-data="cartPage({{ Illuminate\Support\Js::from($cartStateItems) }}, {{ Illuminate\Support\Js::from([
+        'couponCode' => $summary['coupon_code'],
+        'couponDiscount' => $summary['coupon_discount'],
+        'couponApplyUrl' => route('cart.coupon.apply'),
+        'couponRemoveUrl' => route('cart.coupon.remove'),
+    ]) }})">
         <h1 class="font-display text-3xl text-charcoal sm:text-4xl">Shopping Cart</h1>
 
         <div x-show="!hasItems" @if(count($items) > 0) x-cloak @endif class="mt-10">
@@ -54,9 +59,13 @@
                 <div class="card-luxe p-6">
                     <h3 class="font-display text-lg text-charcoal">Order Summary</h3>
 
-                    <div class="mt-4 flex gap-2" x-data="{ code: '' }">
-                        <input type="text" x-model="code" placeholder="Enter Coupon Code" class="input-luxe flex-1 !py-2.5 text-sm">
-                        <button type="button" class="btn-secondary !px-5 !py-2.5 text-[11px]">Apply</button>
+                    <div class="mt-4 flex gap-2">
+                        <input type="text" x-model="couponInput" @keydown.enter.prevent="applyCoupon()" placeholder="Enter Coupon Code" class="input-luxe min-w-0 flex-1 !py-2.5 text-sm">
+                        <button type="button" @click="applyCoupon()" :disabled="couponBusy" class="btn-secondary !px-5 !py-2.5 text-[11px]">Apply</button>
+                    </div>
+                    <div x-show="couponCode" x-cloak class="mt-2 flex items-center justify-between text-xs text-success">
+                        <span>Coupon <strong x-text="couponCode"></strong> applied</span>
+                        <button type="button" @click="removeCoupon()" class="text-error hover:underline">Remove</button>
                     </div>
 
                     <div class="mt-5 space-y-3 border-t border-line pt-5 text-sm">
@@ -67,6 +76,10 @@
                         <div x-show="discount > 0" class="flex justify-between text-muted">
                             <span>Discount</span>
                             <span class="text-success" x-text="'-' + formatMoney(discount)">&minus;₹{{ number_format($discount) }}</span>
+                        </div>
+                        <div x-show="couponDiscount > 0" x-cloak class="flex justify-between text-muted">
+                            <span>Coupon discount</span>
+                            <span class="text-success" x-text="'-' + formatMoney(couponDiscount)"></span>
                         </div>
                         <div class="flex justify-between text-muted">
                             <span>Shipping</span>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\AffiliateProgramController;
 use App\Http\Controllers\Admin\CareerApplicationController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactController;
@@ -68,6 +69,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'update']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.update-payment-status');
+        Route::patch('orders/{order}/returned-items', [OrderController::class, 'updateReturnedItems'])->name('orders.update-returned-items');
         Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('orders-export', [OrderController::class, 'export'])->name('orders.export');
 
@@ -113,6 +115,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('influencers', InfluencerController::class);
         Route::patch('influencers/{influencer}/status', [InfluencerController::class, 'updateStatus'])->name('influencers.update-status');
         Route::patch('influencers/{influencer}/toggle-active', [InfluencerController::class, 'toggleActive'])->name('influencers.toggle-active');
+        Route::get('affiliates', [AffiliateProgramController::class, 'index'])->name('affiliates.index');
+        Route::get('affiliates/rules', [AffiliateProgramController::class, 'rules'])->name('affiliates.rules');
+        Route::post('affiliates/rules', [AffiliateProgramController::class, 'storeRule'])->name('affiliates.rules.store');
+        Route::delete('affiliates/rules/{rule}', [AffiliateProgramController::class, 'destroyRule'])->name('affiliates.rules.destroy');
+        Route::get('affiliates/referrals', [AffiliateProgramController::class, 'referrals'])->name('affiliates.referrals');
+        Route::get('affiliates/commissions', [AffiliateProgramController::class, 'commissions'])->name('affiliates.commissions');
+        Route::get('affiliates/withdrawals', [AffiliateProgramController::class, 'withdrawals'])->name('affiliates.withdrawals');
+        Route::patch('affiliates/withdrawals/{withdrawal}', [AffiliateProgramController::class, 'updateWithdrawal'])->name('affiliates.withdrawals.update');
+        Route::get('affiliates/audits', [AffiliateProgramController::class, 'audits'])->name('affiliates.audits');
+        Route::get('affiliates/ledger/export', [AffiliateProgramController::class, 'exportLedger'])->name('affiliates.ledger.export');
+        Route::get('affiliates/{affiliate}', [AffiliateProgramController::class, 'show'])->name('affiliates.show');
+        Route::patch('affiliates/{affiliate}/status', [AffiliateProgramController::class, 'updateStatus'])->name('affiliates.status');
+        Route::patch('affiliates/{affiliate}/payout-verification', [AffiliateProgramController::class, 'verifyPayoutAccount'])->name('affiliates.payout-verification');
         Route::resource('email-campaigns', EmailCampaignController::class)
             ->parameters(['email-campaigns' => 'emailCampaign'])
             ->only(['index', 'create', 'store', 'show']);

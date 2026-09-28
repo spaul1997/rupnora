@@ -131,13 +131,13 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->resolveRange($request);
 
-        $orders = Order::whereIn('payment_status', ['refunded', 'partial_refund'])
+        $orders = Order::whereIn('payment_status', ['refunded', 'partial_refund', 'chargeback'])
             ->whereBetween('created_at', [$from, $to])
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        $totalRefunded = (float) Order::whereIn('payment_status', ['refunded', 'partial_refund'])->whereBetween('created_at', [$from, $to])->sum('refund_amount');
+        $totalRefunded = (float) Order::whereIn('payment_status', ['refunded', 'partial_refund', 'chargeback'])->whereBetween('created_at', [$from, $to])->sum('refund_amount');
 
         return view('admin.reports.refunds', compact('orders', 'totalRefunded', 'from', 'to'));
     }

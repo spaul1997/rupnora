@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Product;
+use App\Jobs\ReleaseAffiliateCommissions;
+use App\Jobs\ReconcileStaleAffiliateWithdrawals;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -30,3 +32,5 @@ Artisan::command('products:sync-prices', function () {
 })->purpose('Persist offer or discount expiry price changes and add them to product price history.');
 
 Schedule::command('products:sync-prices')->dailyAt('00:05')->withoutOverlapping();
+Schedule::job(new ReleaseAffiliateCommissions)->hourly()->withoutOverlapping();
+Schedule::job(new ReconcileStaleAffiliateWithdrawals)->hourlyAt(15)->withoutOverlapping();

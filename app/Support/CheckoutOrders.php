@@ -7,6 +7,9 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\WebsiteSetting;
+use App\Services\AffiliateAttributionService;
+use App\Services\AffiliateCommissionRuleResolver;
+use App\Services\CartCouponService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -127,7 +130,6 @@ class CheckoutOrders
 
             $sellingTotal = collect($items)->sum(fn ($item) => $item['product']['price'] * $item['qty']);
             $mrpTotal = collect($items)->sum(fn ($item) => max($item['product']['mrp'], $item['product']['price']) * $item['qty']);
-            $tax = round($sellingTotal * 0.03);
             $customer = $guestCheckout ? self::resolveCustomer($address) : auth()->user();
 
             if (! $customer->is_active) {
@@ -145,16 +147,49 @@ class CheckoutOrders
                 $address = $savedAddress->toStorefront();
             }
 
+            $couponPricing = null;
+            if ($couponCode = session(CartCouponService::SESSION_KEY)) {
+                $couponItems = collect($items)->map(function (array $item) use ($products) {
+                    $product = $products->get($item['product']['id']);
+
+                    return [
+                        'key' => $item['key'], 'model' => $product,
+                        'unit_price' => $item['product']['price'], 'qty' => $item['qty'],
+                    ];
+                })->all();
+                $couponPricing = app(CartCouponService::class)->apply($couponCode, $couponItems, $customer);
+            }
+            $coupon = $couponPricing['coupon'] ?? null;
+            $couponDiscount = (float) ($couponPricing['discount'] ?? 0);
+            $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03);
+            $attribution = app(AffiliateAttributionService::class)->resolve($customer, $coupon);
+
             $order = $customer->orders()->create([
                 'order_number' => 'ORD-'.now()->format('Y').'-'.Str::upper(Str::random(12)),
                 'customer_name' => $guestCheckout ? $address['name'] : $customer->name,
                 'customer_email' => $guestCheckout ? mb_strtolower(trim($address['email'])) : $customer->email,
                 'customer_phone' => $guestCheckout ? $address['phone'] : $customer->phone,
+                'affiliate_id' => $attribution['affiliate']?->id,
+                'affiliate_referral_click_id' => $attribution['click']?->id,
+                'affiliate_coupon_id' => $coupon?->affiliate_id ? $coupon->id : null,
+                'affiliate_attribution_source' => $attribution['source'],
+                'affiliate_referral_code' => $attribution['affiliate']?->referral_code,
+                'affiliate_rule_snapshot' => $attribution['affiliate'] ? [
+                    'priority' => ['product', 'affiliate', 'category', 'global'],
+                    'attribution_window_days' => (int) config('affiliate.attribution_window_days', 30),
+                    'return_hold_days' => (int) config('affiliate.return_hold_days', 7),
+                    'captured_at' => now()->toIso8601String(),
+                ] : null,
+                'affiliate_flagged' => $attribution['flagged'],
+                'affiliate_flag_reason' => $attribution['reason'],
+                'affiliate_attributed_at' => $attribution['affiliate'] ? now() : null,
                 'status' => 'processing',
                 'payment_status' => $data['payment'] === 'cod' ? 'cod' : 'pending',
                 'payment_method' => self::paymentMethod($data['payment']),
                 'subtotal' => $mrpTotal,
                 'discount_amount' => $mrpTotal - $sellingTotal,
+                'coupon_code' => $coupon?->code,
+                'coupon_discount' => $couponDiscount,
                 'shipping_charge' => $shipping,
                 'gst_amount' => $tax,
                 'gift_wrap' => $giftWrap,
@@ -163,7 +198,7 @@ class CheckoutOrders
                 'gift_message' => $giftWrap ? self::nullableTrimmed($data['gift_message'] ?? null) : null,
                 'gift_to' => $giftWrap ? self::nullableTrimmed($data['gift_to'] ?? null) : null,
                 'gift_from' => $giftWrap ? self::nullableTrimmed($data['gift_from'] ?? null) : null,
-                'grand_total' => $sellingTotal + $shipping + $tax + $giftWrapCharge,
+                'grand_total' => $sellingTotal - $couponDiscount + $shipping + $tax + $giftWrapCharge,
                 'shipping_address' => $address,
                 'billing_address' => $address,
                 'estimated_delivery' => now()->addDays($data['delivery'] === 'express' ? 3 : 7),
@@ -172,11 +207,32 @@ class CheckoutOrders
 
             foreach ($items as $item) {
                 $product = $item['product'];
+                $productModel = $products->get($product['id']);
+                $lineTotal = round($product['price'] * $item['qty'], 2);
+                $lineCoupon = (float) ($couponPricing['allocations'][$item['key']] ?? 0);
+                $gstDivisor = 1 + ((float) ($productModel->gst_percentage ?? 0) / 100);
+                $eligibleAmount = round(max(0, ($lineTotal - $lineCoupon) / max(1, $gstDivisor)), 2);
+                $rule = $attribution['affiliate']
+                    ? app(AffiliateCommissionRuleResolver::class)->resolve($attribution['affiliate'], $productModel)
+                    : null;
+                $commissionAmount = $rule && ! $attribution['flagged']
+                    ? round($eligibleAmount * ($rule['rate'] / 100), 2)
+                    : 0;
                 $order->items()->create([
                     'product_id' => $product['id'], 'product_name' => $product['name'], 'sku' => $product['sku'],
                     'metal' => $product['metal'], 'purity' => $product['purity'], 'size' => $item['size'],
-                    'quantity' => $item['qty'], 'price' => $product['price'], 'total' => $product['price'] * $item['qty'],
+                    'quantity' => $item['qty'], 'price' => $product['price'], 'total' => $lineTotal,
+                    'affiliate_eligible_amount' => $attribution['affiliate'] ? $eligibleAmount : 0,
+                    'affiliate_commission_rate' => $rule['rate'] ?? null,
+                    'affiliate_commission_rule_type' => $rule['type'] ?? null,
+                    'affiliate_commission_rule_id' => $rule['rule_id'] ?? null,
+                    'affiliate_commission_amount' => $commissionAmount,
                 ]);
+            }
+
+            app(AffiliateAttributionService::class)->attachOrder($attribution, $order);
+            if ($coupon) {
+                $coupon->increment('used_count');
             }
 
             foreach ($quantities as $id => $quantity) {

@@ -13,6 +13,7 @@ class CartController extends Controller
         return view('pages.cart', [
             'title' => 'Shopping Cart',
             'items' => ShoppingCart::items(),
+            'summary' => ShoppingCart::summary(),
         ]);
     }
 
@@ -58,6 +59,21 @@ class CartController extends Controller
         abort_if(! $item, 404);
 
         return $this->cartResponse('Moved to wishlist');
+    }
+
+    public function applyCoupon(Request $request): JsonResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:100']]);
+        ShoppingCart::applyCoupon($data['code']);
+
+        return $this->cartResponse('Coupon applied');
+    }
+
+    public function removeCoupon(): JsonResponse
+    {
+        ShoppingCart::removeCoupon();
+
+        return $this->cartResponse('Coupon removed');
     }
 
     protected function cartResponse(?string $message = null): JsonResponse

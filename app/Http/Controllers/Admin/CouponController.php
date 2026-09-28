@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCouponRequest;
 use App\Models\Category;
+use App\Models\AffiliateProfile;
 use App\Models\Coupon;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -30,8 +31,9 @@ class CouponController extends Controller
     {
         $products = Product::orderBy('name')->get(['id', 'name']);
         $categories = Category::orderBy('name')->get(['id', 'name']);
+        $affiliates = AffiliateProfile::with('user')->where('status', 'approved')->orderBy('referral_code')->get();
 
-        return view('admin.coupons.create', compact('products', 'categories'));
+        return view('admin.coupons.create', compact('products', 'categories', 'affiliates'));
     }
 
     public function store(StoreCouponRequest $request): RedirectResponse
@@ -55,8 +57,9 @@ class CouponController extends Controller
         $coupon->load(['products:id', 'categories:id']);
         $products = Product::orderBy('name')->get(['id', 'name']);
         $categories = Category::orderBy('name')->get(['id', 'name']);
+        $affiliates = AffiliateProfile::with('user')->where('status', 'approved')->orderBy('referral_code')->get();
 
-        return view('admin.coupons.edit', compact('coupon', 'products', 'categories'));
+        return view('admin.coupons.edit', compact('coupon', 'products', 'categories', 'affiliates'));
     }
 
     public function update(StoreCouponRequest $request, Coupon $coupon): RedirectResponse

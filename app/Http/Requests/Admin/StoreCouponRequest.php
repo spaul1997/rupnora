@@ -28,6 +28,7 @@ class StoreCouponRequest extends FormRequest
             'usage_limit' => ['nullable', 'integer', 'min:1'],
             'usage_per_customer' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['boolean'],
+            'affiliate_id' => ['nullable', 'exists:affiliate_profiles,id'],
             'products' => ['nullable', 'array'],
             'products.*' => ['exists:products,id'],
             'categories' => ['nullable', 'array'],
