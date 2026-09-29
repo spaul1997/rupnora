@@ -22,7 +22,7 @@
 
 <div class="relative overflow-hidden bg-gradient-to-br {{ $bg }}">
     @if ($image)
-        <x-ui.optimized-image :src="$image" :mobile-src="$mobileImage" alt="" sizes="100vw" loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" />
+        <x-ui.optimized-image :src="$image" :mobile-src="$mobileImage" alt="" sizes="100vw" loading="eager" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover lg:object-contain" />
     @else
         <div class="absolute inset-0 opacity-[0.05]" style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 22px 22px; color: var(--color-charcoal);"></div>
 
@@ -35,7 +35,7 @@
         </svg>
     @endif
 
-    <div class="container-luxe relative flex min-h-[68vh] flex-col justify-center py-20 sm:min-h-[76vh]">
+    <div class="container-luxe relative flex min-h-[68vh] flex-col justify-center py-20 sm:min-h-[76vh] lg:min-h-[clamp(420px,48vh,500px)] lg:py-10">
         @unless ($image)
             <div class="max-w-xl" x-data="{ shown: false }" x-init="setTimeout(() => shown = true, 80)">
                 <span class="eyebrow inline-block" :class="shown && 'animate-fade-up'">{{ $eyebrow }}</span>
