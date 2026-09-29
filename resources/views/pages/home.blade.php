@@ -372,6 +372,32 @@
         </section>
     @endif
 
+    {{-- L2. Rupnora Style Partners --}}
+    <section class="section-pad bg-ivory-soft">
+        <div class="container-luxe">
+            <div class="grid overflow-hidden rounded-3xl bg-beige shadow-soft lg:grid-cols-2">
+                <div class="flex items-center px-6 py-12 sm:px-10 sm:py-16 lg:px-14">
+                    <div class="max-w-xl">
+                        <span class="eyebrow">Earn With Rupnora</span>
+                        <h2 class="font-display mt-3 text-3xl text-charcoal sm:text-4xl">Rupnora Style Partners</h2>
+                        <p class="mt-4 text-[15px] leading-relaxed text-muted">
+                            Share the styles you love and earn commission when someone shops through your unique link. Join Rupnora Style Partners, track your earnings, and request a withdrawal when you&rsquo;re ready.
+                        </p>
+                        <a href="{{ route('account.affiliate.dashboard') }}" class="btn-primary mt-7 inline-flex">
+                            Join Style Partners
+                        </a>
+                    </div>
+                </div>
+                <x-ui.optimized-image
+                    :src="asset('images/affilate.png')"
+                    alt="Rupnora Style Partner sharing jewellery with her audience"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    class="h-full min-h-72 w-full object-cover object-right lg:min-h-[430px]"
+                />
+            </div>
+        </div>
+    </section>
+
     {{-- M. Newsletter --}}
     <!-- <section class="relative overflow-hidden bg-beige py-20">
         <div class="container-luxe relative text-center">
