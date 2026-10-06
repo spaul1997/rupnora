@@ -124,7 +124,7 @@ class StoreProductRequest extends FormRequest
             'meta_keywords' => ['nullable', 'string', 'max:255'],
 
             'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
+            'images.*' => ['bail', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
 
             'variants' => ['nullable', 'array'],
             'variants.*.size' => ['nullable', 'string', 'max:50'],
@@ -134,6 +134,14 @@ class StoreProductRequest extends FormRequest
             'variants.*.price' => ['nullable', 'numeric', 'min:0'],
             'variants.*.offer_price' => ['nullable', 'numeric', 'min:0'],
             'variants.*.stock_quantity' => ['nullable', 'integer', 'min:0'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'images.*.uploaded' => 'One or more product images could not be uploaded. The live server may still have a lower upload_max_filesize or post_max_size limit.',
+            'images.*.max' => 'Each product image must not be greater than 5MB.',
         ];
     }
 }
