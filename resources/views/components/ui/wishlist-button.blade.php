@@ -4,8 +4,9 @@
 ])
 
 @php
-    $dim = $size === 'sm' ? 'h-8 w-8' : 'h-10 w-10';
-    $iconDim = $size === 'sm' ? 'h-4 w-4' : 'h-[18px] w-[18px]';
+    // 'sm' grows on phones for an easier tap target
+    $dim = $size === 'sm' ? 'h-9 w-9 sm:h-8 sm:w-8' : 'h-10 w-10';
+    $iconDim = $size === 'sm' ? 'h-[18px] w-[18px] sm:h-4 sm:w-4' : 'h-[18px] w-[18px]';
     $wishlistPayload = [
         'id' => (string) $id,
         'addUrl' => route('account.wishlist.store'),

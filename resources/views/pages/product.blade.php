@@ -296,11 +296,13 @@
                     <div class="rounded-xl border border-line px-4 py-3 lg:flex-1">
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <p class="shrink-0 text-sm font-medium text-charcoal">Delivery Availability</p>
-                            <input type="text" x-model="pin" maxlength="6" placeholder="Enter PIN code" class="input-luxe !py-2 text-sm" @keydown.enter="checkPin()">
-                            <button @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px]" :disabled="pinLoading">
-                                <span x-show="!pinLoading">Check</span>
-                                <span x-show="pinLoading" x-cloak>...</span>
-                            </button>
+                            <div class="flex min-w-0 flex-1 items-center gap-2">
+                                <input type="text" x-model="pin" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="Enter PIN code" class="input-luxe min-w-0 flex-1 !py-2 text-sm" @keydown.enter="checkPin()">
+                                <button type="button" @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px]" :disabled="pinLoading">
+                                    <span x-show="!pinLoading">Check</span>
+                                    <span x-show="pinLoading" x-cloak>...</span>
+                                </button>
+                            </div>
                         </div>
                         <p x-show="pinStatus === 'invalid'" x-cloak class="mt-2 text-xs text-error">Please enter a valid 6-digit PIN code.</p>
                         <p x-show="pinStatus === 'available'" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-success">
@@ -314,7 +316,8 @@
                     <p class="mt-5 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error">This product is currently out of stock and cannot be purchased.</p>
                 @endunless
 
-                <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+                {{-- Below lg these actions live in the mobile sticky CTA at the bottom of the page --}}
+                <div class="mt-7 hidden gap-3 lg:flex">
                     <button type="button" data-purchase-action="add-to-cart" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50">{{ $isInStock ? 'Add to Cart' : 'Out of Stock' }}</button>
                     <button type="button" data-purchase-action="buy-now" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-50">
                         <span x-show="!$store.ui.buyingNow">Buy Now</span>
