@@ -97,9 +97,29 @@
         'name' => $product['name'],
         'url' => route('cart.store'),
     ];
+    $productCanonical = route('product.show', $productUrlKey);
+    $productSeoTitle = $product['meta_title'] ?: $product['name'];
+    $productSeoDescription = $product['meta_description'] ?: $product['short_desc'];
+    $productSeoImage = $product['primary_image'] ?? $product['image'] ?? collect($product['gallery'] ?? [])->filter()->first();
+    $productBreadcrumbs = [
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => $categoryLabel, 'url' => route('category.show', $product['category'])],
+        ['name' => $product['name'], 'url' => $productCanonical],
+    ];
+    $productSchema = \App\Support\Seo::productSchema($product, $productCanonical);
 @endphp
 
-<x-layouts.app :title="$product['name']" :description="$product['short_desc']" :tracking-product-id="$product['id']">
+<x-layouts.app
+    :title="$productSeoTitle"
+    :description="$productSeoDescription"
+    :canonical="$productCanonical"
+    :image="$productSeoImage"
+    og-type="product"
+    schema-type="ItemPage"
+    :schema="$productSchema"
+    :breadcrumbs="$productBreadcrumbs"
+    :tracking-product-id="$product['id']"
+>
     <div
         x-data="{
             activeImg: 0,
@@ -174,7 +194,14 @@
 
             {{-- Info --}}
             <div class="product-details-scrollbar lg:col-span-3 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
-                <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
+                    @if (! empty($product['sku']))
+                        <span class="inline-flex items-center rounded-full border border-line bg-paper px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+                            SKU: {{ $product['sku'] }}
+                        </span>
+                    @endif
+                </div>
                 <div class="mt-1.5 flex items-start justify-between gap-4">
                     <h1 class="font-display text-[28px] leading-tight text-charcoal sm:text-[32px]">{{ $product['name'] }}</h1>
                     <div class="flex flex-shrink-0 items-center gap-1">

@@ -35,9 +35,13 @@ class ProductController extends Controller
                         ->orWhere('sku', 'like', "%{$search}%");
                 });
             })
-            ->when($request->category_id, fn ($q, $id) => $q->where('category_id', $id))
+            ->when($request->category_id, function ($q, $id) {
+                $q->where(function ($q) use ($id) {
+                    $q->where('category_id', $id)
+                        ->orWhereHas('category', fn ($q) => $q->where('parent_id', $id));
+                });
+            })
             ->when($request->metal_type, fn ($q, $metal) => $q->where('metal_type', $metal))
-            ->when($request->purity, fn ($q, $purity) => $q->where('purity', $purity))
             ->when($request->stock_status, fn ($q, $status) => $q->where('stock_status', $status))
             ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
             ->when($request->filled('is_featured'), fn ($q) => $q->where('is_featured', $request->boolean('is_featured')))
@@ -47,7 +51,7 @@ class ProductController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $categories = Category::orderBy('name')->get(['id', 'name']);
+        $categories = Category::parents()->orderBy('name')->get(['id', 'name']);
         $metalTypes = MetalType::query()->orderBy('sort_order')->orderBy('name')->get(['name']);
 
         return view('admin.products.index', compact('products', 'categories', 'metalTypes'));
@@ -77,6 +81,17 @@ class ProductController extends Controller
         try {
             $product = DB::transaction(function () use ($request) {
                 $data = $this->prepareData($request);
+                $data['slug'] = $this->generateUniqueSlug(
+                    (string) $request->input('slug', ''),
+                    (string) $request->input('name')
+                );
+
+                if ($request->boolean('auto_generate_sku')) {
+                    $data['sku'] = $this->generateSku(
+                        (int) $request->input('parent_category_id'),
+                        (string) $request->input('sku', '')
+                    );
+                }
 
                 $product = Product::create($data);
 
@@ -137,6 +152,11 @@ class ProductController extends Controller
     {
         DB::transaction(function () use ($request, $product) {
             $data = $this->prepareData($request);
+            unset($data['slug'], $data['sku']);
+
+            if ($request->has('sku_code')) {
+                $data['sku'] = $product->skuWithCode($request->input('sku_code'));
+            }
 
             $product->priceChangeNote = $request->input('price_change_note');
             $product->update($data);
@@ -286,6 +306,58 @@ class ProductController extends Controller
     protected function defaultWhenBlank(mixed $value, mixed $default): mixed
     {
         return $value === null || $value === '' ? $default : $value;
+    }
+
+    protected function generateUniqueSlug(string $requestedSlug, string $productName): string
+    {
+        $slugBase = Str::slug(filled($requestedSlug) ? $requestedSlug : $productName);
+        $slugBase = Str::limit($slugBase ?: 'product', 240, '');
+
+        $existingSlugs = Product::query()
+            ->where(function ($query) use ($slugBase) {
+                $query->where('slug', $slugBase)
+                    ->orWhere('slug', 'like', $slugBase.'-%');
+            })
+            ->lockForUpdate()
+            ->pluck('slug')
+            ->all();
+
+        if (! in_array($slugBase, $existingSlugs, true)) {
+            return $slugBase;
+        }
+
+        $suffix = 2;
+
+        while (in_array($slugBase.'-'.$suffix, $existingSlugs, true)) {
+            $suffix++;
+        }
+
+        return $slugBase.'-'.$suffix;
+    }
+
+    protected function generateSku(int $parentCategoryId, string $inputCode): string
+    {
+        $parentCategory = Category::query()
+            ->whereNull('parent_id')
+            ->lockForUpdate()
+            ->findOrFail($parentCategoryId);
+
+        $categoryCode = substr(preg_replace('/[^A-Z0-9]/', '', Str::upper(Str::ascii($parentCategory->name))), 0, 3);
+        $inputCode = Str::upper(trim($inputCode));
+        $prefix = 'RA-'.$categoryCode.($inputCode !== '' ? '-'.$inputCode : '');
+        $serialPattern = '/^'.preg_quote($prefix, '/').'-(\d+)$/i';
+
+        $lastSerial = Product::query()
+            ->where('sku', 'like', $prefix.'-%')
+            ->lockForUpdate()
+            ->pluck('sku')
+            ->reduce(function (int $highest, string $sku) use ($serialPattern): int {
+                return preg_match($serialPattern, $sku, $matches)
+                    ? max($highest, (int) $matches[1])
+                    : $highest;
+            }, 0);
+
+        return $prefix.'-'.str_pad((string) ($lastSerial + 1), 2, '0', STR_PAD_LEFT);
     }
 
     protected function syncImages(Product $product, Request $request): void

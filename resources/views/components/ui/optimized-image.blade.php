@@ -5,12 +5,15 @@
     'sizes' => '100vw',
     'loading' => 'lazy',
     'fetchpriority' => null,
+    'fallbackSrc' => null,
 ])
 
 @php
-    $src = (string) $src;
-    $mobileSrc = (string) $mobileSrc;
-    $hasResponsiveVariants = preg_match('/^(.*)-lg\.webp$/', $src, $matches);
+    $originalSrc = trim((string) $src);
+    $mobileSrc = trim((string) $mobileSrc);
+    $fallbackSrc = trim((string) ($fallbackSrc ?: asset('images/image-placeholder.svg')));
+    $src = $originalSrc ?: $fallbackSrc;
+    $hasResponsiveVariants = $originalSrc !== '' && preg_match('/^(.*)-lg\.webp$/', $originalSrc, $matches);
     $base = $hasResponsiveVariants ? $matches[1] : null;
     $avifStoragePath = $base ? ltrim(\Illuminate\Support\Str::after(parse_url($base.'-lg.avif', PHP_URL_PATH) ?: '', '/storage/'), '/') : null;
     $hasAvif = $avifStoragePath && \Illuminate\Support\Facades\Storage::disk('public')->exists($avifStoragePath);
@@ -20,7 +23,7 @@
     $hasMobileAvif = $mobileAvifStoragePath && \Illuminate\Support\Facades\Storage::disk('public')->exists($mobileAvifStoragePath);
 @endphp
 
-@if ($src && ($hasResponsiveVariants || $mobileSrc))
+@if ($hasResponsiveVariants || $mobileSrc)
     <picture>
         @if ($mobileSrc && $hasMobileResponsiveVariants)
             @if ($hasMobileAvif)
@@ -41,16 +44,18 @@
             alt="{{ $alt }}"
             loading="{{ $loading }}"
             decoding="async"
+            data-image-fallback-src="{{ $fallbackSrc }}"
             @if ($fetchpriority) fetchpriority="{{ $fetchpriority }}" @endif
             {{ $attributes }}
         >
     </picture>
-@elseif ($src)
+@else
     <img
         src="{{ $src }}"
         alt="{{ $alt }}"
         loading="{{ $loading }}"
         decoding="async"
+        data-image-fallback-src="{{ $fallbackSrc }}"
         @if ($fetchpriority) fetchpriority="{{ $fetchpriority }}" @endif
         {{ $attributes }}
     >

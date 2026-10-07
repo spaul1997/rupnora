@@ -35,12 +35,23 @@ class CategoryInfiniteScrollTest extends TestCase
             ]);
         }
 
-        $this->get(route('category.show', $category->slug))
+        $firstPage = $this->get(route('category.show', $category->slug))
             ->assertOk()
             ->assertViewHas('products', fn (array $products) => count($products) === 20)
             ->assertViewHas('totalProducts', 25)
             ->assertViewHas('hasMore', true)
             ->assertDontSee('pagination');
+
+        $firstPage
+            ->assertSee('href="'.route('category.show', $category->slug).'?page=2" rel="next"', false)
+            ->assertSee('<link rel="next" href="'.route('category.show', $category->slug).'?page=2">', false);
+
+        $this->get(route('category.show', [$category->slug, 'page' => 2]))
+            ->assertOk()
+            ->assertViewHas('products', fn (array $products) => count($products) === 5)
+            ->assertViewHas('currentPage', 2)
+            ->assertSee('<link rel="canonical" href="'.route('category.show', $category->slug).'?page=2">', false)
+            ->assertSee('href="'.route('category.show', $category->slug).'" rel="prev"', false);
 
         $this->getJson(route('category.show', $category->slug).'?page=2')
             ->assertOk()

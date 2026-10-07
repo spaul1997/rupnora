@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\AuthPageController;
 use App\Http\Controllers\CareerApplicationController;
 use App\Http\Controllers\CartController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\NewsletterSubscriptionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\VisitorTrackingController;
 use App\Mail\ForgotPasswordOtpMail;
 use App\Mail\OrderFailedMail;
@@ -32,7 +34,6 @@ use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AffiliateController;
 
 Route::get('/clear-cache', function () {
     Artisan::call('optimize:clear');
@@ -102,6 +103,8 @@ Route::get('/mail-preview/{type}', function (string $type) {
 })->name('mail-preview');
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 
 Route::get('/about', function () {
     return view('pages.about', ['title' => 'Our Story']);

@@ -3,7 +3,7 @@
     'size' => 'md',
 ])
 
-<a href="{{ route('category.show', $category['slug']) }}" class="group block overflow-hidden rounded-lg border border-line bg-paper transition-colors hover:border-champagne">
+<a href="{{ route('category.show', $category['slug']) }}" data-motion-card="category" class="group block overflow-hidden rounded-lg border border-line bg-paper transition-colors hover:border-champagne">
     <div class="overflow-hidden">
         @if (! empty($category['image']))
             <x-ui.optimized-image :src="$category['image']" alt="" sizes="(min-width: 1024px) 13vw, (min-width: 640px) 25vw, 33vw" class="aspect-square w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />

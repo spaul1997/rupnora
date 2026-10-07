@@ -1,53 +1,67 @@
-<input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or SKU..." class="admin-input lg:max-w-xs">
+<input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or SKU..." class="admin-input !py-2 lg:min-w-[200px] lg:flex-1">
 
-<select name="category_id" class="admin-select lg:max-w-[160px]">
-    <option value="">All Categories</option>
-    @foreach ($categories as $cat)
-        <option value="{{ $cat->id }}" @selected(request('category_id') == $cat->id)>{{ $cat->name }}</option>
-    @endforeach
-</select>
+<x-admin.searchable-select
+    name="category_id"
+    :options="$categories->pluck('name', 'id')"
+    :selected="request('category_id')"
+    placeholder="All Categories"
+    search-placeholder="Search categories..."
+    compact
+    class="lg:w-44"
+/>
 
-<select name="metal_type" class="admin-select lg:max-w-[140px]">
-    <option value="">All Metals</option>
-    @foreach ($metalTypes as $metalType)
-        <option value="{{ $metalType->name }}" @selected(request('metal_type') === $metalType->name)>{{ $metalType->name }}</option>
-    @endforeach
-</select>
+<x-admin.searchable-select
+    name="metal_type"
+    :options="$metalTypes->pluck('name', 'name')"
+    :selected="request('metal_type')"
+    placeholder="All Metals"
+    search-placeholder="Search metals..."
+    compact
+    class="lg:w-36"
+/>
 
-<select name="purity" class="admin-select lg:max-w-[120px]">
-    <option value="">All Purity</option>
-    @foreach (\App\Http\Controllers\Admin\ProductController::PURITIES as $purity)
-        <option value="{{ $purity }}" @selected(request('purity') === $purity)>{{ $purity }}</option>
-    @endforeach
-</select>
+<x-admin.searchable-select
+    name="stock_status"
+    :options="[
+        'in_stock' => 'In Stock',
+        'low_stock' => 'Low Stock',
+        'out_of_stock' => 'Out of Stock',
+    ]"
+    :selected="request('stock_status')"
+    placeholder="All Stock"
+    search-placeholder="Search stock..."
+    compact
+    class="lg:w-36"
+/>
 
-<select name="stock_status" class="admin-select lg:max-w-[140px]">
-    <option value="">All Stock</option>
-    <option value="in_stock" @selected(request('stock_status') === 'in_stock')>In Stock</option>
-    <option value="low_stock" @selected(request('stock_status') === 'low_stock')>Low Stock</option>
-    <option value="out_of_stock" @selected(request('stock_status') === 'out_of_stock')>Out of Stock</option>
-</select>
+<x-admin.searchable-select
+    name="is_active"
+    :options="['1' => 'Active', '0' => 'Inactive']"
+    :selected="request('is_active')"
+    placeholder="All Status"
+    search-placeholder="Search status..."
+    compact
+    class="lg:w-32"
+/>
 
-<select name="is_active" class="admin-select lg:max-w-[130px]">
-    <option value="">Active/Inactive</option>
-    <option value="1" @selected(request('is_active') === '1')>Active</option>
-    <option value="0" @selected(request('is_active') === '0')>Inactive</option>
-</select>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <label class="flex items-center gap-1.5 whitespace-nowrap text-sm text-gray-600">
+        <input type="checkbox" name="is_featured" value="1" @checked(request('is_featured')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
+        Featured
+    </label>
+    <label class="flex items-center gap-1.5 whitespace-nowrap text-sm text-gray-600">
+        <input type="checkbox" name="is_new_arrival" value="1" @checked(request('is_new_arrival')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
+        New Arrival
+    </label>
+    <label class="flex items-center gap-1.5 whitespace-nowrap text-sm text-gray-600">
+        <input type="checkbox" name="is_best_seller" value="1" @checked(request('is_best_seller')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
+        Best Seller
+    </label>
+</div>
 
-<label class="flex items-center gap-1.5 text-sm text-gray-600">
-    <input type="checkbox" name="is_featured" value="1" @checked(request('is_featured')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
-    Featured
-</label>
-<label class="flex items-center gap-1.5 text-sm text-gray-600">
-    <input type="checkbox" name="is_new_arrival" value="1" @checked(request('is_new_arrival')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
-    New Arrival
-</label>
-<label class="flex items-center gap-1.5 text-sm text-gray-600">
-    <input type="checkbox" name="is_best_seller" value="1" @checked(request('is_best_seller')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
-    Best Seller
-</label>
-
-<button type="submit" class="admin-btn-secondary">Apply</button>
-@if (request()->hasAny(['search', 'category_id', 'metal_type', 'purity', 'stock_status', 'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller']))
-    <a href="{{ route('admin.products.index') }}" class="admin-btn-ghost">Clear</a>
-@endif
+<div class="flex items-center gap-2">
+    <button type="submit" class="admin-btn-secondary">Apply</button>
+    @if (request()->hasAny(['search', 'category_id', 'metal_type', 'stock_status', 'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller']))
+        <a href="{{ route('admin.products.index') }}" class="admin-btn-ghost">Clear</a>
+    @endif
+</div>

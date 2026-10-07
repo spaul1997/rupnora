@@ -14,7 +14,7 @@ class CategoryController extends Controller
     public function index()
     {
         return view('pages.categories', [
-            'title' => 'Categories',
+            'title' => 'Shop Jewellery by Category',
             'categories' => StorefrontCatalog::topLevelCategories(),
         ]);
     }
@@ -27,7 +27,7 @@ class CategoryController extends Controller
         ];
 
         if (isset($special[$slug])) {
-            return redirect()->route($special[$slug]);
+            return redirect()->route($special[$slug], status: Response::HTTP_MOVED_PERMANENTLY);
         }
 
         $category = StorefrontCatalog::category($slug);
@@ -111,13 +111,15 @@ class CategoryController extends Controller
         bool $showBanner = true,
         array $initialGenderFilter = [],
     ) {
-        $page = $request->expectsJson() ? max(1, $request->integer('page', 1)) : 1;
+        $page = max(1, $request->integer('page', 1));
         $offset = ($page - 1) * self::PRODUCTS_PER_PAGE;
         $visibleProducts = array_slice($products, $offset, self::PRODUCTS_PER_PAGE);
         $totalProducts = count($products);
         $loadedCount = min($offset + count($visibleProducts), $totalProducts);
         $hasMore = $loadedCount < $totalProducts;
         $meta = StorefrontCatalog::productMeta($visibleProducts, $offset);
+
+        abort_if(! $request->expectsJson() && $page > 1 && $visibleProducts === [], Response::HTTP_NOT_FOUND);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -135,6 +137,8 @@ class CategoryController extends Controller
 
         return view('pages.category', [
             'title' => $category['name'],
+            'seoTitle' => $category['meta_title'] ?? $category['name'].' Jewellery Online',
+            'seoDescription' => $category['meta_description'] ?? $category['blurb'] ?? null,
             'slug' => $slug,
             'category' => $category,
             'products' => $visibleProducts,
@@ -142,7 +146,8 @@ class CategoryController extends Controller
             'meta' => $meta,
             'totalProducts' => $totalProducts,
             'hasMore' => $hasMore,
-            'nextPage' => $hasMore ? 2 : null,
+            'nextPage' => $hasMore ? $page + 1 : null,
+            'currentPage' => $page,
             'loadUrl' => $request->url(),
             'showBanner' => $showBanner,
             'initialGenderFilter' => $initialGenderFilter,

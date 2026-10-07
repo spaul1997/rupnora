@@ -8,7 +8,7 @@
     $tag = $collection['tag'] ?? null;
 @endphp
 
-<a href="{{ route('collection.show', $collection['slug']) }}" class="group relative block overflow-hidden rounded-lg border border-line bg-paper transition-colors hover:border-champagne">
+<a href="{{ route('collection.show', $collection['slug']) }}" data-motion-card="collection" class="group relative block overflow-hidden rounded-lg border border-line bg-paper transition-colors hover:border-champagne">
     <div class="relative aspect-square overflow-hidden">
     @if ($logo)
         <x-ui.optimized-image :src="$logo" alt="{{ $collection['name'] }}" sizes="(min-width: 1024px) 16vw, (min-width: 640px) 25vw, 45vw" class="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105" />

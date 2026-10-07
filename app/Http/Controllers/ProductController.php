@@ -15,8 +15,12 @@ class ProductController extends Controller
 
         abort_if(! $product, Response::HTTP_NOT_FOUND);
 
-        if (($product['slug'] ?? $product['id']) !== $slug) {
-            return redirect()->route('product.show', $product['slug'] ?? $product['id']);
+        if (($product['slug'] ?? $product['id']) !== $slug || request()->routeIs('products.show')) {
+            return redirect()->route(
+                'product.show',
+                $product['slug'] ?? $product['id'],
+                Response::HTTP_MOVED_PERMANENTLY,
+            );
         }
 
         $approvedReviews = Review::query()
@@ -47,7 +51,7 @@ class ProductController extends Controller
             : null;
 
         return view('pages.product', [
-            'title' => $product['name'],
+            'title' => $product['meta_title'] ?: $product['name'],
             'product' => $product,
             'related' => StorefrontCatalog::related($product['id'], 5),
             'bestSellersCross' => collect(StorefrontCatalog::bestSellers())->where('id', '!=', $product['id'])->take(5)->values()->all(),

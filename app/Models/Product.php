@@ -157,6 +157,35 @@ class Product extends Model
         return 'in_stock';
     }
 
+    /**
+     * @return array{prefix: string, code: string, serial: string}|null
+     */
+    public function skuSegments(): ?array
+    {
+        if (! preg_match('/^([A-Z0-9]+-[A-Z0-9]+)(?:-([A-Z0-9]+))?-(\d+)$/i', $this->sku, $matches)) {
+            return null;
+        }
+
+        return [
+            'prefix' => $matches[1],
+            'code' => $matches[2] ?? '',
+            'serial' => $matches[3],
+        ];
+    }
+
+    public function skuWithCode(?string $code): ?string
+    {
+        $segments = $this->skuSegments();
+
+        if ($segments === null) {
+            return null;
+        }
+
+        $code = strtoupper(trim((string) $code));
+
+        return $segments['prefix'].'-'.($code !== '' ? $code.'-' : '').$segments['serial'];
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

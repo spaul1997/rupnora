@@ -13,7 +13,7 @@
     ];
 @endphp
 
-<div class="group relative" x-data="{ quickView: false }">
+<div class="group relative" data-motion-card="product" x-data="{ quickView: false }">
     <a href="{{ route('product.show', $productUrlKey) }}" class="block">
         <div class="relative overflow-hidden rounded-lg border border-line">
             <div class="relative aspect-square">

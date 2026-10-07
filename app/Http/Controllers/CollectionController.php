@@ -10,7 +10,7 @@ class CollectionController extends Controller
     public function index()
     {
         return view('pages.collections', [
-            'title' => 'Collections',
+            'title' => 'Jewellery Collections',
             'collections' => StorefrontCatalog::collections(),
         ]);
     }
@@ -25,6 +25,8 @@ class CollectionController extends Controller
 
         return view('pages.category', [
             'title' => $collection['name'],
+            'seoTitle' => $collection['name'].' Jewellery Collection',
+            'seoDescription' => $collection['blurb'] ?? null,
             'slug' => $slug,
             'category' => $collection,
             'products' => $products,

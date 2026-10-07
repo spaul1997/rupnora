@@ -159,6 +159,93 @@
         @apply relative text-charcoal after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-champagne-dark after:transition-all after:duration-300 hover:after:w-full;
     }
 
+    /* Storefront motion system. Motion is enabled by JS only after elements are prepared. */
+    .motion-ready .storefront [data-motion-page] {
+        animation: storefront-page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .motion-ready .storefront [data-motion-reveal]:not(.motion-visible),
+    .motion-ready .storefront [data-motion-card]:not(.motion-visible) {
+        opacity: 0;
+        transform: translate3d(0, 22px, 0) scale(0.985);
+    }
+
+    .motion-ready .storefront [data-motion-reveal],
+    .motion-ready .storefront [data-motion-card] {
+        transition:
+            opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .motion-ready .storefront [data-motion-reveal].motion-visible,
+    .motion-ready .storefront [data-motion-card].motion-visible {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .motion-ready .storefront [data-motion-card='product'] {
+        transform: none;
+        transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .storefront [data-motion-card='product'] > a > div:first-child {
+        transition:
+            transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+            border-color 300ms ease,
+            box-shadow 350ms ease;
+    }
+
+    .storefront [data-motion-card='category'],
+    .storefront [data-motion-card='collection'],
+    .storefront [data-motion-card='surface'] {
+        transition:
+            opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+            translate 350ms cubic-bezier(0.22, 1, 0.36, 1),
+            border-color 300ms ease,
+            box-shadow 350ms ease;
+    }
+
+    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn) {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn):active:not(:disabled) {
+        scale: 0.97;
+    }
+
+    .storefront .icon-btn svg {
+        transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .storefront [data-motion-card='product']:hover > a > div:first-child {
+            transform: translateY(-4px);
+            border-color: color-mix(in srgb, var(--color-champagne) 65%, transparent);
+            box-shadow: var(--shadow-lift);
+        }
+
+        .storefront [data-motion-card='category']:hover,
+        .storefront [data-motion-card='collection']:hover,
+        .storefront [data-motion-card='surface']:hover {
+            translate: 0 -5px;
+            box-shadow: var(--shadow-lift);
+        }
+
+        .storefront .icon-btn:hover svg {
+            transform: scale(1.08);
+        }
+    }
+
+    @keyframes storefront-page-enter {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
     /* Admin panel */
     .admin-btn-primary, .admin-btn-secondary, .admin-btn-danger, .admin-btn-ghost {
         @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
@@ -284,5 +371,36 @@
     }
     .admin-sidebar-link.active {
         @apply bg-champagne-dark/15 text-champagne-light;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .storefront *,
+    .storefront *::before,
+    .storefront *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+    }
+
+    .storefront [data-motion-reveal],
+    .storefront [data-motion-card] {
+        opacity: 1 !important;
+        transform: none !important;
+        translate: none !important;
+    }
+
+    .storefront [data-motion-card='product'] > a > div:first-child {
+        transform: none !important;
+    }
+
+    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn) {
+        scale: 1 !important;
     }
 }

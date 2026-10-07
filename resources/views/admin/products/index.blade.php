@@ -21,7 +21,7 @@
             <button @click="filtersOpen = true" class="admin-btn-secondary flex-1 justify-center">Filters</button>
         </div>
 
-        <form method="GET" class="admin-card hidden flex-wrap items-center gap-3 p-4 lg:flex">
+        <form method="GET" class="admin-card hidden flex-wrap items-center gap-x-3 gap-y-2 p-3 lg:flex">
             @include('admin.products._filters')
         </form>
 

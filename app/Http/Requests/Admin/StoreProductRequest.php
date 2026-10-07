@@ -18,6 +18,10 @@ class StoreProductRequest extends FormRequest
     {
         $slugSource = $this->filled('slug') ? $this->input('slug') : $this->input('name');
 
+        if ($this->has('sku')) {
+            $this->merge(['sku' => trim((string) $this->input('sku'))]);
+        }
+
         if ($slugSource) {
             $this->merge([
                 'slug' => Str::slug($slugSource),
@@ -31,10 +35,15 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
+        $skuRules = $this->boolean('auto_generate_sku')
+            ? ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z0-9]+$/']
+            : ['required', 'string', 'max:100', 'unique:products,sku'];
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:products,slug'],
-            'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
+            'slug' => ['nullable', 'string', 'max:255'],
+            'sku' => $skuRules,
+            'auto_generate_sku' => ['sometimes', 'boolean'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'parent_category_id' => [
                 'required',
@@ -140,6 +149,7 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'sku.regex' => 'The optional SKU code may contain letters and numbers only.',
             'images.*.uploaded' => 'One or more product images could not be uploaded. The live server may still have a lower upload_max_filesize or post_max_size limit.',
             'images.*.max' => 'Each product image must not be greater than 5MB.',
         ];

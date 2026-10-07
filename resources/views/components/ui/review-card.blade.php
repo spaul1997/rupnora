@@ -1,6 +1,6 @@
 @props(['review'])
 
-<div class="card-luxe h-full p-6">
+<div class="card-luxe h-full p-6" data-motion-card="surface">
     <x-ui.rating :value="$review['rating']" size="sm" />
     <p class="mt-4 text-[14.5px] leading-relaxed text-charcoal-soft">&ldquo;{{ $review['text'] }}&rdquo;</p>
     <div class="mt-5 flex items-center gap-3 border-t border-line pt-4">

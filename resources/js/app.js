@@ -860,4 +860,127 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     },
 });
 
+const initStorefrontMotion = () => {
+    const storefront = document.querySelector('.storefront');
+
+    if (!storefront || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const main = storefront.querySelector('#main-content');
+
+    if (!main) {
+        return;
+    }
+
+    const sectionSelector = ':scope > section:not([role="dialog"]), :scope > div > section:not([role="dialog"])';
+
+    main.querySelectorAll(sectionSelector).forEach((section) => {
+        section.dataset.motionReveal = 'section';
+    });
+
+    const observer = 'IntersectionObserver' in window
+        ? new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                observer.unobserve(entry.target);
+                const delay = Number(entry.target.dataset.motionDelay || 0);
+
+                window.setTimeout(() => {
+                    entry.target.classList.add('motion-visible');
+                }, delay);
+            });
+        }, {
+            rootMargin: '0px 0px -8% 0px',
+            threshold: 0.08,
+        })
+        : null;
+
+    const prepareElement = (element) => {
+        if (element.dataset.motionPrepared === 'true') {
+            return;
+        }
+
+        element.dataset.motionPrepared = 'true';
+
+        if (element.hasAttribute('data-motion-card')) {
+            const siblings = Array.from(element.parentElement?.children || [])
+                .filter((sibling) => sibling.hasAttribute?.('data-motion-card'));
+            const position = Math.max(0, siblings.indexOf(element));
+            element.dataset.motionDelay = String(Math.min(position % 6, 5) * 55);
+        }
+
+        if (observer) {
+            observer.observe(element);
+        } else {
+            element.classList.add('motion-visible');
+        }
+    };
+
+    const prepareWithin = (root) => {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches('[data-motion-reveal], [data-motion-card]')) {
+            prepareElement(root);
+        }
+
+        root.querySelectorAll('[data-motion-reveal], [data-motion-card]').forEach(prepareElement);
+    };
+
+    prepareWithin(main);
+    document.documentElement.classList.add('motion-ready');
+
+    const contentObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach(prepareWithin);
+        });
+    });
+
+    contentObserver.observe(main, { childList: true, subtree: true });
+};
+
+const initStorefrontImageFallbacks = () => {
+    const storefront = document.querySelector('.storefront');
+    const defaultFallback = storefront?.dataset.imageFallback;
+
+    if (!storefront || !defaultFallback) {
+        return;
+    }
+
+    const applyFallback = (image) => {
+        if (!(image instanceof HTMLImageElement)) {
+            return;
+        }
+
+        const fallback = image.dataset.imageFallbackSrc || defaultFallback;
+        const fallbackUrl = new URL(fallback, document.baseURI).href;
+
+        if (image.src === fallbackUrl) {
+            return;
+        }
+
+        image.closest('picture')?.querySelectorAll('source').forEach((source) => source.remove());
+        image.removeAttribute('srcset');
+        image.src = fallback;
+        image.classList.add('image-fallback');
+    };
+
+    document.addEventListener('error', (event) => {
+        applyFallback(event.target);
+    }, true);
+
+    storefront.querySelectorAll('img').forEach((image) => {
+        if (!image.getAttribute('src')?.trim()) {
+            applyFallback(image);
+        }
+    });
+};
+
 Alpine.start();
+initStorefrontImageFallbacks();
+initStorefrontMotion();

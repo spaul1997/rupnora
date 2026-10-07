@@ -532,6 +532,8 @@ class StorefrontCatalog
             'image' => self::storageUrl($category->image),
             'banner' => self::storageUrl($banner),
             'blurb' => $category->description ?: ($fallback['blurb'] ?? 'Explore our '.$category->name.' collection.'),
+            'meta_title' => $category->meta_title,
+            'meta_description' => $category->meta_description,
             'count' => $category->products_count ?? $category->products()->active()->count(),
             'show_in_header' => (bool) ($category->show_in_header ?? true),
         ];
@@ -632,6 +634,8 @@ class StorefrontCatalog
             'stock_status' => $product->stock_status,
             'short_desc' => $product->short_description ?: Str::limit(strip_tags((string) $product->description), 120),
             'description' => $product->description ?: $product->short_description,
+            'meta_title' => $product->meta_title,
+            'meta_description' => $product->meta_description,
             'metal_options' => $product->variants->pluck('metal')->filter()->unique()->values()->all() ?: null,
             'sizes' => $product->variants->pluck('size')->filter()->unique()->values()->all() ?: null,
             'variants' => $product->variants

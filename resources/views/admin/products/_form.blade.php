@@ -9,6 +9,7 @@
     $selectedCategoryId = old('category_id', $productCategory?->parent_id ? $productCategory->id : '');
     $selectedJewelleryType = old('jewellery_type', $product->jewellery_type ?? '');
     $selectedCollections = \App\Models\Product::normalizeCollectionSlugs(old('collection', isset($product) ? $product->collectionSlugs() : []));
+    $skuSegments = isset($product) ? $product->skuSegments() : null;
 @endphp
 
 <div
@@ -56,7 +57,22 @@
             <h3 class="text-sm font-semibold text-gray-900">Basic Information</h3>
             <div class="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
                 <x-admin.form.input label="Product Name" name="name" :value="$product->name ?? null" required />
-                <x-admin.form.input label="Slug" name="slug" :value="$product->slug ?? null" help="Leave blank to auto-generate. Must be unique." />
+                @isset($product)
+                    <x-admin.form.input
+                        label="Slug"
+                        name="slug"
+                        :value="$product->slug"
+                        readonly
+                        class="cursor-not-allowed bg-gray-50 text-gray-500"
+                        help="Slug cannot be changed after product creation."
+                    />
+                @else
+                    <x-admin.form.input
+                        label="Slug"
+                        name="slug"
+                        help="Leave blank to generate it from the product name. Duplicate slugs receive a numeric suffix."
+                    />
+                @endisset
                 <div>
                     <label for="parent_category_id" class="admin-label">Category <span class="text-error">*</span></label>
                     <select name="parent_category_id" id="parent_category_id" x-model="selectedParentCategory" x-on:change="selectedCategory = ''" required class="admin-select">
@@ -83,7 +99,44 @@
                     @enderror
                 </div>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:col-span-2">
-                    <x-admin.form.input label="SKU" name="sku" :value="$product->sku ?? null" required />
+                    @if (isset($product))
+                        @if ($skuSegments)
+                            @php($editableSkuCode = old('sku_code', $skuSegments['code']))
+                            <div x-data="{ skuCode: {{ Illuminate\Support\Js::from($editableSkuCode) }} }">
+                                <label for="sku_code" class="admin-label">SKU <span class="text-error">*</span></label>
+                                <div class="inline-flex min-h-[42px] max-w-full items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition focus-within:border-champagne-dark focus-within:ring-2 focus-within:ring-champagne/25">
+                                    <span class="flex self-stretch shrink-0 items-center whitespace-nowrap border-r border-gray-200 bg-gray-50 px-2.5 text-sm text-gray-500" title="SKU prefix is read-only">{{ $skuSegments['prefix'] }}-</span>
+                                    <input
+                                        type="text"
+                                        name="sku_code"
+                                        id="sku_code"
+                                        value="{{ $editableSkuCode }}"
+                                        x-model="skuCode"
+                                        x-on:input="skuCode = $event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+                                        maxlength="30"
+                                        pattern="[A-Za-z0-9]*"
+                                        autocomplete="off"
+                                        aria-describedby="sku-help"
+                                        class="w-16 shrink-0 border-0 px-1.5 py-2 text-center text-sm font-semibold uppercase text-gray-900 outline-none focus:ring-0"
+                                    >
+                                    <span class="flex self-stretch shrink-0 items-center whitespace-nowrap border-l border-gray-200 bg-gray-50 px-2.5 text-sm text-gray-500" x-text="(skuCode ? '-' : '') + {{ Illuminate\Support\Js::from($skuSegments['serial']) }}" title="SKU serial is read-only">{{ ($editableSkuCode ? '-' : '').$skuSegments['serial'] }}</span>
+                                </div>
+                                <p id="sku-help" class="mt-1 text-xs text-gray-400">Only the middle SKU code can be edited. The prefix and serial number are read-only.</p>
+                                @error('sku_code')
+                                    <p class="mt-1 text-xs text-error">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @else
+                            <div>
+                                <label for="sku_readonly" class="admin-label">SKU</label>
+                                <input type="text" id="sku_readonly" value="{{ $product->sku }}" readonly class="admin-input cursor-not-allowed bg-gray-50 text-gray-500">
+                                <p class="mt-1 text-xs text-gray-400">This SKU does not contain an editable middle code.</p>
+                            </div>
+                        @endif
+                    @else
+                        <input type="hidden" name="auto_generate_sku" value="1">
+                        <x-admin.form.input label="SKU Code (Optional)" name="sku" :value="null" placeholder="e.g. TF" help="Auto-generated as RA-{first 3 category letters}-{code}-01. Without a code: RA-EAR-01." />
+                    @endif
                     <x-admin.form.input label="Barcode" name="barcode" :value="$product->barcode ?? null" />
                     <x-admin.form.input label="Brand" name="brand" :value="$product->brand ?? 'Aurelle'" />
                 </div>

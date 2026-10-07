@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -16,12 +17,8 @@ class UpdateProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $slugSource = $this->filled('slug') ? $this->input('slug') : $this->input('name');
-
-        if ($slugSource) {
-            $this->merge([
-                'slug' => Str::slug($slugSource),
-            ]);
+        if ($this->has('sku_code')) {
+            $this->merge(['sku_code' => trim((string) $this->input('sku_code'))]);
         }
     }
 
@@ -36,8 +33,7 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($product)],
-            'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->ignore($product)],
+            'sku_code' => ['sometimes', 'nullable', 'string', 'max:30', 'regex:/^[A-Za-z0-9]+$/'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'parent_category_id' => [
                 'required',
@@ -141,9 +137,41 @@ class UpdateProductRequest extends FormRequest
         ];
     }
 
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if (! $this->has('sku_code') || $validator->errors()->has('sku_code')) {
+                    return;
+                }
+
+                /** @var Product $product */
+                $product = $this->route('product');
+                $sku = $product->skuWithCode($this->input('sku_code'));
+
+                if ($sku === null) {
+                    $validator->errors()->add('sku_code', 'This SKU format does not have an editable code section.');
+
+                    return;
+                }
+
+                if (Str::length($sku) > 100) {
+                    $validator->errors()->add('sku_code', 'The resulting SKU must not exceed 100 characters.');
+
+                    return;
+                }
+
+                if (Product::query()->where('sku', $sku)->where('id', '!=', $product->getKey())->exists()) {
+                    $validator->errors()->add('sku_code', 'A product with the resulting SKU already exists.');
+                }
+            },
+        ];
+    }
+
     public function messages(): array
     {
         return [
+            'sku_code.regex' => 'The SKU code may contain letters and numbers only.',
             'images.*.uploaded' => 'One or more product images could not be uploaded. The live server may still have a lower upload_max_filesize or post_max_size limit.',
             'images.*.max' => 'Each product image must not be greater than 5MB.',
         ];

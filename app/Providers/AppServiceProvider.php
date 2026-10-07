@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\ContactMessage;
 use App\Models\AffiliateProfile;
 use App\Models\AffiliateWithdrawal;
+use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
@@ -77,7 +77,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('components.layouts.app', function ($view) {
-            $view->with('socialProofItems', StorefrontCatalog::socialProofItems());
+            $view->with([
+                'seoSettings' => WebsiteSetting::current(),
+                'socialProofItems' => StorefrontCatalog::socialProofItems(),
+            ]);
         });
     }
 

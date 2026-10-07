@@ -4,6 +4,18 @@
     $hideCollectionFilter = $hideCollectionFilter ?? false;
     $productCollection = collect($filterProducts ?? $products);
     $totalProducts = $totalProducts ?? count($products);
+    $currentPage = $currentPage ?? 1;
+    $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
+    $categoryCanonical = url()->current().($currentPage > 1 ? '?page='.$currentPage : '');
+    $categoryPreviousUrl = $currentPage > 1
+        ? url()->current().($currentPage > 2 ? '?page='.($currentPage - 1) : '')
+        : null;
+    $categoryNextUrl = ($hasMore ?? false) ? url()->current().'?page='.($currentPage + 1) : null;
+    $categoryBreadcrumbs = [
+        ['name' => 'Home', 'url' => route('home')],
+        ['name' => 'Jewellery', 'url' => route('collections.index')],
+        ['name' => $category['name'], 'url' => $categoryCanonical],
+    ];
     $priceMin = max(0, (int) floor($productCollection->min('price') ?? 0));
     $priceMax = max(1000, (int) ceil($productCollection->max('price') ?? 500000));
     $currentCategory = \App\Models\Category::query()
@@ -113,7 +125,17 @@
     ];
 @endphp
 
-<x-layouts.app :title="$title">
+<x-layouts.app
+    :title="($seoTitle ?? $title).($currentPage > 1 ? ' — Page '.$currentPage : '')"
+    :description="$seoDescription ?? ($category['blurb'] ?? null)"
+    :canonical="$categoryCanonical"
+    :image="$categoryHeroImage"
+    :robots="$totalProducts > 0 ? null : 'noindex, follow'"
+    schema-type="CollectionPage"
+    :breadcrumbs="$categoryBreadcrumbs"
+    :previous-url="$categoryPreviousUrl"
+    :next-url="$categoryNextUrl"
+>
     <div
         x-data="{
             loading: true,
@@ -231,15 +253,20 @@
 
         @if ($showBanner)
             {{-- Category banner --}}
-            @php
-                $categoryHeroImage = $category['banner'] ?? $category['image'] ?? null;
-            @endphp
             <div class="relative mt-5 w-full overflow-hidden">
                 @if ($categoryHeroImage)
                     <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full object-cover object-top sm:aspect-[16/4]" />
                 @else
                     <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
                 @endif
+                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-charcoal/75 via-charcoal/10 to-transparent">
+                    <div class="container-luxe pb-6 text-ivory sm:pb-8">
+                        <h1 class="font-display text-3xl sm:text-5xl">{{ $category['name'] }}</h1>
+                        @if (! empty($category['blurb']))
+                            <p class="mt-2 max-w-2xl text-sm leading-6 text-ivory/90 sm:text-base">{{ $category['blurb'] }}</p>
+                        @endif
+                    </div>
+                </div>
             </div>
         @else
             <div class="container-luxe py-8 text-center sm:py-10">
@@ -300,6 +327,18 @@
                         </button>
                         <p x-show="!hasMore && meta.length > 20 && visibleCount > 0" x-cloak class="text-sm text-muted">You have viewed all products.</p>
                     </div>
+
+                    @if ($categoryPreviousUrl || $categoryNextUrl)
+                        <nav aria-label="Product results pages" class="mt-6 flex items-center justify-center gap-3 text-sm">
+                            @if ($categoryPreviousUrl)
+                                <a href="{{ $categoryPreviousUrl }}" rel="prev" class="btn-ghost">Previous</a>
+                            @endif
+                            <span class="text-muted">Page {{ $currentPage }}</span>
+                            @if ($categoryNextUrl)
+                                <a href="{{ $categoryNextUrl }}" rel="next" class="btn-ghost">Next</a>
+                            @endif
+                        </nav>
+                    @endif
                 </div>
             </div>
         </div>
