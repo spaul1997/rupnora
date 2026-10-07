@@ -96,7 +96,10 @@
         'id' => $product['id'],
         'name' => $product['name'],
         'url' => route('cart.store'),
+        'inStock' => (bool) ($product['in_stock'] ?? false),
     ];
+    $isInStock = (bool) ($product['in_stock'] ?? false);
+    $purchaseMaxQty = max(1, min(5, (int) ($product['stock_quantity'] ?? 0)));
     $productCanonical = route('product.show', $productUrlKey);
     $productSeoTitle = $product['meta_title'] ?: $product['name'];
     $productSeoDescription = $product['meta_description'] ?: $product['short_desc'];
@@ -286,7 +289,7 @@
                 <div class="mt-6 flex flex-col gap-3 lg:flex-row lg:items-end">
                     <div class="lg:w-36 lg:flex-shrink-0">
                         <p class="label-luxe">Quantity</p>
-                        <x-ui.quantity-selector model="qty" :max="5" />
+                        <x-ui.quantity-selector model="qty" :max="$purchaseMaxQty" :disabled-when="$isInStock ? null : 'true'" />
                     </div>
 
                     {{-- Delivery check --}}
@@ -307,9 +310,13 @@
                     </div>
                 </div>
 
+                @unless ($isInStock)
+                    <p class="mt-5 rounded-xl border border-error/20 bg-error/10 px-4 py-3 text-sm font-medium text-error">This product is currently out of stock and cannot be purchased.</p>
+                @endunless
+
                 <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow" class="btn-primary flex-1">Add to Cart</button>
-                    <button type="button" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow" class="btn-secondary flex-1">
+                    <button type="button" data-purchase-action="add-to-cart" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50">{{ $isInStock ? 'Add to Cart' : 'Out of Stock' }}</button>
+                    <button type="button" data-purchase-action="buy-now" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-50">
                         <span x-show="!$store.ui.buyingNow">Buy Now</span>
                         <span x-show="$store.ui.buyingNow" x-cloak>Processing...</span>
                     </button>
@@ -672,8 +679,8 @@
         {{-- Mobile sticky CTA --}}
         <div class="h-20 lg:hidden" aria-hidden="true"></div>
         <div class="fixed inset-x-0 bottom-16 z-30 flex gap-3 border-t border-line bg-paper p-3 lg:hidden" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
-            <button type="button" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow" class="btn-primary flex-1 !py-3">Add to Cart</button>
-            <button type="button" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow" class="btn-secondary flex-1 !py-3 text-center">
+            <button type="button" data-purchase-action="add-to-cart" @click="$store.ui.addToCart({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null })" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-primary flex-1 !py-3 disabled:cursor-not-allowed disabled:opacity-50">{{ $isInStock ? 'Add to Cart' : 'Out of Stock' }}</button>
+            <button type="button" data-purchase-action="buy-now" @click="$store.ui.buyNow({ ...{{ Illuminate\Support\Js::from($cartPayload) }}, qty, size: typeof selectedSize !== 'undefined' ? selectedSize : null }, {{ Illuminate\Support\Js::from(route('checkout')) }})" :disabled="$store.ui.buyingNow || {{ $isInStock ? 'false' : 'true' }}" @disabled(! $isInStock) class="btn-secondary flex-1 !py-3 text-center disabled:cursor-not-allowed disabled:opacity-50">
                 <span x-show="!$store.ui.buyingNow">Buy Now</span>
                 <span x-show="$store.ui.buyingNow" x-cloak>Processing...</span>
             </button>

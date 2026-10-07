@@ -31,6 +31,7 @@
                             'id' => $product['id'],
                             'name' => $product['name'],
                             'url' => route('cart.store'),
+                            'inStock' => (bool) ($product['in_stock'] ?? false),
                         ];
                     @endphp
                     <div class="card-luxe overflow-hidden" x-show="!products[{{ $loop->index }}].removed" x-transition>
@@ -50,7 +51,7 @@
                                 {{ $product['in_stock'] ? 'In Stock' : 'Out of Stock' }}
                             </p>
                             <div class="mt-2 flex gap-1.5">
-                                <button @click="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})" class="btn-primary flex-1 !py-1.5 !px-2 text-[9.5px]" @if(!$product['in_stock']) disabled @endif>Add to Cart</button>
+                                <button @click="$store.ui.addToCart({{ Illuminate\Support\Js::from($cartPayload) }})" class="btn-primary flex-1 !py-1.5 !px-2 text-[9.5px] disabled:cursor-not-allowed disabled:opacity-50" @disabled(! $product['in_stock'])>{{ $product['in_stock'] ? 'Add to Cart' : 'Out of Stock' }}</button>
                                 <button @click="removeProduct({{ $loop->index }})" :disabled="products[{{ $loop->index }}].syncing" class="icon-btn h-8 w-8 flex-shrink-0 border border-line text-muted hover:text-error disabled:opacity-40" aria-label="Remove">
                                     <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0h10l-1 13H8L7 7z" stroke-linecap="round" stroke-linejoin="round" /></svg>
                                 </button>

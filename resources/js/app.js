@@ -141,6 +141,10 @@ Alpine.store('ui', {
 
         if (payload.id) {
             try {
+                if (payload.inStock === false) {
+                    throw new Error('This product is currently out of stock.');
+                }
+
                 const response = await fetch(payload.url || '/cart', {
                     method: 'POST',
                     headers: jsonHeaders(),
@@ -150,15 +154,16 @@ Alpine.store('ui', {
                         size: payload.size || null,
                     }),
                 });
+                const data = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    throw new Error('Cart request failed');
+                    const firstError = Object.values(data.errors || {})[0]?.[0];
+                    throw new Error(firstError || data.message || 'Unable to add this product to your cart.');
                 }
 
-                const data = await response.json();
                 this.setCartCount(data.count);
             } catch (error) {
-                this.notify('Unable to update cart. Please try again.', 'error');
+                this.notify(error.message || 'Unable to update cart. Please try again.', 'error');
                 return null;
             }
         } else {

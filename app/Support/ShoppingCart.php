@@ -49,6 +49,12 @@ class ShoppingCart
             return null;
         }
 
+        if (! self::isPurchasable($product)) {
+            throw ValidationException::withMessages([
+                'product_id' => 'This product is currently out of stock.',
+            ]);
+        }
+
         $size = filled($size) ? trim($size) : null;
         $maxQty = self::maxQty($product);
         $key = self::lineKey($product['id'], $size);
@@ -334,6 +340,12 @@ class ShoppingCart
     private static function maxQty(array $product): int
     {
         return max(1, min(5, (int) ($product['stock_quantity'] ?? 5)));
+    }
+
+    private static function isPurchasable(array $product): bool
+    {
+        return (bool) ($product['in_stock'] ?? false)
+            && (int) ($product['stock_quantity'] ?? 0) > 0;
     }
 
     private static function clampQty(int $qty, int $maxQty): int
