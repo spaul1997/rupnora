@@ -27,7 +27,7 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $products = Product::query()
-            ->with('category')
+            ->with('category.parent')
             ->withCount('reviews')
             ->when($request->search, function ($q, $search) {
                 $q->where(function ($q) use ($search) {

@@ -44,25 +44,40 @@
             </x-slot:actions>
         </x-admin.empty-state>
     @else
-        <x-admin.table :headers="['Product', 'SKU', 'Category', 'Metal / Purity', 'Price', 'Stock', 'Status', 'Featured', 'Created', '!Actions']">
+        <x-admin.table
+            table-class="table-fixed"
+            :headers="['Product', 'Category', 'Type', 'Price', 'Stock', 'Status', 'Created', '!Actions']"
+            :column-classes="['w-[260px] xl:w-[340px]', '', '', '', '', '', '', 'w-[100px]']"
+        >
             @foreach ($products as $product)
                 <tr>
-                    <td>
-                        <div class="flex items-center gap-3">
+                    <td class="w-[260px] max-w-[260px] overflow-hidden xl:w-[340px] xl:max-w-[340px]">
+                        <div class="flex min-w-0 items-center gap-3">
                             @php($primary = $product->images->firstWhere('is_primary', true) ?? $product->images->first())
-                            @if ($primary ?? false)
-                                <x-ui.optimized-image :src="asset('storage/'.$primary->image_path)" alt="" sizes="40px" class="h-10 w-10 rounded-lg object-cover" />
-                            @else
-                                <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-beige text-champagne-dark">
-                                    <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8" /></svg>
-                                </span>
-                            @endif
-                            <a href="{{ route('admin.products.show', $product) }}" class="max-w-[180px] truncate font-medium text-gray-900 hover:text-champagne-dark">{{ $product->name }}</a>
+                            <div class="h-14 w-14 flex-none overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                @if ($primary ?? false)
+                                    <x-ui.optimized-image :src="asset('storage/'.$primary->image_path)" :alt="$product->name" sizes="56px" class="h-14 w-14 object-cover" />
+                                @else
+                                    <span class="flex h-full w-full items-center justify-center bg-beige text-champagne-dark">
+                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8" /></svg>
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <a href="{{ route('admin.products.show', $product) }}" class="block truncate font-medium text-gray-900 hover:text-champagne-dark" title="{{ $product->name }}">{{ $product->name }}</a>
+                                <span class="mt-1 block truncate text-xs text-gray-400" title="{{ $product->sku }}">{{ $product->sku }}</span>
+                            </div>
                         </div>
                     </td>
-                    <td class="text-gray-500">{{ $product->sku }}</td>
-                    <td>{{ $product->category?->name }}</td>
-                    <td>{{ $product->metal_type }}@if($product->purity) &middot; {{ $product->purity }}@endif</td>
+                    <td>
+                        @php($category = $product->category)
+                        @php($parentCategory = $category?->parent)
+                        <span class="block whitespace-nowrap font-medium text-gray-800">{{ $parentCategory?->name ?? $category?->name ?? '—' }}</span>
+                        @if ($parentCategory)
+                            <span class="mt-0.5 block whitespace-nowrap text-xs text-gray-400">{{ $category->name }}</span>
+                        @endif
+                    </td>
+                    <td class="whitespace-nowrap">{{ $product->jewellery_type ?: '—' }}</td>
                     <td class="font-medium text-gray-900">₹{{ number_format($product->selling_price) }}</td>
                     <td>
                         <span class="{{ $product->stock_status === 'out_of_stock' ? 'text-error' : ($product->stock_status === 'low_stock' ? 'text-amber-600' : 'text-gray-700') }}">{{ $product->stock_quantity }}</span>
@@ -73,23 +88,90 @@
                             <button type="submit"><x-admin.status-badge :status="$product->is_active ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
-                    <td>
-                        <form method="POST" action="{{ route('admin.products.toggle-featured', $product) }}">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="{{ $product->is_featured ? 'text-champagne-dark' : 'text-gray-300' }}">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z" /></svg>
-                            </button>
-                        </form>
-                    </td>
-                    <td class="text-gray-400">{{ $product->created_at->format('d M Y') }}</td>
+                    <td class="whitespace-nowrap text-gray-400">{{ $product->created_at->format('d-m-y') }}</td>
                     <td class="text-right">
-                        <div class="flex items-center justify-end gap-3">
-                            <a href="{{ route('admin.products.show', $product) }}" class="text-sm font-medium text-gray-500 hover:text-gray-800">View</a>
-                            <a href="{{ route('admin.products.edit', $product) }}" class="text-sm font-medium text-champagne-dark hover:underline">Edit</a>
-                            <form method="POST" action="{{ route('admin.products.duplicate', $product) }}">
-                                @csrf
-                                <button type="submit" class="text-sm font-medium text-gray-500 hover:text-gray-800">Duplicate</button>
+                        <div
+                            x-data="{
+                                open: false,
+                                menuStyle: '',
+                                toggleMenu() {
+                                    if (this.open) {
+                                        this.open = false;
+                                        return;
+                                    }
+
+                                    const trigger = this.$refs.trigger.getBoundingClientRect();
+                                    const width = 176;
+                                    const height = 140;
+                                    const gap = 6;
+                                    const left = Math.min(window.innerWidth - width - 8, Math.max(8, trigger.right - width));
+                                    const top = trigger.bottom + height + gap > window.innerHeight && trigger.top > height
+                                        ? trigger.top - height - gap
+                                        : trigger.bottom + gap;
+
+                                    this.menuStyle = `top: ${top}px; left: ${left}px; width: ${width}px;`;
+                                    this.open = true;
+                                }
+                            }"
+                            @keydown.escape.window="open = false"
+                            @resize.window="open = false"
+                            class="flex items-center justify-end gap-1.5"
+                        >
+                            <form method="POST" action="{{ route('admin.products.toggle-featured', $product) }}">
+                                @csrf @method('PATCH')
+                                <button
+                                    type="submit"
+                                    class="rounded-lg p-2 transition-colors hover:bg-gray-100 {{ $product->is_featured ? 'text-champagne-dark' : 'text-gray-300 hover:text-gray-500' }}"
+                                    aria-label="{{ $product->is_featured ? 'Remove from featured products' : 'Add to featured products' }}"
+                                    title="{{ $product->is_featured ? 'Featured' : 'Mark as featured' }}"
+                                >
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z" /></svg>
+                                </button>
                             </form>
+
+                            <button
+                                x-ref="trigger"
+                                type="button"
+                                @click="toggleMenu()"
+                                :aria-expanded="open"
+                                aria-haspopup="menu"
+                                aria-label="Open product actions"
+                                class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                            >
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <circle cx="5" cy="12" r="1.8" />
+                                    <circle cx="12" cy="12" r="1.8" />
+                                    <circle cx="19" cy="12" r="1.8" />
+                                </svg>
+                            </button>
+
+                            <template x-teleport="body">
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.outside="open = false"
+                                    x-transition.opacity.duration.100ms
+                                    :style="menuStyle"
+                                    role="menu"
+                                    class="fixed z-[100] overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl"
+                                >
+                                    <a href="{{ route('admin.products.show', $product) }}" role="menuitem" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.5" /></svg>
+                                        View product
+                                    </a>
+                                    <a href="{{ route('admin.products.edit', $product) }}" role="menuitem" class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 16-.8 4 4-.8L18.5 7.9l-3.2-3.2L4 16Z" /><path d="m13.8 6.2 3.2 3.2" /></svg>
+                                        Edit product
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.products.duplicate', $product) }}">
+                                        @csrf
+                                        <button type="submit" role="menuitem" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                                            <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+                                            Duplicate
+                                        </button>
+                                    </form>
+                                </div>
+                            </template>
                         </div>
                     </td>
                 </tr>

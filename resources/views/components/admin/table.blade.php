@@ -1,14 +1,19 @@
 @props([
     'headers' => [],
+    'tableClass' => '',
+    'columnClasses' => [],
 ])
 
 <div class="admin-card overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="admin-table">
+        <table @class(['admin-table', $tableClass])>
             <thead class="bg-gray-50">
                 <tr>
                     @foreach ($headers as $header)
-                        <th @class(['text-right' => str_starts_with($header, '!')])>{{ ltrim($header, '!') }}</th>
+                        <th @class([
+                            $columnClasses[$loop->index] ?? '',
+                            'text-right' => str_starts_with($header, '!'),
+                        ])>{{ ltrim($header, '!') }}</th>
                     @endforeach
                 </tr>
             </thead>
