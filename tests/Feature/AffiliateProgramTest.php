@@ -232,6 +232,7 @@ class AffiliateProgramTest extends TestCase
             ->assertOk()
             ->assertSee('Your Commission Rate Chart')
             ->assertSee('Affiliate-specific')
+            ->assertSee('Commission becomes available after the return/refund period ends for returnable products, and after delivery for non-returnable products.')
             ->assertSee('8.00%')
             ->assertDontSee('11.00%');
 

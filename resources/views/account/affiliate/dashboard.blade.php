@@ -44,6 +44,10 @@
                             Product rates apply first, followed by category and Global rates.
                         @endif
                     </p>
+                    <p class="mt-2 inline-flex items-start gap-1.5 rounded-full bg-error/10 px-3 py-1.5 text-xs font-medium leading-4 text-error">
+                        <span aria-hidden="true">*</span>
+                        <span>Commission becomes available after the return/refund period ends for returnable products, and after delivery for non-returnable products.</span>
+                    </p>
                 </div>
                 <div class="overflow-x-auto rounded-2xl border border-line bg-paper">
                     <table class="min-w-full text-left text-sm">
