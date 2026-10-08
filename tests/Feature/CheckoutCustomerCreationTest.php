@@ -24,6 +24,7 @@ class CheckoutCustomerCreationTest extends TestCase
     {
         Mail::fake();
         WebsiteSetting::current()->update(['support_email' => 'support@example.com']);
+        config()->set('marketing.cc_email', 'marketing@example.com');
         $product = $this->product();
         $addressId = $this->prepareCheckout($product, ['email' => 'BUYER@example.com']);
         $orderNumber = $this->placeOrder($addressId)->assertOk()->json('orderId');
@@ -51,7 +52,8 @@ class CheckoutCustomerCreationTest extends TestCase
         Mail::assertSent(OrderSuccessMail::class, function (OrderSuccessMail $mail) use ($orderNumber) {
             return $mail->order->order_number === $orderNumber
                 && $mail->hasTo('buyer@example.com')
-                && $mail->hasBcc('support@example.com');
+                && $mail->hasBcc('marketing@example.com')
+                && ! $mail->hasBcc('support@example.com');
         });
     }
 

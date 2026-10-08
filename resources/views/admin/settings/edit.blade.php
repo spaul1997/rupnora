@@ -31,6 +31,7 @@
                 <x-admin.form.input label="Free Shipping Order Threshold (INR)" name="free_shipping_threshold" type="number" :value="$settings->free_shipping_threshold" :required="true" min="0" max="99999999.99" step="0.01" help="Displayed in the storefront announcement bar. Enter 0 to advertise free shipping on every order." />
                 <x-admin.form.input label="Express Delivery Price (INR)" name="express_delivery_charge" type="number" :value="$settings->express_delivery_charge" :required="true" min="0" max="99999999.99" step="0.01" help="Charged when customers choose Express Delivery. Enter 0 for free express delivery." />
                 <x-admin.form.input label="Cash on Delivery Order Limit (INR)" name="cod_order_limit" type="number" :value="$settings->cod_order_limit" :required="true" min="0" max="99999999.99" step="0.01" help="Cash on Delivery is available when the final order total, including tax and delivery, is below this amount. Enter 0 to disable Cash on Delivery." />
+                <x-admin.form.input label="Return / Refund Allowance (Days)" name="return_allow" type="number" :value="$settings->return_allow" :required="true" min="0" max="365" step="1" help="Affiliate commission for returnable or refundable products is released this many days after delivery." />
             </div>
 
             <div class="admin-card space-y-5 p-6">

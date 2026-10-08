@@ -47,7 +47,7 @@ class OrderItem extends Model
 
     public function affiliateCommissionRule(): BelongsTo
     {
-        return $this->belongsTo(AffiliateCommissionRule::class);
+        return $this->belongsTo(AffiliateCommissionRule::class)->withTrashed();
     }
 
     public function affiliateCommission(): HasOne

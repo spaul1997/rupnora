@@ -7,7 +7,7 @@
             <form method="POST" action="{{ route('account.affiliate.apply') }}" class="mt-8 max-w-2xl space-y-5 rounded-2xl border border-line bg-paper p-6">
                 @csrf
                 <h2 class="font-display text-xl text-charcoal">Apply to become an affiliate</h2>
-                <div><label class="mb-1 block text-sm font-medium">Why would you like to join?</label><textarea name="application_message" rows="5" required minlength="30" maxlength="3000" class="input-luxe w-full">{{ old('application_message') }}</textarea></div>
+                <div><label class="mb-1 block text-sm font-medium">Why would you like to join? <span class="text-error">*</span></label><textarea name="application_message" rows="5" required minlength="30" maxlength="3000" class="input-luxe w-full">{{ old('application_message') }}</textarea></div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div><label class="mb-1 block text-sm font-medium">Website URL</label><input name="website_url" type="url" value="{{ old('website_url') }}" class="input-luxe w-full"></div>
                     <div><label class="mb-1 block text-sm font-medium">Social profile URL</label><input name="social_url" type="url" value="{{ old('social_url') }}" class="input-luxe w-full"></div>
@@ -34,6 +34,28 @@
                 <div class="rounded-2xl border border-line p-5"><p class="text-xs text-muted">Recorded clicks</p><p class="font-display mt-2 text-2xl">{{ number_format($clicks) }}</p></div>
                 <div class="rounded-2xl border border-line p-5"><p class="text-xs text-muted">Attributed orders</p><p class="font-display mt-2 text-2xl">{{ number_format($orders) }}</p></div>
             </div>
+            <section class="mt-8" aria-labelledby="commission-rate-chart-heading">
+                <div class="mb-3">
+                    <h2 id="commission-rate-chart-heading" class="font-display text-xl text-charcoal">Your Commission Rate Chart</h2>
+                    <p class="mt-1 text-sm text-muted">
+                        @if ($profile->commission_rate !== null)
+                            Your affiliate-specific rate overrides all shared commission rules.
+                        @else
+                            Product rates apply first, followed by category and Global rates.
+                        @endif
+                    </p>
+                </div>
+                <div class="overflow-x-auto rounded-2xl border border-line bg-paper">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-ivory-soft text-xs uppercase text-muted"><tr><th class="p-4">Scope</th><th class="p-4">Applies to</th><th class="p-4">Availability</th><th class="p-4 text-right">Rate</th></tr></thead>
+                        <tbody class="divide-y divide-line">
+                            @foreach ($rateChart as $rate)
+                                <tr><td class="p-4 font-medium text-charcoal">{{ $rate['scope'] }}</td><td class="p-4">{{ $rate['target'] }}</td><td class="p-4 text-muted">{{ $rate['availability'] }}</td><td class="p-4 text-right font-semibold text-charcoal">{{ number_format($rate['rate'], 2) }}%</td></tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </section>
             <div class="mt-8 overflow-x-auto rounded-2xl border border-line">
                 <table class="min-w-full text-left text-sm"><thead class="bg-ivory-soft text-xs uppercase text-muted"><tr><th class="p-4">Order</th><th class="p-4">Status</th><th class="p-4 text-right">Commission</th></tr></thead><tbody class="divide-y divide-line">
                     @forelse($recentCommissions as $commission)<tr><td class="p-4">{{ $commission->order->order_number }}</td><td class="p-4 capitalize">{{ str_replace('_', ' ', $commission->status) }}</td><td class="p-4 text-right">₹{{ number_format($commission->gross_amount, 2) }}</td></tr>@empty<tr><td colspan="3" class="p-6 text-center text-muted">No commissions yet.</td></tr>@endforelse

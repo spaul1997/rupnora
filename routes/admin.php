@@ -118,6 +118,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('affiliates', [AffiliateProgramController::class, 'index'])->name('affiliates.index');
         Route::get('affiliates/rules', [AffiliateProgramController::class, 'rules'])->name('affiliates.rules');
         Route::post('affiliates/rules', [AffiliateProgramController::class, 'storeRule'])->name('affiliates.rules.store');
+        Route::patch('affiliates/rules/{rule}/toggle-active', [AffiliateProgramController::class, 'toggleRule'])->name('affiliates.rules.toggle-active');
         Route::delete('affiliates/rules/{rule}', [AffiliateProgramController::class, 'destroyRule'])->name('affiliates.rules.destroy');
         Route::get('affiliates/referrals', [AffiliateProgramController::class, 'referrals'])->name('affiliates.referrals');
         Route::get('affiliates/commissions', [AffiliateProgramController::class, 'commissions'])->name('affiliates.commissions');

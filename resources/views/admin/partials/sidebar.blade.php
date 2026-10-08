@@ -66,7 +66,7 @@
         'items' => [
             ['label' => 'Home Banners', 'url' => route('admin.home-banners.index')],
             ['label' => 'Influencers', 'url' => route('admin.influencers.index')],
-            ['label' => 'Affiliate Program', 'url' => route('admin.affiliates.index')],
+            ['label' => 'Affiliate Program', 'url' => route('admin.affiliates.index'), 'active' => request()->routeIs('admin.affiliates.*')],
             ['label' => 'Email Marketing', 'url' => route('admin.email-campaigns.index')],
             ['label' => 'Coupons', 'url' => route('admin.coupons.index')],
         ],
@@ -104,7 +104,7 @@
                 </button>
                 <div x-cloak x-show="open === '{{ $key }}'" x-collapse class="mt-1 space-y-0.5 pl-11">
                     @foreach ($group['items'] as $item)
-                        <a href="{{ $item['url'] }}" class="block rounded-lg px-3 py-2 text-[13px] text-ivory/55 transition-colors hover:bg-ivory/5 hover:text-ivory {{ request()->fullUrlIs($item['url']) || (request()->url() === $item['url'] && ! request()->query()) ? 'text-champagne-light' : '' }}">
+                        <a href="{{ $item['url'] }}" class="block rounded-lg px-3 py-2 text-[13px] text-ivory/55 transition-colors hover:bg-ivory/5 hover:text-ivory {{ ($item['active'] ?? false) || request()->fullUrlIs($item['url']) || (request()->url() === $item['url'] && ! request()->query()) ? 'text-champagne-light' : '' }}">
                             {{ $item['label'] }}
                         </a>
                     @endforeach

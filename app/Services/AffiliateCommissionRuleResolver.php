@@ -11,18 +11,15 @@ class AffiliateCommissionRuleResolver
     /** @return array{type: string, rate: float, rule_id: ?int} */
     public function resolve(AffiliateProfile $affiliate, Product $product): array
     {
-        $active = AffiliateCommissionRule::query()
-            ->where('is_active', true)
-            ->where(fn ($query) => $query->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
-            ->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', now()));
+        if ($affiliate->commission_rate !== null) {
+            return ['type' => 'affiliate', 'rate' => (float) $affiliate->commission_rate, 'rule_id' => null];
+        }
+
+        $active = AffiliateCommissionRule::query()->activeAt();
 
         $productRule = (clone $active)->where('scope_type', 'product')->where('product_id', $product->id)->first();
         if ($productRule) {
             return $this->result('product', $productRule);
-        }
-
-        if ($affiliate->commission_rate !== null) {
-            return ['type' => 'affiliate', 'rate' => (float) $affiliate->commission_rate, 'rule_id' => null];
         }
 
         $categoryRule = (clone $active)->where('scope_type', 'category')->where('category_id', $product->category_id)->first();

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Mail\InfluencerApplicationMail;
 use App\Models\Influencer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class InfluencerPageTest extends TestCase
@@ -20,6 +22,9 @@ class InfluencerPageTest extends TestCase
 
     public function test_creator_can_submit_an_influencer_application(): void
     {
+        Mail::fake();
+        config()->set('marketing.cc_email', 'marketing@example.com');
+
         $response = $this->post(route('influencer.apply'), [
             'full_name' => 'Meera Shah',
             'email' => 'meera@example.com',
@@ -45,6 +50,12 @@ class InfluencerPageTest extends TestCase
         $this->assertSame('new', $influencer->status);
         $this->assertFalse($influencer->is_active);
         $this->assertStringStartsWith('RPN-INF-', $influencer->reference_no);
+        Mail::assertQueued(InfluencerApplicationMail::class, function (InfluencerApplicationMail $mail) use ($influencer) {
+            return $mail->influencer->is($influencer)
+                && ! $mail->createdByAdmin
+                && $mail->hasTo('meera@example.com')
+                && $mail->hasCc('marketing@example.com');
+        });
     }
 
     public function test_application_rejects_an_unknown_social_platform(): void

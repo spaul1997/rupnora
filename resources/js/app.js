@@ -2,9 +2,38 @@ import './bootstrap';
 import './visitor-tracking';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 window.Alpine = Alpine;
 Alpine.plugin(collapse);
+
+document.addEventListener('submit', async (event) => {
+    const form = event.target instanceof HTMLFormElement ? event.target : null;
+
+    if (!form?.matches('[data-swal-confirm]')) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const result = await Swal.fire({
+        title: form.dataset.confirmTitle || 'Are you sure?',
+        text: form.dataset.confirmMessage || 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: form.dataset.confirmButton || 'Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (result.isConfirmed) {
+        form.submit();
+    }
+});
 
 const initialState = window.rupnoraInitialState || {};
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';

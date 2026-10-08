@@ -221,7 +221,7 @@ Route::prefix('account')->name('account.')->group(function () {
         Route::get('/support', [AccountController::class, 'support'])->name('support');
         Route::post('/support', [AccountController::class, 'storeSupport'])->middleware('throttle:10,1')->name('support.store');
         Route::get('/affiliate', [AffiliateController::class, 'dashboard'])->name('affiliate.dashboard');
-        Route::post('/affiliate/apply', [AffiliateController::class, 'apply'])->middleware('throttle:3,10')->name('affiliate.apply');
+        Route::post('/affiliate/apply', [AffiliateController::class, 'apply'])->middleware('throttle:5,1')->name('affiliate.apply');
         Route::get('/affiliate/links', [AffiliateController::class, 'links'])->name('affiliate.links');
         Route::get('/affiliate/referrals', [AffiliateController::class, 'referrals'])->name('affiliate.referrals');
         Route::get('/affiliate/commissions', [AffiliateController::class, 'commissions'])->name('affiliate.commissions');

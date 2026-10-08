@@ -45,6 +45,6 @@ class AffiliateCommission extends Model
 
     public function rule(): BelongsTo
     {
-        return $this->belongsTo(AffiliateCommissionRule::class, 'rule_id');
+        return $this->belongsTo(AffiliateCommissionRule::class, 'rule_id')->withTrashed();
     }
 }

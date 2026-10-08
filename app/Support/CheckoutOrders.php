@@ -98,7 +98,9 @@ class CheckoutOrders
     {
         $items = ShoppingCart::items();
         $address = self::address((string) $data['address_id']);
-        $shipping = $data['delivery'] === 'express' ? (float) WebsiteSetting::current()->express_delivery_charge : 0;
+        $settings = WebsiteSetting::current();
+        $shipping = $data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0;
+        $returnAllowDays = max(0, (int) $settings->return_allow);
         $giftWrap = (bool) ($data['gift_wrap'] ?? false);
         $giftWrapCharge = $giftWrap ? (float) config('checkout.gift_wrap.charge', 50) : 0;
         $guestCheckout = auth()->user()?->role !== 'customer';
@@ -108,7 +110,7 @@ class CheckoutOrders
             $address['phone'] = trim($address['phone'] ?? '');
         }
 
-        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $giftWrap, $giftWrapCharge, $guestCheckout) {
+        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $returnAllowDays, $giftWrap, $giftWrapCharge, $guestCheckout) {
             $products = Product::query()->whereIn('id', array_column(array_column($items, 'product'), 'id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $quantities = collect($items)->groupBy('product.id')->map(fn ($rows) => $rows->sum('qty'));
@@ -177,7 +179,7 @@ class CheckoutOrders
                 'affiliate_rule_snapshot' => $attribution['affiliate'] ? [
                     'priority' => ['product', 'affiliate', 'category', 'global'],
                     'attribution_window_days' => (int) config('affiliate.attribution_window_days', 30),
-                    'return_hold_days' => (int) config('affiliate.return_hold_days', 7),
+                    'return_allow_days' => $returnAllowDays,
                     'captured_at' => now()->toIso8601String(),
                 ] : null,
                 'affiliate_flagged' => $attribution['flagged'],

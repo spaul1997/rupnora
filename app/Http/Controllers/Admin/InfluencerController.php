@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Influencer;
+use App\Services\InfluencerMailService;
 use App\Support\ProductImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,7 +60,7 @@ class InfluencerController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, InfluencerMailService $mailService): RedirectResponse
     {
         $data = $this->validatedData($request);
         $data = $this->prepareData($request, $data);
@@ -70,6 +71,7 @@ class InfluencerController extends Controller
         }
 
         $influencer = Influencer::create($data);
+        $mailService->applicationReceived($influencer, true);
 
         return redirect()->route('admin.influencers.show', $influencer)
             ->with('success', 'Influencer created successfully.');
@@ -94,8 +96,9 @@ class InfluencerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Influencer $influencer): RedirectResponse
+    public function update(Request $request, Influencer $influencer, InfluencerMailService $mailService): RedirectResponse
     {
+        $previousStatus = $influencer->status;
         $data = $this->validatedData($request, $influencer);
         $data = $this->prepareData($request, $data, $influencer);
 
@@ -105,6 +108,7 @@ class InfluencerController extends Controller
         }
 
         $influencer->update($data);
+        $mailService->statusChanged($influencer, $previousStatus);
 
         return redirect()->route('admin.influencers.show', $influencer)
             ->with('success', 'Influencer updated successfully.');
@@ -119,8 +123,9 @@ class InfluencerController extends Controller
             ->with('success', 'Influencer deleted successfully.');
     }
 
-    public function updateStatus(Request $request, Influencer $influencer): RedirectResponse
+    public function updateStatus(Request $request, Influencer $influencer, InfluencerMailService $mailService): RedirectResponse
     {
+        $previousStatus = $influencer->status;
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(Influencer::STATUSES))],
         ]);
@@ -133,6 +138,7 @@ class InfluencerController extends Controller
         }
 
         $influencer->update($data);
+        $mailService->statusChanged($influencer, $previousStatus);
 
         return back()->with('success', 'Influencer status updated successfully.');
     }

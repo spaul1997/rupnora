@@ -7,9 +7,10 @@ The affiliate program uses existing customer accounts. Customers apply from **Ac
 - Referral links use `?ref=CODE`; `/products/{slug}?ref=CODE` is supported.
 - Attribution lasts 30 days by default. The latest valid click wins; an active affiliate-owned coupon overrides link attribution.
 - The checkout never accepts an affiliate ID from the browser. It resolves attribution from the server session or the validated coupon and freezes the source, code, rule settings, eligible amount, rate, and commission on the order.
-- Commission priority is product rule → affiliate-specific rate → category rule → global rule/config.
+- Commission priority is affiliate-specific rate → product rule → category rule → global rule/config. An affiliate-specific rate overrides every shared rule for that affiliate.
+- A rule with no start date is effective immediately, and a rule with no end date does not expire. Approval requires either an affiliate-specific rate or a currently active Global rule.
 - Commission is created only after payment status becomes `paid`. COD therefore requires confirmed collection before commission creation.
-- Commission remains pending until delivery plus the return hold. Refunds, cancellations, item returns, and chargebacks append reversal entries. A late reversal can make the available wallet negative after payout.
+- Commission for a returnable or refundable product remains pending until delivery plus the `return_allow` days configured in Website Settings (3 days by default). Commission for other products is eligible at delivery. Refunds, cancellations, item returns, and chargebacks append reversal entries. A late reversal can make the available wallet negative after payout.
 - Wallet figures are sums of immutable ledger entries. Withdrawal reservation and balance checks run in one database transaction with row locks and idempotency keys.
 - Payout account values and payout snapshots are encrypted with Laravel's `APP_KEY`.
 - Payouts are manual. The administrator records the bank/UPI transfer UTR before marking a withdrawal paid. A processing payout remains reserved if its result is unknown; after 24 hours it is flagged for manual reconciliation rather than retried or released automatically.
@@ -20,7 +21,6 @@ Add these values to the production `.env` as needed:
 
 ```dotenv
 AFFILIATE_ATTRIBUTION_DAYS=30
-AFFILIATE_RETURN_HOLD_DAYS=7
 AFFILIATE_GLOBAL_RATE=5
 AFFILIATE_MIN_WITHDRAWAL=500
 AFFILIATE_QUEUE=default
@@ -87,7 +87,7 @@ Payout jobs must not be blindly retried if an external transfer result is unknow
 
 ## Administrator workflow
 
-1. Review and approve the application. Optionally set an affiliate-specific rate.
+1. Review and approve the application. Set an affiliate-specific rate, or leave it blank to use shared rules when an active Global rule exists.
 2. Configure global/category/product rates. Rate changes affect new order snapshots only.
 3. Optionally assign an approved affiliate as owner of a coupon. That coupon takes precedence over a referral link.
 4. Review suspicious referrals and flagged orders. Self-referrals do not earn commission.

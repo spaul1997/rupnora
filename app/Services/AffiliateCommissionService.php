@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\AffiliateCommission;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\WebsiteSetting;
 use App\Notifications\AffiliateActivity;
 use Illuminate\Support\Facades\DB;
 
@@ -14,13 +16,14 @@ class AffiliateCommissionService
     public function createForPaidOrder(Order $order): int
     {
         return DB::transaction(function () use ($order) {
-            $order = Order::query()->with(['affiliate', 'items'])->lockForUpdate()->findOrFail($order->id);
+            $order = Order::query()->with(['affiliate', 'items.product'])->lockForUpdate()->findOrFail($order->id);
 
             if ($order->payment_status !== 'paid' || ! $order->affiliate || $order->affiliate_flagged ||
                 in_array($order->status, ['cancelled', 'returned', 'refunded'], true)) {
                 return 0;
             }
 
+            $returnAllowDays = $this->returnAllowDays($order);
             $created = 0;
             foreach ($order->items as $item) {
                 $amount = round((float) $item->affiliate_commission_amount, 2);
@@ -40,11 +43,14 @@ class AffiliateCommissionService
                         'rule_type' => $item->affiliate_commission_rule_type,
                         'rule_id' => $item->affiliate_commission_rule_id,
                         'idempotency_key' => 'paid-order-item-'.$item->id,
-                        'available_at' => $order->delivered_at?->copy()->addDays((int) config('affiliate.return_hold_days', 7)),
+                        'available_at' => $this->availableAt($order, $item, $returnAllowDays),
                     ]
                 );
 
                 if ($commission->wasRecentlyCreated) {
+                    $pendingReason = $this->hasReturnOrRefundWindow($item) && $returnAllowDays > 0
+                        ? 'delivery and the '.$returnAllowDays.'-day return/refund allowance'
+                        : 'delivery';
                     $this->ledger->append($order->affiliate, 'commission-pending-'.$commission->id, 'commission_pending',
                         ['pending' => $amount], [
                             'commission_id' => $commission->id,
@@ -53,7 +59,7 @@ class AffiliateCommissionService
                         ]);
                     DB::afterCommit(fn () => $order->affiliate->user->notify(new AffiliateActivity(
                         'Commission pending',
-                        '₹'.number_format($amount, 2).' from order '.$order->order_number.' is pending until delivery and the return hold pass.',
+                        '₹'.number_format($amount, 2).' from order '.$order->order_number.' is pending until '.$pendingReason.'.',
                         route('account.affiliate.commissions')
                     )));
                     $created++;
@@ -70,8 +76,18 @@ class AffiliateCommissionService
             return;
         }
 
-        AffiliateCommission::query()->where('order_id', $order->id)->where('status', 'pending')
-            ->update(['available_at' => $order->delivered_at->copy()->addDays((int) config('affiliate.return_hold_days', 7))]);
+        $returnAllowDays = $this->returnAllowDays($order);
+        $commissions = AffiliateCommission::query()
+            ->with('orderItem.product')
+            ->where('order_id', $order->id)
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($commissions as $commission) {
+            $commission->update([
+                'available_at' => $this->availableAt($order, $commission->orderItem, $returnAllowDays),
+            ]);
+        }
     }
 
     public function releaseDue(): int
@@ -164,5 +180,28 @@ class AffiliateCommissionService
         $goodsPaid = max(0.01, (float) $order->grand_total - (float) $order->shipping_charge - (float) $order->gst_amount - (float) $order->gift_wrap_charge);
 
         return min(1, (float) $order->refund_amount / $goodsPaid);
+    }
+
+    private function returnAllowDays(Order $order): int
+    {
+        $snapshotDays = data_get($order->affiliate_rule_snapshot, 'return_allow_days');
+
+        return max(0, (int) ($snapshotDays ?? WebsiteSetting::current()->return_allow));
+    }
+
+    private function availableAt(Order $order, OrderItem $item, int $returnAllowDays): ?\Illuminate\Support\Carbon
+    {
+        if (! $order->delivered_at) {
+            return null;
+        }
+
+        $days = $this->hasReturnOrRefundWindow($item) ? $returnAllowDays : 0;
+
+        return $order->delivered_at->copy()->addDays($days);
+    }
+
+    private function hasReturnOrRefundWindow(OrderItem $item): bool
+    {
+        return (bool) ($item->product?->is_return_available || $item->product?->is_refund_available);
     }
 }

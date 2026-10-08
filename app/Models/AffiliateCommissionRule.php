@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AffiliateCommissionRule extends Model
 {
+    use SoftDeletes;
+
     public const SCOPE_TYPES = ['global', 'category', 'product'];
 
     protected $fillable = [
@@ -22,6 +27,16 @@ class AffiliateCommissionRule extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
+    }
+
+    public function scopeActiveAt(Builder $query, ?CarbonInterface $date = null): Builder
+    {
+        $date ??= now();
+
+        return $query
+            ->where('is_active', true)
+            ->where(fn (Builder $query) => $query->whereNull('starts_at')->orWhere('starts_at', '<=', $date))
+            ->where(fn (Builder $query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', $date));
     }
 
     public function product(): BelongsTo

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\InfluencerApplicationMail;
+use App\Mail\InfluencerStatusChangedMail;
 use App\Models\Influencer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AdminInfluencerManagementTest extends TestCase
@@ -52,6 +55,8 @@ class AdminInfluencerManagementTest extends TestCase
 
     public function test_admin_can_approve_and_activate_an_influencer(): void
     {
+        Mail::fake();
+        config()->set('marketing.cc_email', 'marketing@example.com');
         $admin = $this->admin();
         $influencer = $this->influencer();
 
@@ -64,12 +69,51 @@ class AdminInfluencerManagementTest extends TestCase
         $this->assertSame('approved', $influencer->status);
         $this->assertTrue($influencer->is_active);
         $this->assertNotNull($influencer->approved_at);
+        Mail::assertQueued(InfluencerStatusChangedMail::class, function (InfluencerStatusChangedMail $mail) use ($influencer) {
+            return $mail->influencer->is($influencer)
+                && $mail->previousStatus === 'new'
+                && $mail->status === 'approved'
+                && $mail->hasTo($influencer->email)
+                && $mail->hasCc('marketing@example.com');
+        });
 
         $this->actingAs($admin)
             ->patch(route('admin.influencers.toggle-active', $influencer))
             ->assertRedirect();
 
         $this->assertFalse($influencer->refresh()->is_active);
+    }
+
+    public function test_admin_created_influencer_and_rejection_emails_use_the_marketing_cc(): void
+    {
+        Mail::fake();
+        config()->set('marketing.cc_email', 'marketing@example.com');
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.influencers.store'), $this->influencerData())
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $influencer = Influencer::firstOrFail();
+        Mail::assertQueued(InfluencerApplicationMail::class, function (InfluencerApplicationMail $mail) use ($influencer) {
+            return $mail->influencer->is($influencer)
+                && $mail->createdByAdmin
+                && $mail->hasTo($influencer->email)
+                && $mail->hasCc('marketing@example.com');
+        });
+
+        $this->patch(route('admin.influencers.update-status', $influencer), ['status' => 'rejected'])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Mail::assertQueued(InfluencerStatusChangedMail::class, function (InfluencerStatusChangedMail $mail) use ($influencer) {
+            return $mail->influencer->is($influencer)
+                && $mail->previousStatus === 'new'
+                && $mail->status === 'rejected'
+                && $mail->hasTo($influencer->email)
+                && $mail->hasCc('marketing@example.com');
+        });
     }
 
     public function test_admin_can_update_partnership_details(): void
@@ -124,7 +168,12 @@ class AdminInfluencerManagementTest extends TestCase
 
     private function influencer(array $overrides = []): Influencer
     {
-        return Influencer::create(array_merge([
+        return Influencer::create(array_merge($this->influencerData(), $overrides));
+    }
+
+    private function influencerData(): array
+    {
+        return [
             'reference_no' => 'RPN-INF-2026-TEST0001',
             'full_name' => 'Meera Shah',
             'email' => 'meera@example.com',
@@ -139,6 +188,6 @@ class AdminInfluencerManagementTest extends TestCase
             'message' => 'I create thoughtful styling content for an audience that values craftsmanship.',
             'status' => 'new',
             'is_active' => false,
-        ], $overrides));
+        ];
     }
 }

@@ -35,6 +35,7 @@ class WebsiteSettingController extends Controller
             'express_delivery_charge' => ['required', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
             'cod_order_limit' => ['required', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
             'free_shipping_threshold' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
+            'return_allow' => ['sometimes', 'required', 'integer', 'min:0', 'max:365'],
         ]);
 
         WebsiteSetting::current()->update($data);

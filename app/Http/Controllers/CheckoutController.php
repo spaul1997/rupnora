@@ -129,10 +129,10 @@ class CheckoutController extends Controller
         try {
             $order = Order::query()->where('order_number', $orderNumber)->firstOrFail();
             $pendingMail = Mail::to($order->customer_email);
-            $supportEmail = WebsiteSetting::current()->support_email;
+            $marketingEmail = trim((string) config('marketing.cc_email'));
 
-            if ($supportEmail && strcasecmp($supportEmail, $order->customer_email) !== 0) {
-                $pendingMail->bcc($supportEmail);
+            if ($marketingEmail !== '' && strcasecmp($marketingEmail, $order->customer_email) !== 0) {
+                $pendingMail->bcc($marketingEmail);
             }
 
             $pendingMail->sendNow(new OrderSuccessMail($order));

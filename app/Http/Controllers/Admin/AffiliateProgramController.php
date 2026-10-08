@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AffiliateStatusChangedMail;
+use App\Mail\AffiliateWithdrawalMail;
 use App\Models\AffiliateAuditLog;
 use App\Models\AffiliateCommission;
 use App\Models\AffiliateCommissionRule;
@@ -17,7 +19,9 @@ use App\Services\AffiliateWithdrawalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -51,11 +55,22 @@ class AffiliateProgramController extends Controller
 
     public function updateStatus(Request $request, AffiliateProfile $affiliate): RedirectResponse
     {
+        $previousStatus = $affiliate->status;
         $data = $request->validate([
             'status' => ['required', Rule::in(AffiliateProfile::STATUSES)],
             'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'admin_notes' => ['nullable', 'string', 'max:3000'],
         ]);
+
+        if (
+            $data['status'] === 'approved'
+            && ($data['commission_rate'] ?? null) === null
+            && ! AffiliateCommissionRule::query()->activeAt()->where('scope_type', 'global')->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'commission_rate' => 'Set an affiliate-specific rate or create an active Global commission rule before approving.',
+            ]);
+        }
 
         DB::transaction(function () use ($request, $affiliate, $data) {
             $from = $affiliate->status;
@@ -74,13 +89,32 @@ class AffiliateProgramController extends Controller
             ]);
         });
 
-        $affiliate->user->notify(new AffiliateActivity(
-            'Affiliate application '.str_replace('_', ' ', $affiliate->status),
-            'Your affiliate account is now '.$affiliate->status.'.',
-            route('account.affiliate.dashboard')
-        ));
+        $affiliate->refresh()->load('user');
 
-        return back()->with('success', 'Affiliate status updated.');
+        if ($previousStatus !== $affiliate->status) {
+            $affiliate->user->notify(new AffiliateActivity(
+                'Affiliate application '.str_replace('_', ' ', $affiliate->status),
+                'Your affiliate account is now '.$affiliate->status.'.',
+                route('account.affiliate.dashboard')
+            ));
+
+            try {
+                $pendingMail = Mail::to($affiliate->user->email);
+                $ccEmail = trim((string) config('marketing.cc_email'));
+
+                if ($ccEmail !== '' && strcasecmp($ccEmail, $affiliate->user->email) !== 0) {
+                    $pendingMail->cc($ccEmail);
+                }
+
+                $pendingMail->send(new AffiliateStatusChangedMail($affiliate, $previousStatus));
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return back()->with('success', $previousStatus !== $affiliate->status
+            ? 'Affiliate status updated and the user has been notified.'
+            : 'Affiliate details updated.');
     }
 
     public function rules(): View
@@ -88,7 +122,7 @@ class AffiliateProgramController extends Controller
         return view('admin.affiliates.rules', [
             'rules' => AffiliateCommissionRule::with(['product', 'category'])->latest()->paginate(30),
             'products' => Product::orderBy('name')->get(['id', 'name']),
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'categories' => Category::parents()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -97,7 +131,11 @@ class AffiliateProgramController extends Controller
         $data = $request->validate([
             'scope_type' => ['required', Rule::in(AffiliateCommissionRule::SCOPE_TYPES)],
             'product_id' => ['nullable', 'required_if:scope_type,product', 'exists:products,id'],
-            'category_id' => ['nullable', 'required_if:scope_type,category', 'exists:categories,id'],
+            'category_id' => [
+                'nullable',
+                'required_if:scope_type,category',
+                Rule::exists('categories', 'id')->where(fn ($query) => $query->whereNull('parent_id')),
+            ],
             'rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
@@ -108,12 +146,18 @@ class AffiliateProgramController extends Controller
             'category' => 'category:'.$data['category_id'],
             default => 'global',
         };
-        AffiliateCommissionRule::updateOrCreate(['scope_key' => $key], [
+        $rule = AffiliateCommissionRule::withTrashed()->firstOrNew(['scope_key' => $key]);
+
+        if ($rule->exists && $rule->trashed()) {
+            $rule->restore();
+        }
+
+        $rule->fill([
             ...$data,
             'product_id' => $data['scope_type'] === 'product' ? $data['product_id'] : null,
             'category_id' => $data['scope_type'] === 'category' ? $data['category_id'] : null,
             'is_active' => $request->boolean('is_active'), 'created_by' => $request->user()->id,
-        ]);
+        ])->save();
 
         return back()->with('success', 'Commission rule saved. New orders will use it; existing snapshots are unchanged.');
     }
@@ -122,7 +166,17 @@ class AffiliateProgramController extends Controller
     {
         $rule->delete();
 
-        return back()->with('success', 'Commission rule deleted. Existing orders keep their frozen rates.');
+        return back()->with('success', 'Commission rule deleted. It can be recreated later, and existing orders keep their frozen rates.');
+    }
+
+    public function toggleRule(AffiliateCommissionRule $rule): RedirectResponse
+    {
+        $rule->update(['is_active' => ! $rule->is_active]);
+
+        return back()->with(
+            'success',
+            'Commission rule '.($rule->is_active ? 'activated.' : 'deactivated. It will not apply to new orders.')
+        );
     }
 
     public function referrals(Request $request): View
@@ -154,6 +208,7 @@ class AffiliateProgramController extends Controller
 
     public function updateWithdrawal(Request $request, AffiliateWithdrawal $withdrawal, AffiliateWithdrawalService $service): RedirectResponse
     {
+        $previousStatus = $withdrawal->status;
         $data = $request->validate([
             'status' => ['required', Rule::in(AffiliateWithdrawal::STATUSES)],
             'transfer_reference' => ['nullable', 'string', 'max:255', Rule::unique('affiliate_withdrawals')->ignore($withdrawal->id)],
@@ -161,11 +216,30 @@ class AffiliateProgramController extends Controller
             'failure_reason' => ['nullable', 'string', 'max:1000'],
         ]);
         $withdrawal = $service->transition($withdrawal, $data['status'], $request->user(), $data);
-        $withdrawal->affiliate->user->notify(new AffiliateActivity(
-            'Withdrawal '.str_replace('_', ' ', $withdrawal->status),
-            'Withdrawal '.$withdrawal->request_reference.' is now '.$withdrawal->status.'.',
-            route('account.affiliate.withdrawals')
-        ));
+        $withdrawal->loadMissing('affiliate.user');
+
+        if ($previousStatus !== $withdrawal->status) {
+            $withdrawal->affiliate->user->notify(new AffiliateActivity(
+                'Withdrawal '.str_replace('_', ' ', $withdrawal->status),
+                'Withdrawal '.$withdrawal->request_reference.' is now '.$withdrawal->status.'.',
+                route('account.affiliate.withdrawals')
+            ));
+
+            if (in_array($withdrawal->status, ['paid', 'rejected', 'failed'], true)) {
+                try {
+                    $pendingMail = Mail::to($withdrawal->affiliate->user->email);
+                    $ccEmail = trim((string) config('marketing.cc_email'));
+
+                    if ($ccEmail !== '' && strcasecmp($ccEmail, $withdrawal->affiliate->user->email) !== 0) {
+                        $pendingMail->cc($ccEmail);
+                    }
+
+                    $pendingMail->send(new AffiliateWithdrawalMail($withdrawal, $withdrawal->status));
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
+            }
+        }
 
         return back()->with('success', 'Withdrawal status updated.');
     }

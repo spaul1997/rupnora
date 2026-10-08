@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInfluencerApplicationRequest;
 use App\Models\Influencer;
+use App\Services\InfluencerMailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -14,7 +15,7 @@ class InfluencerController extends Controller
         return view('pages.influencer', ['title' => 'Influencer Program']);
     }
 
-    public function store(StoreInfluencerApplicationRequest $request): RedirectResponse
+    public function store(StoreInfluencerApplicationRequest $request, InfluencerMailService $mailService): RedirectResponse
     {
         $data = $request->safe()->except('terms');
         $data['reference_no'] = Influencer::generateReferenceNumber();
@@ -23,6 +24,7 @@ class InfluencerController extends Controller
         $data['is_active'] = false;
 
         $influencer = Influencer::create($data);
+        $mailService->applicationReceived($influencer);
 
         return redirect()
             ->to(route('influencer').'#apply')
