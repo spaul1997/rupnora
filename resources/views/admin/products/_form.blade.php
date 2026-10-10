@@ -142,7 +142,14 @@
                 </div>
             </div>
             <x-admin.form.textarea label="Short Description" name="short_description" :value="$product->short_description ?? null" :rows="2" />
-            <x-admin.form.textarea label="Full Description" name="description" :value="$product->description ?? null" :rows="8" class="js-product-description-editor" />
+            <x-admin.form.textarea
+                label="Full Description"
+                name="description"
+                :value="$product->description ?? null"
+                :rows="8"
+                class="js-product-description-editor"
+                help="Use the Image button in the editor to add an image by URL or upload one from your device (max 5MB)."
+            />
         </div>
 
         {{-- Jewellery Information --}}
@@ -494,7 +501,10 @@
                 var editor = CKEDITOR.replace(textarea.id, {
                     height: 260,
                     versionCheck: false,
+                    filebrowserImageUploadUrl: @json(route('admin.products.description-images.store', ['_token' => csrf_token()])),
+                    filebrowserUploadMethod: 'xhr',
                     removeButtons: 'About,Anchor,Styles,Flash,Iframe,Save,NewPage,Preview,Print',
+                    removeDialogTabs: 'image:advanced;link:advanced',
                     contentsCss: [
                         'https://fonts.bunny.net/css?family=inter:400,500,600',
                     ],
@@ -504,7 +514,7 @@
                         { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'RemoveFormat'] },
                         { name: 'paragraph', items: ['NumberedList', 'BulletedList', 'Blockquote', 'JustifyLeft', 'JustifyCenter'] },
                         { name: 'links', items: ['Link', 'Unlink'] },
-                        { name: 'insert', items: ['Table', 'HorizontalRule'] },
+                        { name: 'insert', items: ['Image', 'Table', 'HorizontalRule'] },
                         { name: 'tools', items: ['Maximize'] }
                     ]
                 });

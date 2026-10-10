@@ -13,9 +13,12 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Support\ProductImageOptimizer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -215,6 +218,37 @@ class ProductController extends Controller
         $product->update(['is_featured' => ! $product->is_featured]);
 
         return back()->with('success', 'Product featured flag updated successfully.');
+    }
+
+    public function storeDescriptionImage(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'upload' => ['bail', 'required', 'file', 'mimetypes:image/jpeg,image/png,image/webp,image/avif', 'max:5120'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'uploaded' => 0,
+                'error' => ['message' => $validator->errors()->first('upload')],
+            ], 422);
+        }
+
+        try {
+            $path = ProductImageOptimizer::store($request->file('upload'), 'products/descriptions');
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'uploaded' => 0,
+                'error' => ['message' => 'The image could not be processed. Please try another image.'],
+            ], 422);
+        }
+
+        return response()->json([
+            'uploaded' => 1,
+            'fileName' => basename($path),
+            'url' => Storage::disk('public')->url($path),
+        ]);
     }
 
     public function destroyImage(Product $product, ProductImage $image): RedirectResponse
