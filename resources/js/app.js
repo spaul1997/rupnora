@@ -907,10 +907,40 @@ const initStorefrontMotion = () => {
         return;
     }
 
-    const sectionSelector = ':scope > section:not([role="dialog"]), :scope > div > section:not([role="dialog"])';
+    const revealSelector = [
+        ':scope > section:not([role="dialog"])',
+        ':scope > .container-luxe',
+        ':scope > div > section:not([role="dialog"])',
+        ':scope > div > .container-luxe',
+    ].join(', ');
 
-    main.querySelectorAll(sectionSelector).forEach((section) => {
+    main.querySelectorAll(revealSelector).forEach((section, index) => {
+        if (section.hasAttribute('data-motion-reveal') || section.hasAttribute('data-motion-card')) {
+            return;
+        }
+
         section.dataset.motionReveal = 'section';
+        section.dataset.motionDelay = String(Math.min(index, 4) * 45);
+    });
+
+    const autoCardSelector = [
+        '.card-luxe',
+        '.grid > a',
+        '.grid > article',
+        '.grid > li',
+        '.flex.flex-wrap > a',
+    ].join(', ');
+
+    main.querySelectorAll(autoCardSelector).forEach((card) => {
+        if (
+            card.hasAttribute('data-motion-card') ||
+            card.closest('[data-motion-card]') ||
+            card.closest('[role="dialog"]')
+        ) {
+            return;
+        }
+
+        card.dataset.motionCard = 'surface';
     });
 
     const observer = 'IntersectionObserver' in window
@@ -978,6 +1008,67 @@ const initStorefrontMotion = () => {
     contentObserver.observe(main, { childList: true, subtree: true });
 };
 
+const initStorefrontInteractiveMotion = () => {
+    const storefront = document.querySelector('.storefront');
+
+    if (!storefront || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const interactiveSelector = ':where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn, [data-card-cart-action])';
+
+    storefront.addEventListener('pointerdown', (event) => {
+        const start = event.target instanceof Element ? event.target : null;
+        const target = start?.closest(interactiveSelector);
+
+        if (!target || !storefront.contains(target) || target.disabled || target.getAttribute('aria-disabled') === 'true') {
+            return;
+        }
+
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.9;
+        const ripple = document.createElement('span');
+
+        ripple.className = 'tap-ripple';
+        ripple.style.setProperty('--ripple-size', `${size}px`);
+        ripple.style.setProperty('--ripple-x', `${event.clientX - rect.left}px`);
+        ripple.style.setProperty('--ripple-y', `${event.clientY - rect.top}px`);
+
+        target.append(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+    });
+
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        return;
+    }
+
+    const tiltCards = storefront.querySelectorAll("[data-motion-card='category'], [data-motion-card='collection'], [data-motion-card='surface']");
+
+    tiltCards.forEach((card) => {
+        if (card.dataset.motionTiltPrepared === 'true') {
+            return;
+        }
+
+        card.dataset.motionTiltPrepared = 'true';
+
+        card.addEventListener('pointermove', (event) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) - 0.5;
+            const y = ((event.clientY - rect.top) / rect.height) - 0.5;
+
+            card.style.setProperty('--tilt-x', `${(-y * 4).toFixed(2)}deg`);
+            card.style.setProperty('--tilt-y', `${(x * 4).toFixed(2)}deg`);
+            card.classList.add('motion-tilting');
+        });
+
+        card.addEventListener('pointerleave', () => {
+            card.classList.remove('motion-tilting');
+            card.style.setProperty('--tilt-x', '0deg');
+            card.style.setProperty('--tilt-y', '0deg');
+        });
+    });
+};
+
 const initStorefrontImageFallbacks = () => {
     const storefront = document.querySelector('.storefront');
     const defaultFallback = storefront?.dataset.imageFallback;
@@ -1018,3 +1109,4 @@ const initStorefrontImageFallbacks = () => {
 Alpine.start();
 initStorefrontImageFallbacks();
 initStorefrontMotion();
+initStorefrontInteractiveMotion();

@@ -30,10 +30,18 @@
     --shadow-soft: 0 1px 2px rgba(35, 21, 53, 0.05), 0 8px 28px -10px rgba(35, 21, 53, 0.16);
     --shadow-lift: 0 10px 34px -8px rgba(35, 21, 53, 0.24);
     --shadow-card: 0 1px 3px rgba(35, 21, 53, 0.08);
+    --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
     --animate-shimmer: shimmer 1.6s ease-in-out infinite;
     --animate-fade-up: fade-up 0.5s ease both;
     --animate-marquee: marquee 32s linear infinite;
+    --animate-promo-float: promo-float 7s ease-in-out infinite;
+    --animate-promo-shine: promo-shine 4.2s ease-in-out infinite;
+    --animate-promo-pulse: promo-pulse 3.6s ease-in-out infinite;
+    --animate-cart-icon: cart-icon 2.6s ease-in-out infinite;
+    --animate-nav-icon: nav-icon 3.4s ease-in-out infinite;
+    --animate-ripple: ripple 560ms var(--motion-ease) forwards;
+    --animate-soft-pop: soft-pop 420ms var(--motion-ease) both;
 
     @keyframes shimmer {
         0% { background-position: -400px 0; }
@@ -46,6 +54,36 @@
     @keyframes marquee {
         from { transform: translateX(0); }
         to { transform: translateX(-50%); }
+    }
+    @keyframes promo-float {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-10px) scale(1.015); }
+    }
+    @keyframes promo-shine {
+        0% { transform: translateX(-160%) skewX(-14deg); }
+        48%, 100% { transform: translateX(260%) skewX(-14deg); }
+    }
+    @keyframes promo-pulse {
+        0%, 100% { opacity: 0.42; transform: scale(0.96); }
+        50% { opacity: 0.82; transform: scale(1.04); }
+    }
+    @keyframes cart-icon {
+        0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+        45% { transform: translateY(-2px) rotate(-6deg) scale(1.08); }
+        70% { transform: translateY(0) rotate(3deg) scale(1.02); }
+    }
+    @keyframes nav-icon {
+        0%, 100% { transform: translateY(0) scale(1); }
+        45% { transform: translateY(-2px) scale(1.08); }
+        70% { transform: translateY(0) scale(1.02); }
+    }
+    @keyframes ripple {
+        from { opacity: 0.35; transform: translate(-50%, -50%) scale(0); }
+        to { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes soft-pop {
+        0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 }
 
@@ -106,6 +144,9 @@
 
     .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light {
         @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.14em] transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-50;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
     }
     .btn-primary {
         @apply text-ivory hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0;
@@ -126,6 +167,7 @@
 
     .icon-btn {
         @apply relative inline-flex h-10 w-10 items-center justify-center rounded-full text-charcoal transition-colors duration-200 hover:bg-champagne-light/45;
+        overflow: hidden;
     }
 
     .card-luxe {
@@ -173,8 +215,8 @@
     .motion-ready .storefront [data-motion-reveal],
     .motion-ready .storefront [data-motion-card] {
         transition:
-            opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
-            transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+            opacity 680ms var(--motion-ease),
+            transform 680ms var(--motion-ease);
     }
 
     .motion-ready .storefront [data-motion-reveal].motion-visible,
@@ -185,12 +227,13 @@
 
     .motion-ready .storefront [data-motion-card='product'] {
         transform: none;
-        transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: opacity 600ms var(--motion-ease);
     }
 
-    .storefront [data-motion-card='product'] > a > div:first-child {
+    .storefront [data-motion-card='product'] > div:first-child {
+        position: relative;
         transition:
-            transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 350ms var(--motion-ease),
             border-color 300ms ease,
             box-shadow 350ms ease;
     }
@@ -198,28 +241,120 @@
     .storefront [data-motion-card='category'],
     .storefront [data-motion-card='collection'],
     .storefront [data-motion-card='surface'] {
+        --tilt-x: 0deg;
+        --tilt-y: 0deg;
+        position: relative;
+    }
+
+    .storefront [data-motion-card='category'],
+    .storefront [data-motion-card='collection'],
+    .storefront [data-motion-card='surface'] {
         transition:
-            opacity 680ms cubic-bezier(0.22, 1, 0.36, 1),
-            transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
-            translate 350ms cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 680ms var(--motion-ease),
+            transform 350ms var(--motion-ease),
+            translate 350ms var(--motion-ease),
             border-color 300ms ease,
             box-shadow 350ms ease;
+    }
+
+    .storefront [data-motion-card='surface'] {
+        overflow: hidden;
+    }
+
+    .storefront [data-motion-card='product'] > div:first-child::after,
+    .storefront [data-motion-card='category']::after,
+    .storefront [data-motion-card='collection']::after,
+    .storefront [data-motion-card='surface']::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.26) 45%, transparent 68%);
+        opacity: 0;
+        transform: translateX(-120%);
+        transition:
+            opacity 360ms ease,
+            transform 900ms var(--motion-ease);
+    }
+
+    .motion-ready .storefront [data-motion-reveal='section']:not(.motion-visible) :where(.eyebrow, h1, h2, h3, p) {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    .motion-ready .storefront [data-motion-reveal='section'].motion-visible :where(.eyebrow, h1, h2, h3, p) {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+            opacity 620ms var(--motion-ease),
+            transform 620ms var(--motion-ease),
+            color 220ms ease,
+            background-color 220ms ease,
+            border-color 220ms ease,
+            box-shadow 260ms ease;
+    }
+
+    .motion-ready .storefront [data-motion-reveal='section'].motion-visible :where(h1, h2) {
+        transition-delay: 70ms;
+    }
+
+    .motion-ready .storefront [data-motion-reveal='section'].motion-visible :where(p) {
+        transition-delay: 120ms;
     }
 
     .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn) {
         -webkit-tap-highlight-color: transparent;
     }
 
-    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn):active:not(:disabled) {
+    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light, .icon-btn, [data-card-cart-action]):active:not(:disabled) {
         scale: 0.97;
     }
 
     .storefront .icon-btn svg {
-        transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 240ms var(--motion-ease);
+    }
+
+    .storefront [data-card-cart-action] {
+        overflow: hidden;
+    }
+
+    .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light)::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        z-index: 0;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.32) 50%, transparent 72%);
+        transform: translateX(-120%) skewX(-18deg);
+        transition: transform 720ms var(--motion-ease);
+    }
+
+    .storefront .tap-ripple {
+        position: absolute;
+        left: var(--ripple-x);
+        top: var(--ripple-y);
+        width: var(--ripple-size);
+        height: var(--ripple-size);
+        z-index: 4;
+        pointer-events: none;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.22;
+        animation: ripple 560ms var(--motion-ease) forwards;
+    }
+
+    .storefront :where(.input-luxe, select, textarea):focus,
+    .storefront :where(.input-luxe, select, textarea):focus-visible {
+        transform: translateY(-1px);
+        transition:
+            transform 220ms var(--motion-ease),
+            border-color 220ms ease,
+            box-shadow 220ms ease;
     }
 
     @media (hover: hover) and (pointer: fine) {
-        .storefront [data-motion-card='product']:hover > a > div:first-child {
+        .storefront [data-motion-card='product']:hover > div:first-child {
             transform: translateY(-4px);
             border-color: color-mix(in srgb, var(--color-champagne) 65%, transparent);
             box-shadow: var(--shadow-lift);
@@ -230,6 +365,24 @@
         .storefront [data-motion-card='surface']:hover {
             translate: 0 -5px;
             box-shadow: var(--shadow-lift);
+        }
+
+        .storefront [data-motion-card='category'].motion-tilting,
+        .storefront [data-motion-card='collection'].motion-tilting,
+        .storefront [data-motion-card='surface'].motion-tilting {
+            transform: perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+        }
+
+        .storefront [data-motion-card='product']:hover > div:first-child::after,
+        .storefront [data-motion-card='category']:hover::after,
+        .storefront [data-motion-card='collection']:hover::after,
+        .storefront [data-motion-card='surface']:hover::after {
+            opacity: 1;
+            transform: translateX(120%);
+        }
+
+        .storefront :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-light):hover::after {
+            transform: translateX(120%) skewX(-18deg);
         }
 
         .storefront .icon-btn:hover svg {
@@ -396,7 +549,7 @@
         translate: none !important;
     }
 
-    .storefront [data-motion-card='product'] > a > div:first-child {
+    .storefront [data-motion-card='product'] > div:first-child {
         transform: none !important;
     }
 

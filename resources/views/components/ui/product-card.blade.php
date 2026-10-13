@@ -48,8 +48,8 @@
     }"
     x-init="$watch('quickView', (open) => document.body.classList.toggle('overflow-hidden', open))"
 >
-    <a href="{{ route('product.show', $productUrlKey) }}" class="block">
-        <div class="relative overflow-hidden rounded-lg border border-line">
+    <div class="relative overflow-hidden rounded-lg border border-line">
+        <a href="{{ route('product.show', $productUrlKey) }}" class="block">
             <div class="relative aspect-square">
                 @if ($primaryImage)
                     <x-ui.optimized-image :src="$primaryImage" :alt="$product['name']" sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -68,29 +68,58 @@
                     </div>
                 @endif
             </div>
+        </a>
 
-            <div class="absolute left-1.5 top-1.5 flex flex-col items-start gap-0.5">
-                @foreach ($product['badges'] ?? [] as $badge)
-                    <x-ui.badge
-                        class="!h-4 !gap-0 !rounded-md !px-1.5 !py-0 !text-[7.5px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20"
-                        :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')"
-                    >{{ $badge }}</x-ui.badge>
-                @endforeach
-            </div>
-
-            <div class="absolute right-2 top-2">
-                <x-ui.wishlist-button :id="$productUrlKey" size="sm" />
-            </div>
-
-            <button
-                type="button"
-                @click.stop.prevent="activeImage = 0; quickView = true"
-                class="absolute inset-x-2 bottom-2 translate-y-2 rounded-full bg-paper/95 py-1.5 text-center text-[9.5px] font-semibold uppercase tracking-wide text-charcoal opacity-0 shadow-card backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 hidden sm:block"
-            >
-                Quick View
-            </button>
+        <div class="absolute left-1.5 top-1.5 flex flex-col items-start gap-0.5">
+            @foreach ($product['badges'] ?? [] as $badge)
+                <x-ui.badge
+                    class="!h-4 !gap-0 !rounded-md !px-1.5 !py-0 !text-[7.5px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20"
+                    :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')"
+                >{{ $badge }}</x-ui.badge>
+            @endforeach
         </div>
-    </a>
+
+        <div class="absolute right-2 top-2">
+            <x-ui.wishlist-button :id="$productUrlKey" size="sm" />
+        </div>
+
+        {{-- Icon-only add to cart: disabled attr must stay before the click handler (OutOfStockPurchaseTest regex) --}}
+        <button
+            type="button"
+            data-card-cart-action
+            @disabled(! $isInStock)
+            @click.stop.prevent="addToCart()"
+            :aria-busy="cartState === 'busy'"
+            :class="{ '!bg-none !bg-success !shadow-none': cartState === 'added', 'cursor-wait': cartState === 'busy' }"
+            aria-label="{{ $isInStock ? 'Add '.$product['name'].' to cart' : 'Out of stock' }}"
+            title="{{ $isInStock ? 'Add to cart' : 'Out of stock' }}"
+            class="absolute bottom-2 right-2 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-charcoal drop-shadow-[0_1px_2px_rgba(255,255,255,0.95)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 {{ $isInStock ? 'hover:-translate-y-0.5 hover:text-champagne-dark active:scale-90' : 'cursor-not-allowed opacity-70' }}"
+        >
+            <svg x-show="cartState === 'idle'" class="block h-5 w-5 animate-cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.5 3.5h2.2l2.4 11.1a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.8 7H5.6" />
+                <circle cx="9.5" cy="20" r="1.2" fill="currentColor" />
+                <circle cx="17" cy="20" r="1.2" fill="currentColor" />
+                @if ($isInStock)
+                    <path d="M13 9v4.6M10.7 11.3h4.6" />
+                @endif
+            </svg>
+            <svg x-cloak x-show="cartState === 'busy'" class="block h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="3" />
+                <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            <svg x-cloak x-show="cartState === 'added'" class="block h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+        </button>
+
+        <button
+            type="button"
+            @click.stop.prevent="activeImage = 0; quickView = true"
+            class="absolute bottom-2 left-2 right-12 hidden translate-y-2 rounded-full bg-paper/95 py-1.5 text-center text-[9.5px] font-semibold uppercase tracking-wide text-charcoal opacity-0 shadow-card backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:block"
+        >
+            Quick View
+        </button>
+    </div>
 
     <div class="mt-1.5 space-y-0.5">
         <p class="text-[9.5px] uppercase tracking-wide text-muted">{{ $categoryLabel }}</p>
@@ -98,37 +127,8 @@
             {{ $product['name'] }}
         </a>
         <x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" size="xs" />
-        <div class="flex items-center justify-between gap-1.5">
+        <div class="flex items-end justify-between gap-1.5">
             <div class="min-w-0"><x-ui.price :price="$product['price']" :mrp="$product['mrp']" size="xs" /></div>
-
-            {{-- Icon-only add to cart: disabled attr must stay before the click handler (OutOfStockPurchaseTest regex) --}}
-            <button
-                type="button"
-                data-card-cart-action
-                @disabled(! $isInStock)
-                @click.stop.prevent="addToCart()"
-                :aria-busy="cartState === 'busy'"
-                :class="{ '!bg-none !bg-success !shadow-none': cartState === 'added', 'cursor-wait': cartState === 'busy' }"
-                aria-label="{{ $isInStock ? 'Add '.$product['name'].' to cart' : 'Out of stock' }}"
-                title="{{ $isInStock ? 'Add to cart' : 'Out of stock' }}"
-                class="-my-1.5 inline-flex h-9 w-9 shrink-0 items-center sm:-my-1 sm:h-8 sm:w-8 justify-center rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 {{ $isInStock ? 'bg-[linear-gradient(135deg,var(--color-champagne),var(--color-champagne-dark))] text-white shadow-[0_4px_12px_-3px_color-mix(in_srgb,var(--color-champagne)_65%,transparent)] hover:-translate-y-0.5 hover:bg-[linear-gradient(135deg,var(--color-champagne-dark),var(--color-charcoal-soft))] hover:shadow-[0_6px_16px_-4px_color-mix(in_srgb,var(--color-champagne-dark)_75%,transparent)] active:scale-90' : 'cursor-not-allowed border border-line bg-gray-100 text-muted' }}"
-            >
-                <svg x-show="cartState === 'idle'" class="h-[18px] w-[18px] sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M2.5 3.5h2.2l2.4 11.1a1.6 1.6 0 001.6 1.3h8.4a1.6 1.6 0 001.6-1.2L20.8 7H5.6" />
-                    <circle cx="9.5" cy="20" r="1.2" fill="currentColor" />
-                    <circle cx="17" cy="20" r="1.2" fill="currentColor" />
-                    @if ($isInStock)
-                        <path d="M13 9v4.6M10.7 11.3h4.6" />
-                    @endif
-                </svg>
-                <svg x-cloak x-show="cartState === 'busy'" class="h-4 w-4 animate-spin sm:h-3.5 sm:w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="3" />
-                    <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                </svg>
-                <svg x-cloak x-show="cartState === 'added'" class="h-[18px] w-[18px] sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M5 12.5l4.5 4.5L19 7.5" />
-                </svg>
-            </button>
         </div>
     </div>
 
