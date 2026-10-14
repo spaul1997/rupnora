@@ -202,8 +202,10 @@
     }
 
     /* Storefront motion system. Motion is enabled by JS only after elements are prepared. */
+    /* Fill `backwards` only: a fill that persists after the animation keeps <main> as its own
+       stacking context, which traps fixed modals inside it beneath the sticky header. */
     .motion-ready .storefront [data-motion-page] {
-        animation: storefront-page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation: storefront-page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
     }
 
     .motion-ready .storefront [data-motion-reveal]:not(.motion-visible),

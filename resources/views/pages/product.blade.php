@@ -154,7 +154,7 @@
 
             {{-- Gallery --}}
             <div class="mx-auto w-full max-w-md lg:sticky lg:top-24 lg:col-span-2 lg:mx-0 lg:self-start">
-                <div class="relative overflow-hidden rounded-xl border border-line bg-paper">
+                <div class="relative overflow-hidden rounded-xl border border-line bg-ivory">
                     <div
                         class="relative aspect-[4/3] cursor-zoom-in overflow-hidden"
                         @mousemove="zoomActive = true; const r = $el.getBoundingClientRect(); zoomX = ((event.clientX - r.left) / r.width) * 100; zoomY = ((event.clientY - r.top) / r.height) * 100;"
@@ -197,28 +197,28 @@
 
             {{-- Info --}}
             <div class="product-details-scrollbar lg:col-span-3 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
-                    @if (! empty($product['sku']))
-                        <span class="inline-flex items-center rounded-full border border-line bg-paper px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
-                            SKU: {{ $product['sku'] }}
-                        </span>
-                    @endif
-                </div>
-                <div class="mt-1.5 flex items-start justify-between gap-4">
-                    <h1 class="font-display text-[28px] leading-tight text-charcoal sm:text-[32px]">{{ $product['name'] }}</h1>
-                    <div class="flex flex-shrink-0 items-center gap-1">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                        <p class="text-xs uppercase tracking-wider text-muted">{{ $categoryLabel }}</p>
+                        @if (! empty($product['sku']))
+                            <span class="inline-flex items-center rounded-full border border-line bg-paper px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+                                SKU: {{ $product['sku'] }}
+                            </span>
+                        @endif
+                    </div>
+                    <div class="flex flex-none items-center gap-1.5">
                         <x-ui.wishlist-button :id="$productUrlKey" />
-                        <a href="https://wa.me/?text={{ $whatsappShareText }}" target="_blank" rel="noopener noreferrer" class="icon-btn text-success" aria-label="Share on WhatsApp">
+                        <a href="https://wa.me/?text={{ $whatsappShareText }}" target="_blank" rel="noopener noreferrer" class="icon-btn bg-paper text-success shadow-card" aria-label="Share on WhatsApp">
                             <svg class="h-5 w-5" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
                                 <path d="M16.04 3.2c-7.06 0-12.8 5.72-12.8 12.77 0 2.25.59 4.45 1.71 6.39L3.14 29l6.8-1.78a12.75 12.75 0 006.1 1.55h.01c7.05 0 12.79-5.73 12.79-12.78 0-3.41-1.33-6.62-3.75-9.03a12.68 12.68 0 00-9.05-3.76zm0 23.41h-.01c-1.94 0-3.84-.52-5.5-1.5l-.39-.23-4.03 1.06 1.08-3.93-.26-.4a10.56 10.56 0 01-1.62-5.64c0-5.9 4.81-10.69 10.73-10.69 2.86 0 5.55 1.11 7.57 3.14a10.62 10.62 0 013.14 7.57c0 5.9-4.81 10.7-10.71 10.7zm5.87-8.01c-.32-.16-1.9-.94-2.19-1.04-.29-.11-.5-.16-.72.16-.21.32-.83 1.04-1.02 1.25-.19.21-.38.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.61-1.91-1.8-2.23-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.21-.32.32-.54.11-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.48 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.39.19-1.53-.08-.13-.29-.21-.61-.37z" />
                             </svg>
                         </a>
-                        <button class="icon-btn" aria-label="Share" @click="navigator.share ? navigator.share({title: {{ Illuminate\Support\Js::from($product['name']) }}, url: window.location.href}) : $store.ui.notify('Link copied to clipboard')">
+                        <button type="button" class="icon-btn bg-paper shadow-card" aria-label="Share" @click="navigator.share ? navigator.share({title: {{ Illuminate\Support\Js::from($product['name']) }}, url: window.location.href}) : $store.ui.notify('Link copied to clipboard')">
                             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6" /></svg>
                         </button>
                     </div>
                 </div>
+                <h1 class="mt-2 font-display text-[26px] leading-[1.15] text-charcoal sm:text-[30px] lg:text-[32px] lg:leading-tight">{{ $product['name'] }}</h1>
 
                 <div class="mt-3">
                     <x-ui.rating :value="$product['rating']" :rating-count="$product['ratings_count']" :count="$product['reviews_count']" size="lg" />
@@ -637,22 +637,36 @@
         @endif
 
         {{-- Lightbox --}}
-        <div x-cloak x-show="lightbox" x-transition.opacity class="fixed inset-0 z-[110] flex items-center justify-center bg-charcoal/90 p-4" @click.self="lightbox = false" @keydown.window.escape="lightbox = false">
-            <button @click="lightbox = false" class="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-ivory/10 text-ivory"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg></button>
-            <button @click="activeImg = (activeImg + {{ $galleryCount - 1 }}) % {{ $galleryCount }}" class="absolute left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ivory/10 text-ivory"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
-            <button @click="activeImg = (activeImg + 1) % {{ $galleryCount }}" class="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-ivory/10 text-ivory"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
-            <div class="w-full max-w-xl">
-                @foreach ($gallery as $i => $image)
-                    <div x-show="activeImg === {{ $i }}" x-cloak>
-                        @if ($image)
-                            <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="(min-width: 640px) 576px, 100vw" class="aspect-square rounded-2xl object-cover" />
-                        @else
-                            <x-ui.product-art :art="$product['art']" :tone="$i % 2 === 0 ? 1 : 2" class="aspect-square rounded-2xl" />
-                        @endif
-                    </div>
-                @endforeach
+        <template x-teleport="body">
+            <div
+                x-cloak
+                x-show="lightbox"
+                x-transition.opacity
+                class="fixed inset-0 z-[999] flex items-center justify-center bg-charcoal/90 p-4 lg:p-12"
+                @click="lightbox = false"
+                @keydown.window.escape="lightbox = false"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Product image viewer"
+            >
+                <button type="button" @click.stop="lightbox = false" class="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-charcoal/60 text-ivory sm:right-5 sm:top-5" aria-label="Close image viewer"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg></button>
+                <button type="button" @click.stop="activeImg = (activeImg + {{ $galleryCount - 1 }}) % {{ $galleryCount }}" class="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-charcoal/60 text-ivory sm:left-5" aria-label="Previous image"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                <button type="button" @click.stop="activeImg = (activeImg + 1) % {{ $galleryCount }}" class="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-charcoal/60 text-ivory sm:right-5" aria-label="Next image"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                <div class="flex h-full w-full max-w-xl items-center justify-center lg:max-w-lg">
+                    @foreach ($gallery as $i => $image)
+                        <div x-show="activeImg === {{ $i }}" x-cloak class="flex w-full items-center justify-center">
+                            <div class="contents" @click.stop>
+                                @if ($image)
+                                    <x-ui.optimized-image :src="$image" :alt="$product['name']" sizes="(min-width: 1024px) 512px, (min-width: 640px) 576px, 100vw" class="mx-auto block h-auto max-h-[calc(100dvh-2rem)] w-auto max-w-full rounded-2xl object-contain lg:max-h-[calc(100dvh-6rem)]" />
+                                @else
+                                    <x-ui.product-art :art="$product['art']" :tone="$i % 2 === 0 ? 1 : 2" class="mx-auto aspect-square max-h-[calc(100dvh-2rem)] max-w-full rounded-2xl lg:max-h-[calc(100dvh-6rem)]" />
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        </template>
 
         {{-- Size Guide modal --}}
         @if ($product['sizes'])

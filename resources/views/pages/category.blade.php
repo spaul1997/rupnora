@@ -253,7 +253,7 @@
 
         @if ($showBanner)
             {{-- Category and collection hero banner --}}
-            <div class="relative mt-5 min-h-[68vh] w-full overflow-hidden bg-gradient-to-br from-beige via-ivory to-champagne-light/70 sm:min-h-[76vh] lg:min-h-[clamp(420px,48vh,500px)]">
+            <div class="relative mt-5 w-full overflow-hidden bg-gradient-to-br from-beige via-ivory to-champagne-light/70 {{ $categoryHeroImage ? '' : 'min-h-[68vh]' }} sm:min-h-[76vh] lg:min-h-[clamp(420px,48vh,500px)]">
                 @if ($categoryHeroImage)
                     <x-ui.optimized-image
                         :src="$categoryHeroImage"
@@ -261,7 +261,7 @@
                         sizes="100vw"
                         loading="eager"
                         fetchpriority="high"
-                        class="absolute inset-0 h-full w-full object-cover object-center lg:object-contain"
+                        class="block h-auto w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:object-cover sm:object-center lg:object-contain"
                     />
                 @else
                     <x-ui.product-art :art="$category['art']" class="absolute inset-0 h-full w-full" />
