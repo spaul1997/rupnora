@@ -252,12 +252,19 @@
         </div>
 
         @if ($showBanner)
-            {{-- Category banner --}}
-            <div class="relative mt-5 w-full overflow-hidden">
+            {{-- Category and collection hero banner --}}
+            <div class="relative mt-5 min-h-[68vh] w-full overflow-hidden bg-gradient-to-br from-beige via-ivory to-champagne-light/70 sm:min-h-[76vh] lg:min-h-[clamp(420px,48vh,500px)]">
                 @if ($categoryHeroImage)
-                    <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full object-cover object-top sm:aspect-[16/4]" />
+                    <x-ui.optimized-image
+                        :src="$categoryHeroImage"
+                        :alt="$category['name']"
+                        sizes="100vw"
+                        loading="eager"
+                        fetchpriority="high"
+                        class="absolute inset-0 h-full w-full object-cover object-center lg:object-contain"
+                    />
                 @else
-                    <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
+                    <x-ui.product-art :art="$category['art']" class="absolute inset-0 h-full w-full" />
                     <div class="absolute inset-0 flex items-end bg-gradient-to-t from-charcoal/75 via-charcoal/10 to-transparent">
                         <div class="container-luxe pb-6 text-ivory sm:pb-8">
                             <h1 class="font-display text-3xl sm:text-5xl">{{ $category['name'] }}</h1>
