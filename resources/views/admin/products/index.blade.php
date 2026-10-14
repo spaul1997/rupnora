@@ -85,7 +85,7 @@
                     <td>
                         <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}">
                             @csrf @method('PATCH')
-                            <button type="submit"><x-admin.status-badge :status="$product->is_active ? 'active' : 'inactive'" /></button>
+                            <button type="submit" class="cursor-pointer"><x-admin.status-badge :status="$product->is_active ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
                     <td class="whitespace-nowrap text-gray-400">{{ $product->created_at->format('d-m-y') }}</td>

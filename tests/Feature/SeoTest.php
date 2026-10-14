@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\JewelleryCollection;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,13 +18,18 @@ class SeoTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<html lang="en-IN"', false)
+            ->assertSee('<title>Rupnora | Premium Fashion Jewellery Online</title>', false)
+            ->assertSee('<meta name="description" content="'.\App\Support\Seo::DEFAULT_DESCRIPTION.'">', false)
             ->assertSee('<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">', false)
+            ->assertDontSee('<meta name="robots" content="noindex, nofollow">', false)
             ->assertSee('<link rel="canonical" href="'.route('home').'">', false)
             ->assertSee('<meta property="og:site_name" content="Rupnora">', false)
             ->assertSee('<meta name="twitter:card" content="summary_large_image">', false)
             ->assertSee('<script type="application/ld+json">', false)
             ->assertSee('"@type":["Organization","OnlineStore"]', false)
-            ->assertSee('"@type":"WebSite"', false);
+            ->assertSee('"@type":"WebSite"', false)
+            ->assertSee('Premium Fashion Jewellery', false)
+            ->assertSee('Explore premium fashion jewellery edits', false);
     }
 
     public function test_private_transactional_and_search_pages_are_not_indexed(): void
@@ -61,6 +67,39 @@ class SeoTest extends TestCase
         $this->get(route('products.show', $product->slug))
             ->assertRedirect(route('product.show', $product->slug))
             ->assertStatus(301);
+    }
+
+    public function test_category_and_collection_banner_images_are_not_covered_by_duplicate_copy(): void
+    {
+        $category = Category::query()->create([
+            'name' => 'Banner Category',
+            'slug' => 'banner-category',
+            'description' => 'A curated category introduction.',
+            'banner' => 'categories/banner-category.jpg',
+            'is_active' => true,
+        ]);
+
+        $categoryContent = $this->get(route('category.show', $category->slug))
+            ->assertOk()
+            ->assertSee('<h1 id="category-editorial-title"', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('absolute inset-0 flex items-end bg-gradient-to-t', $categoryContent);
+
+        $collection = JewelleryCollection::query()->create([
+            'name' => 'Banner Collection',
+            'slug' => 'banner-collection',
+            'description' => 'A curated collection introduction.',
+            'banner' => 'collections/banner-collection.jpg',
+            'is_active' => true,
+        ]);
+
+        $collectionContent = $this->get(route('collection.show', $collection->slug))
+            ->assertOk()
+            ->assertSee('<h1 id="category-editorial-title"', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('absolute inset-0 flex items-end bg-gradient-to-t', $collectionContent);
     }
 
     public function test_sitemap_and_robots_expose_only_canonical_discoverable_urls(): void

@@ -40,7 +40,7 @@
                     <td>
                         <form method="POST" action="{{ route('admin.faqs.toggle-active', $faq) }}">
                             @csrf @method('PATCH')
-                            <button type="submit"><x-admin.status-badge :status="$faq->is_active ? 'active' : 'inactive'" /></button>
+                            <button type="submit" class="cursor-pointer"><x-admin.status-badge :status="$faq->is_active ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
                     <td class="text-right">

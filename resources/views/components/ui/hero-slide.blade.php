@@ -1,8 +1,8 @@
 @props([
-    'eyebrow' => 'New Collection',
-    'heading' => 'Jewellery Crafted for Every Story',
-    'subheading' => "Discover timeless designs created to celebrate life's most precious moments.",
-    'primaryLabel' => 'Shop Collection',
+    'eyebrow' => 'Premium Fashion Jewellery',
+    'heading' => 'Style Made to Be Yours',
+    'subheading' => 'Discover contemporary pieces designed for everyday expression, memorable gifts and every celebration in between.',
+    'primaryLabel' => 'Shop Collections',
     'primaryUrl' => '#',
     'secondaryLabel' => 'Explore New Arrivals',
     'secondaryUrl' => '#',

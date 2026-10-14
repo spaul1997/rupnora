@@ -55,8 +55,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f6f3f9">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <!-- <meta name="robots" content="{{ $seoRobots }}"> -->
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="{{ $seoRobots }}">
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
     <link rel="canonical" href="{{ $seoCanonical }}">
@@ -74,7 +73,7 @@
     <meta property="og:description" content="{{ $seoDescription }}">
     <meta property="og:url" content="{{ $seoCanonical }}">
     <meta property="og:image" content="{{ $seoImage }}">
-    <meta property="og:image:alt" content="{{ $title ?: 'Rupnora jewellery' }}">
+    <meta property="og:image:alt" content="{{ $title ?: 'Rupnora premium fashion jewellery' }}">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $seoTitle }}">

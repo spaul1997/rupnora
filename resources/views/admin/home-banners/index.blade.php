@@ -48,7 +48,7 @@
                     <td>
                         <form method="POST" action="{{ route('admin.home-banners.toggle-active', $banner) }}">
                             @csrf @method('PATCH')
-                            <button type="submit"><x-admin.status-badge :status="$banner->is_active ? 'active' : 'inactive'" /></button>
+                            <button type="submit" class="cursor-pointer"><x-admin.status-badge :status="$banner->is_active ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
                     <td class="text-gray-400">{{ $banner->updated_at->format('d M Y') }}</td>

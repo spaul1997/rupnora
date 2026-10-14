@@ -29,7 +29,7 @@ class OutOfStockPurchaseTest extends TestCase
         $this->assertSame(0, ShoppingCart::count());
     }
 
-    public function test_out_of_stock_purchase_buttons_are_disabled_on_product_pages_and_cards(): void
+    public function test_out_of_stock_purchase_buttons_are_disabled_on_product_pages_and_hidden_on_cards(): void
     {
         $product = $this->outOfStockProduct();
 
@@ -49,7 +49,20 @@ class OutOfStockPurchaseTest extends TestCase
         );
 
         $this->assertStringContainsString('Out of Stock', $card);
-        $this->assertMatchesRegularExpression('/<button[^>]*data-card-cart-action[^>]*disabled/', $card);
+        $this->assertStringNotContainsString('data-card-cart-action', $card);
+    }
+
+    public function test_home_hides_out_of_stock_new_arrivals_but_view_all_includes_them(): void
+    {
+        $product = $this->outOfStockProduct();
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertViewHas('newArrivals', fn (array $products) => collect($products)->doesntContain('id', $product->id));
+
+        $this->get(route('new-arrivals'))
+            ->assertOk()
+            ->assertViewHas('products', fn (array $products) => collect($products)->contains('id', $product->id));
     }
 
     private function outOfStockProduct(): Product

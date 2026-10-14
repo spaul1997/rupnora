@@ -7,14 +7,14 @@ use Illuminate\Support\Str;
 
 class Seo
 {
-    public const DEFAULT_DESCRIPTION = 'Shop Rupnora jewellery online, including gold, diamond and silver rings, earrings, necklaces, bracelets and occasion-ready collections.';
+    public const DEFAULT_DESCRIPTION = 'Shop premium fashion jewellery online at Rupnora. Explore stylish rings, earrings, necklaces and bracelets for everyday wear and special occasions.';
 
     public static function pageTitle(?string $title): string
     {
         $title = Str::squish(strip_tags((string) $title));
 
         if ($title === '') {
-            return 'Rupnora | Gold, Diamond & Silver Jewellery Online';
+            return 'Rupnora | Premium Fashion Jewellery Online';
         }
 
         return Str::contains(Str::lower($title), 'rupnora') ? $title : $title.' — Rupnora';
@@ -100,6 +100,7 @@ class Seo
             '@type' => ['Organization', 'OnlineStore'],
             '@id' => $organizationId,
             'name' => $settings->company_name ?: 'Rupnora',
+            'description' => self::DEFAULT_DESCRIPTION,
             'url' => $homeUrl,
             'logo' => [
                 '@type' => 'ImageObject',
@@ -144,6 +145,7 @@ class Seo
                 '@id' => $websiteId,
                 'url' => $homeUrl,
                 'name' => 'Rupnora',
+                'description' => self::DEFAULT_DESCRIPTION,
                 'publisher' => ['@id' => $organizationId],
                 'inLanguage' => 'en-IN',
             ],
@@ -234,7 +236,7 @@ class Seo
     {
         return [
             'home' => self::DEFAULT_DESCRIPTION,
-            'about' => 'Learn about Rupnora and our approach to thoughtfully curated jewellery, clear product information and customer care.',
+            'about' => 'Learn about Rupnora and our approach to thoughtfully curated premium fashion jewellery, clear product information and customer care.',
             'careers' => 'Explore careers at Rupnora across jewellery, content, ecommerce, operations and customer experience.',
             'size-guide' => 'Use the Rupnora jewellery size guide to measure rings, bracelets and necklaces and find a comfortable fit.',
             'influencer' => 'Join the Rupnora influencer program and collaborate with us to create meaningful jewellery stories.',
@@ -242,10 +244,10 @@ class Seo
             'terms-of-service' => 'Read the terms that apply when browsing and shopping on the Rupnora website.',
             'refund-policy' => 'Review Rupnora return, refund and eligibility information before or after placing an order.',
             'contact' => 'Contact Rupnora for jewellery guidance, order support, shipping, returns and general enquiries.',
-            'collections.index' => 'Explore curated Rupnora jewellery collections for everyday wear, gifting, celebrations, weddings and special occasions.',
-            'categories.index' => 'Browse Rupnora jewellery by category, including rings, earrings, necklaces, bracelets, pendants and more.',
-            'new-arrivals' => 'Discover the latest jewellery arrivals at Rupnora, with newly added designs for everyday wear and special occasions.',
-            'best-sellers' => 'Shop Rupnora best-selling jewellery and discover customer favourites across our most-loved categories.',
+            'collections.index' => 'Explore curated Rupnora fashion jewellery collections for everyday wear, gifting, celebrations, weddings and special occasions.',
+            'categories.index' => 'Browse premium fashion jewellery by category at Rupnora, including rings, earrings, necklaces, bracelets, pendants and more.',
+            'new-arrivals' => 'Discover the latest fashion jewellery arrivals at Rupnora, with new designs for everyday wear and special occasions.',
+            'best-sellers' => 'Shop Rupnora best-selling fashion jewellery and discover customer favourites across our most-loved categories.',
         ];
     }
 }

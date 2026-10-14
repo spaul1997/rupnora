@@ -8,7 +8,7 @@
             <div class="col-span-2 sm:col-span-3 lg:col-span-2">
                 <img src="{{ asset('logo-w.png') }}" alt="Rupnora" class="h-14 w-auto object-contain">
                 <p class="mt-3 max-w-xs text-sm leading-relaxed text-ivory/60">
-                    Certified fine jewellery crafted for life's most meaningful moments &mdash; gold, diamond &amp; silver pieces made to be passed down.
+                    Premium fashion jewellery for everyday expression, memorable gifting and every celebration &mdash; curated to help you style it your way.
                 </p>
             </div>
 
@@ -57,8 +57,8 @@
         <div class="mt-14 rounded-2xl border border-ivory/15 bg-ivory/5 p-6 sm:p-8">
             <div class="flex w-full flex-col gap-5 text-center sm:flex-row sm:flex-nowrap sm:items-center sm:justify-between sm:text-left">
                 <div class="min-w-0 flex-1">
-                    <h3 class="font-display text-xl text-ivory">Join Our World of Jewellery</h3>
-                    <p class="mt-1 text-sm text-ivory/60">Be first to know about new collections &amp; exclusive offers.</p>
+                    <h3 class="font-display text-xl text-ivory">Join the Rupnora Style Circle</h3>
+                    <p class="mt-1 text-sm text-ivory/60">Discover fresh fashion jewellery edits, new collections &amp; exclusive offers.</p>
                 </div>
                 <form
                     x-data="newsletterForm({{ Illuminate\Support\Js::from(route('newsletter-subscriptions.store')) }})"

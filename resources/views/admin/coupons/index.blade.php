@@ -28,7 +28,7 @@
                     <td>
                         <form method="POST" action="{{ route('admin.coupons.toggle-active', $coupon) }}">
                             @csrf @method('PATCH')
-                            <button type="submit"><x-admin.status-badge :status="$coupon->is_active && ! $coupon->is_expired ? 'active' : 'inactive'" /></button>
+                            <button type="submit" class="cursor-pointer"><x-admin.status-badge :status="$coupon->is_active && ! $coupon->is_expired ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
                     <td class="text-right">

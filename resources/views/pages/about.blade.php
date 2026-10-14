@@ -140,7 +140,7 @@
                     <span class="eyebrow">Our Point of View</span>
                     <h2 class="font-display mt-3 text-3xl leading-tight text-charcoal sm:text-4xl">A little luxury for all the ways you shine</h2>
                     <p class="mt-5 text-[15px] leading-7 text-muted">
-                        Rupnora is a destination for jewellery that makes getting dressed feel more personal. We curate across gold, diamond, silver and fashion-led styles with one simple purpose: to help you find pieces you will genuinely enjoy wearing.
+                        Rupnora is a destination for jewellery that makes getting dressed feel more personal. We curate premium fashion jewellery across everyday, statement and occasion-led styles with one simple purpose: to help you find pieces you will genuinely enjoy wearing.
                     </p>
                     <p class="mt-4 text-[15px] leading-7 text-muted">
                         Whether you are choosing your new everyday favourite, marking a milestone or finding a gift with meaning, we want the experience to feel warm, clear and entirely yours.

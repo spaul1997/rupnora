@@ -58,7 +58,7 @@
                     aria-modal="true"
                     aria-labelledby="home-offer-title"
                     aria-describedby="home-offer-desc"
-                    class="relative grid max-h-[calc(100svh-9rem)] w-full max-w-[21rem] overflow-y-auto rounded-2xl bg-paper shadow-2xl sm:max-h-[calc(100svh-2rem)] sm:max-w-3xl sm:grid-cols-[0.9fr_1.1fr] sm:overflow-hidden sm:rounded-[1.75rem]"
+                    class="relative grid max-h-[calc(100svh-9rem)] w-full max-w-[20rem] overflow-y-auto rounded-2xl bg-paper shadow-2xl sm:max-h-[calc(100svh-2rem)] sm:max-w-2xl sm:grid-cols-[0.9fr_1.1fr] sm:overflow-hidden sm:rounded-[1.5rem]"
                 >
                     <button
                         x-ref="closeButton"
@@ -70,7 +70,7 @@
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
                     </button>
 
-                    <div class="relative aspect-square max-h-[48svh] overflow-hidden bg-ivory-soft sm:aspect-auto sm:h-auto sm:max-h-none sm:min-h-[430px] sm:bg-charcoal">
+                    <div class="relative h-[min(13rem,32svh)] overflow-hidden bg-ivory-soft sm:h-full sm:min-h-[360px] sm:max-h-none sm:bg-charcoal">
                         <x-ui.optimized-image
                             :src="asset('images/her.png')"
                             alt="Woman wearing Rupnora jewellery"
@@ -79,20 +79,20 @@
                             class="h-full w-full object-contain object-top sm:object-cover"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-charcoal/10"></div>
-                        <span class="absolute bottom-3 left-3 rounded-full border border-ivory/30 bg-charcoal/45 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-ivory backdrop-blur-sm sm:bottom-6 sm:left-6 sm:px-3 sm:text-[10px] sm:tracking-[0.2em]">Limited Time</span>
+                        <span class="absolute bottom-3 left-3 rounded-full border border-ivory/30 bg-charcoal/45 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-ivory backdrop-blur-sm sm:bottom-4 sm:left-4 sm:px-3 sm:text-[10px] sm:tracking-[0.2em]">Limited Time</span>
                     </div>
 
-                    <div class="flex flex-col justify-center px-5 py-5 text-center sm:px-10 sm:py-10 sm:text-left">
+                    <div class="flex flex-col justify-center px-5 py-4 text-center sm:px-7 sm:py-6 sm:text-left">
                         <span class="eyebrow text-[10px] sm:text-xs">The Sparkle Sale</span>
-                        <h2 id="home-offer-title" class="font-display mt-1.5 text-2xl leading-tight text-charcoal sm:mt-2 sm:text-4xl">A little luxury,<br class="hidden sm:block"> for a lot less.</h2>
-                        <div class="mt-3.5 flex items-baseline justify-center gap-1.5 sm:mt-5 sm:justify-start sm:gap-2">
-                            <span class="font-display text-4xl font-semibold leading-none text-champagne-dark sm:text-6xl">10–60%</span>
+                        <h2 id="home-offer-title" class="font-display mt-1 text-2xl leading-tight text-charcoal sm:mt-1.5 sm:text-3xl">A little sparkle,<br class="hidden sm:block"> for a lot less.</h2>
+                        <div class="mt-2.5 flex items-baseline justify-center gap-1.5 sm:mt-3.5 sm:justify-start sm:gap-2">
+                            <span class="font-display text-4xl font-semibold leading-none text-champagne-dark sm:text-5xl">10–60%</span>
                             <span class="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal sm:text-sm">Off</span>
                         </div>
-                        <p id="home-offer-desc" class="mt-2.5 text-[13px] leading-relaxed text-muted sm:mt-3 sm:text-sm">Save on selected jewellery styles while the offer lasts.</p>
-                        <a href="{{ route('best-sellers') }}" @click="dismiss()" class="btn-primary mt-4 w-full !px-5 !py-3 text-[12px] sm:mt-6 sm:w-auto sm:!px-7 sm:!py-3.5 sm:text-[13px]">Shop the Offer</a>
-                        <button type="button" @click="dismiss()" class="mt-2.5 py-1 text-xs font-medium text-muted underline-offset-4 hover:text-charcoal hover:underline sm:mt-3">No thanks, maybe later</button>
-                        <p class="mt-3 text-[9px] uppercase tracking-[0.12em] text-muted-light sm:mt-4 sm:text-[10px]">Selected styles only. Terms apply.</p>
+                        <p id="home-offer-desc" class="mt-2 text-[13px] leading-relaxed text-muted sm:text-sm">Save on selected fashion jewellery styles while the offer lasts.</p>
+                        <a href="{{ route('best-sellers') }}" @click="dismiss()" class="btn-primary mt-3.5 w-full !px-5 !py-2.5 text-[12px] sm:mt-4 sm:w-auto sm:!px-6 sm:!py-3 sm:text-[13px]">Shop the Offer</a>
+                        <button type="button" @click="dismiss()" class="mt-2 py-0.5 text-xs font-medium text-muted underline-offset-4 hover:text-charcoal hover:underline sm:mt-2.5">No thanks, maybe later</button>
+                        <p class="mt-2 text-[9px] uppercase tracking-[0.12em] text-muted-light sm:mt-2.5 sm:text-[10px]">Selected styles only. Terms apply.</p>
                     </div>
                 </section>
             </div>
@@ -109,11 +109,11 @@
             <div class="mb-6 text-center sm:mb-8">
                 <span class="eyebrow">Curated For You</span>
                 <h2 id="home-collections-title" class="font-display mt-2 text-2xl text-charcoal sm:text-3xl lg:text-4xl">Featured Collections</h2>
-                <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted">Thoughtfully curated edits, from everyday essentials to once-in-a-lifetime pieces.</p>
+                <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted">Explore premium fashion jewellery edits, from everyday essentials to statement styles for every occasion.</p>
             </div>
-            <div class="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-4 lg:grid-cols-5">
+            <div class="flex flex-wrap justify-center gap-2.5 sm:gap-4">
                 <?php foreach ($collections as $collectionIndex => $collection): ?>
-                    <div class="<?php echo $collectionIndex >= $featuredCollectionsMobileCount ? 'max-sm:hidden' : ''; ?>">
+                    <div class="w-[calc((100%-1.25rem)/3)] min-w-0 shrink-0 sm:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-5rem)/6)] <?php echo $collectionIndex >= $featuredCollectionsMobileCount ? 'max-sm:hidden' : ''; ?>">
                         <x-ui.collection-card :collection="$collection" />
                     </div>
                 <?php endforeach; ?>
@@ -126,7 +126,7 @@
         <div class="container-luxe">
             <div class="mb-6 flex items-end justify-between gap-4 sm:mb-8">
                 <div>
-                    <span class="eyebrow">Explore</span>
+                    <span class="eyebrow">Premium Fashion Jewellery</span>
                     <h2 id="home-categories-title" class="font-display mt-2 text-2xl text-charcoal sm:text-3xl lg:text-4xl">Shop by Category</h2>
                 </div>
                 <a href="{{ route('categories.index') }}" class="group/link inline-flex flex-shrink-0 items-center gap-1.5 text-sm font-medium text-charcoal">
@@ -134,7 +134,7 @@
                     <svg class="h-3.5 w-3.5 transition-transform duration-300 group-hover/link:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
                 </a>
             </div>
-            <div class="-mx-5 snap-x snap-mandatory overflow-x-auto scroll-px-5 px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+            <div class="-mx-5 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-px-5 px-5 pb-3 pt-1.5 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
                 <div class="*:snap-start" style="display: grid; min-width: {{ max(count($parentCategories), 1) * 132 }}px; grid-template-columns: repeat({{ max(count($parentCategories), 1) }}, minmax(0, 1fr)); gap: 0.625rem;">
                     <?php foreach ($parentCategories as $cat): ?>
                         <x-ui.category-card :category="$cat" />
@@ -176,7 +176,7 @@
     <section class="section-pad bg-charcoal" aria-labelledby="home-jewellery-type-title">
         <div class="container-luxe">
             <div class="mb-8 text-center sm:mb-10">
-                <span class="eyebrow text-champagne-light">By Metal &amp; Stone</span>
+                <span class="eyebrow text-champagne-light">Find Your Style</span>
                 <h2 id="home-jewellery-type-title" class="font-display mt-2 text-2xl text-ivory sm:text-3xl lg:text-4xl">Shop by Jewellery Type</h2>
             </div>
             @php
@@ -237,8 +237,8 @@
                     Limited Time
                     <span class="h-px w-8 bg-champagne-light/60 lg:hidden" aria-hidden="true"></span>
                 </span>
-                <h2 id="home-promo-title" class="font-display mt-3 animate-fade-up text-3xl leading-tight text-ivory sm:text-5xl">Celebrate Every Moment</h2>
-                <p class="mx-auto mt-4 max-w-md animate-fade-up text-base leading-relaxed text-champagne-light [animation-delay:120ms] sm:text-lg lg:mx-0">Up to 60% Off Selected Designs</p>
+                <h2 id="home-promo-title" class="font-display mt-3 animate-fade-up text-3xl leading-tight text-ivory sm:text-5xl">Style Every Celebration</h2>
+                <p class="mx-auto mt-4 max-w-md animate-fade-up text-base leading-relaxed text-champagne-light [animation-delay:120ms] sm:text-lg lg:mx-0">Up to 60% Off Selected Fashion Jewellery</p>
                 <div class="mt-6 flex flex-wrap justify-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-ivory/75 lg:justify-start">
                     <span class="rounded-full border border-ivory/15 bg-ivory/5 px-3 py-1.5">Festive Picks</span>
                     <span class="rounded-full border border-ivory/15 bg-ivory/5 px-3 py-1.5">Ready to Gift</span>
@@ -343,12 +343,12 @@
             <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-6">
                 @php
                     $trust = [
-                        ['label' => '100% Certified', 'icon' => 'M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                        ['label' => 'Quality Checked', 'icon' => 'M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z'],
                         ['label' => 'Secure Payments', 'icon' => 'M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z'],
                         ['label' => 'Easy Returns', 'icon' => 'M3 12a9 9 0 1 0 2.64-6.36L3 8M3 3v5h5'],
                         ['label' => 'Free Shipping', 'icon' => 'M1 4h14v12H1zM15 8h4l3 3v5h-7zM5.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18.5 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'],
-                        ['label' => 'Lifetime Support', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['label' => 'Quality Guarantee', 'icon' => 'M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z'],
+                        ['label' => 'Customer Support', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                        ['label' => 'Style for Every Occasion', 'icon' => 'M12 2l2.6 5.6 6.1.6-4.6 4.2 1.3 6.1L12 15l-5.4 3 1.3-6.1L3.3 8.2l6.1-.6L12 2z'],
                     ];
                 @endphp
                 @foreach ($trust as $item)
@@ -449,7 +449,7 @@
                 <span class="eyebrow text-champagne-light">Rupnora Partner Program</span>
                 <h2 id="home-influencer-title" class="font-display mt-3 text-2xl text-ivory sm:text-3xl lg:text-4xl">Become a Rupnora Influencer</h2>
                 <p class="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-ivory/70 lg:mx-0">
-                    Partner with us to style, shoot and share Rupnora pieces with your audience. Get early access to new collections, complimentary pieces for content and exclusive commission on every sale you drive.
+                    Partner with us to style, shoot and share Rupnora fashion jewellery with your audience. Get early access to new collections, complimentary pieces for content and exclusive commission on every sale you drive.
                 </p>
                 <ul class="mx-auto mt-6 inline-flex flex-col space-y-3 text-left lg:mx-0 lg:flex">
                     @foreach (['Early access to new collections', 'Complimentary pieces for content', 'Exclusive commission on referred sales'] as $perk)

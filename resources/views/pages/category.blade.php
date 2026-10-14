@@ -258,15 +258,15 @@
                     <x-ui.optimized-image :src="$categoryHeroImage" :alt="$category['name']" sizes="100vw" class="aspect-[16/6] w-full object-cover object-top sm:aspect-[16/4]" />
                 @else
                     <x-ui.product-art :art="$category['art']" class="aspect-[16/6] sm:aspect-[16/4]" />
-                @endif
-                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-charcoal/75 via-charcoal/10 to-transparent">
-                    <div class="container-luxe pb-6 text-ivory sm:pb-8">
-                        <h1 class="font-display text-3xl sm:text-5xl">{{ $category['name'] }}</h1>
-                        @if (! empty($category['blurb']))
-                            <p class="mt-2 max-w-2xl text-sm leading-6 text-ivory/90 sm:text-base">{{ $category['blurb'] }}</p>
-                        @endif
+                    <div class="absolute inset-0 flex items-end bg-gradient-to-t from-charcoal/75 via-charcoal/10 to-transparent">
+                        <div class="container-luxe pb-6 text-ivory sm:pb-8">
+                            <h1 class="font-display text-3xl sm:text-5xl">{{ $category['name'] }}</h1>
+                            @if (! empty($category['blurb']))
+                                <p class="mt-2 max-w-2xl text-sm leading-6 text-ivory/90 sm:text-base">{{ $category['blurb'] }}</p>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         @else
             <div class="container-luxe py-8 text-center sm:py-10">
@@ -342,5 +342,18 @@
                 </div>
             </div>
         </div>
+
+        @if ($showBanner && $categoryHeroImage)
+            {{-- Banner artwork already contains its display copy; keep crawlable page content in a separate section. --}}
+            <section class="border-t border-line bg-ivory-soft" aria-labelledby="category-editorial-title">
+                <div class="container-luxe py-10 text-center sm:py-14">
+                    <span class="eyebrow">Discover the Edit</span>
+                    <h1 id="category-editorial-title" class="font-display mt-2 text-3xl text-charcoal sm:text-4xl">{{ $category['name'] }}</h1>
+                    @if (! empty($category['blurb']))
+                        <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted sm:text-base">{{ $category['blurb'] }}</p>
+                    @endif
+                </div>
+            </section>
+        @endif
     </div>
 </x-layouts.app>

@@ -314,11 +314,12 @@ class StorefrontCatalog
         return $product ? self::mapProduct($product) : null;
     }
 
-    public static function newArrivals(int $limit = 10): array
+    public static function newArrivals(int $limit = 10, bool $inStockOnly = false): array
     {
         return self::products(
             self::baseProductQuery()
                 ->where('is_new_arrival', true)
+                ->when($inStockOnly, fn (Builder $query) => $query->where('stock_quantity', '>', 0))
                 ->latest()
                 ->limit($limit)
         );

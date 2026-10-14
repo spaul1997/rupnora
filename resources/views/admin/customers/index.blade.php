@@ -33,7 +33,7 @@
                     <td>
                         <form method="POST" action="{{ route('admin.customers.toggle-active', $customer) }}">
                             @csrf @method('PATCH')
-                            <button type="submit"><x-admin.status-badge :status="$customer->is_active ? 'active' : 'inactive'" /></button>
+                            <button type="submit" class="cursor-pointer"><x-admin.status-badge :status="$customer->is_active ? 'active' : 'inactive'" /></button>
                         </form>
                     </td>
                     <td class="text-right">
