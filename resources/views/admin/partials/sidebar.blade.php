@@ -32,6 +32,15 @@
                 ['label' => 'Inventory', 'url' => route('admin.inventory.index')],
             ],
         ],
+        'discount-offers' => [
+            'label' => 'Discount & Offer',
+            'icon' => 'M12 3l2.1 2.1 3-.4.4 3L20 10l-2.5 2.3-.4 3-3-.4L12 17l-2.1-2.1-3 .4-.4-3L4 10l2.5-2.3.4-3 3 .4L12 3z M9 13l6-6 M9.5 8.5h.01 M14.5 11.5h.01',
+            'active' => request()->routeIs('admin.discount-offers.*'),
+            'items' => [
+                ['label' => 'Offer List', 'url' => route('admin.discount-offers.index'), 'active' => request()->routeIs('admin.discount-offers.index') || request()->routeIs('admin.discount-offers.edit')],
+                ['label' => 'Create Offer', 'url' => route('admin.discount-offers.create'), 'active' => request()->routeIs('admin.discount-offers.create')],
+            ],
+        ],
     ];
 
     $simple = [

@@ -1,13 +1,14 @@
 <?php
 
-use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\AffiliateProgramController;
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CareerApplicationController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DiscountOfferController;
 use App\Http\Controllers\Admin\EmailCampaignController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeedbackController;
@@ -50,6 +51,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('products/{product}/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
         Route::patch('products/{product}/images/{image}/primary', [ProductController::class, 'setPrimaryImage'])->name('products.images.primary');
         Route::get('products-export', [ProductController::class, 'export'])->name('products.export');
+
+        // Discounts & offers
+        Route::get('discount-offers', [DiscountOfferController::class, 'index'])->name('discount-offers.index');
+        Route::get('discount-offers/create', [DiscountOfferController::class, 'create'])->name('discount-offers.create');
+        Route::post('discount-offers', [DiscountOfferController::class, 'store'])->name('discount-offers.store');
+        Route::get('discount-offers/{discountOffer}/edit', [DiscountOfferController::class, 'edit'])->name('discount-offers.edit');
+        Route::put('discount-offers/{discountOffer}', [DiscountOfferController::class, 'update'])->name('discount-offers.update');
+        Route::patch('discount-offers/{discountOffer}/toggle-active', [DiscountOfferController::class, 'toggleActive'])->name('discount-offers.toggle-active');
+        Route::delete('discount-offers/{discountOffer}', [DiscountOfferController::class, 'destroy'])->name('discount-offers.destroy');
 
         // Categories
         Route::resource('categories', CategoryController::class)->except(['show']);

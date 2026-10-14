@@ -34,7 +34,9 @@ class ProductObserver
         $note = $product->priceChangeNote;
 
         if (! $note && $changedFields === ['final_price']) {
-            $note = 'Effective price changed automatically after an offer or discount period ended.';
+            $note = $changeType === 'decrease'
+                ? 'Effective price changed automatically when an offer or discount period started.'
+                : 'Effective price changed automatically after an offer or discount period ended.';
         }
 
         $this->record($product, $changeType, $previousFinalPrice, $changedFields, $note);
@@ -58,7 +60,9 @@ class ProductObserver
             'offer_expiry_date' => $product->offer_expiry_date,
             'discount_type' => $product->discount_type,
             'discount_value' => $product->discount_value,
+            'discount_start_date' => $product->discount_start_date,
             'discount_expiry_date' => $product->discount_expiry_date,
+            'discount_offer_id' => $product->discount_offer_id,
             'making_charge' => $product->making_charge ?? 0,
             'gst_percentage' => $product->gst_percentage ?? 0,
             'previous_final_price' => $previousFinalPrice,

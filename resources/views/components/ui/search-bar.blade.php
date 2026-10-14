@@ -88,7 +88,7 @@
                             </span>
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-sm text-charcoal" x-text="p.name"></span>
-                                <span class="block text-xs text-muted" x-text="'₹' + p.price.toLocaleString('en-IN')"></span>
+                                <span class="block text-xs text-muted" x-text="'₹' + Math.round(p.price).toLocaleString('en-IN')"></span>
                             </span>
                         </a>
                     </template>

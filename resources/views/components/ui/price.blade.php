@@ -18,9 +18,9 @@
 @endphp
 
 <div class="flex flex-wrap items-baseline {{ $gap }} {{ $align === 'center' ? 'justify-center' : '' }}">
-    <span class="font-semibold text-charcoal {{ $priceSize }}">₹{{ number_format($price) }}</span>
+    <span class="font-semibold text-charcoal {{ $priceSize }}">₹{{ number_format(round((float) $price)) }}</span>
     @if ($mrp && $mrp > $price)
-        <span class="{{ $secondarySize }} text-muted-light line-through">₹{{ number_format($mrp) }}</span>
+        <span class="{{ $secondarySize }} text-muted-light line-through">₹{{ number_format(round((float) $mrp)) }}</span>
         <span class="{{ $secondarySize }} font-semibold text-success">{{ $discount }}% OFF</span>
     @endif
 </div>

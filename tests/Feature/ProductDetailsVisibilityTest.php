@@ -80,4 +80,39 @@ class ProductDetailsVisibilityTest extends TestCase
             ->assertSee('Warranty')
             ->assertSee('12 months');
     }
+
+    public function test_purchase_history_is_private_admin_only_data(): void
+    {
+        $category = Category::create([
+            'name' => 'Private Purchase Category',
+            'slug' => 'private-purchase-category',
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'name' => 'Private Purchase Product',
+            'slug' => 'private-purchase-product',
+            'sku' => 'PRIVATE-PURCHASE-001',
+            'category_id' => $category->id,
+            'jewellery_type' => 'Earrings',
+            'metal_type' => 'Gold',
+            'mrp' => 2500,
+            'selling_price' => 2200,
+            'stock_quantity' => 6,
+            'is_active' => true,
+        ]);
+        $product->purchaseHistories()->create([
+            'purchase_date' => '2026-10-14',
+            'vendor' => 'Private Wholesale Vendor',
+            'price' => 731.29,
+        ]);
+
+        $this->get(route('product.show', $product->slug))
+            ->assertOk()
+            ->assertDontSee('Purchase History')
+            ->assertDontSee('Private Wholesale Vendor')
+            ->assertDontSee('731.29');
+
+        $this->assertArrayNotHasKey('purchase_histories', $product->load('purchaseHistories')->toArray());
+    }
 }

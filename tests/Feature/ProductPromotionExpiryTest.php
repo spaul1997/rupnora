@@ -47,6 +47,8 @@ class ProductPromotionExpiryTest extends TestCase
             'zero offer price' => [['offer_price' => 0], 0.0],
             'full discount' => [['discount_value' => 100], 0.0],
             'fixed discount greater than price' => [['discount_type' => 'fixed', 'discount_value' => 2000], 0.0],
+            'percentage discount truncates fractional rupees' => [['selling_price' => 125, 'offer_price' => 125, 'discount_value' => 10, 'gst_percentage' => 0], 113.0],
+            'GST is added after the whole-rupee discount' => [['selling_price' => 125, 'offer_price' => 125, 'discount_value' => 10, 'gst_percentage' => 3], 116.39],
             'making charge and GST' => [['making_charge' => 50, 'gst_percentage' => 3], 793.1],
             'expired offer with making charge and GST' => [['offer_expiry_date' => '2026-09-16', 'making_charge' => 50, 'gst_percentage' => 3], 978.5],
         ];
@@ -69,12 +71,12 @@ class ProductPromotionExpiryTest extends TestCase
         $this->travelTo(Carbon::parse('2026-09-17 12:00:00', 'UTC'));
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $data = $this->adminData();
-        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Offer Expiry Date')->assertDontSee('Discount Expiry Date');
+        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertDontSee('Offer Expiry Date')->assertDontSee('Discount Expiry Date');
         $this->post(route('admin.products.store'), $data)->assertSessionHasNoErrors();
         $product = Product::where('sku', $data['sku'])->firstOrFail();
         $this->assertSame('2026-09-17', $product->offer_expiry_date->toDateString());
         $this->assertSame('2026-09-18', $product->discount_expiry_date->toDateString());
-        $this->get(route('admin.products.edit', $product))->assertOk()->assertSee('value="2026-09-17"', escape: false)->assertDontSee('value="2026-09-18"', escape: false);
+        $this->get(route('admin.products.edit', $product))->assertOk()->assertDontSee('value="2026-09-17"', escape: false)->assertDontSee('value="2026-09-18"', escape: false);
 
         $data['offer_expiry_date'] = '2026-09-16';
         $data['discount_expiry_date'] = '2026-09-16';
@@ -185,6 +187,7 @@ class ProductPromotionExpiryTest extends TestCase
         return ['name' => 'Admin Promotion Product', 'sku' => 'ADMIN-PROMO-001', 'parent_category_id' => $parent->id, 'category_id' => $child->id,
             'jewellery_type' => $type->name, 'metal_type' => MetalType::active()->firstOrFail()->name, 'collection' => [$collection->slug],
             'mrp' => 1000, 'selling_price' => 1000, 'offer_price' => 800, 'offer_expiry_date' => '2026-09-17',
-            'discount_type' => 'percentage', 'discount_value' => 10, 'discount_expiry_date' => '2026-09-18', 'stock_quantity' => 10, 'is_active' => 1];
+            'discount_type' => 'percentage', 'discount_value' => 10, 'discount_expiry_date' => '2026-09-18', 'gst_percentage' => 0,
+            'stock_quantity' => 10, 'is_active' => 1];
     }
 }

@@ -5,6 +5,7 @@
     'method' => 'DELETE',
     'triggerLabel' => 'Delete',
     'triggerClass' => 'text-error hover:underline text-sm font-medium',
+    'confirmLabel' => 'Delete',
 ])
 
 <div x-data="{ open: false }" class="inline-block">
@@ -28,7 +29,7 @@
                     @if (strtoupper($method) !== 'POST')
                         @method($method)
                     @endif
-                    <button type="submit" class="admin-btn-danger">Delete</button>
+                    <button type="submit" class="admin-btn-danger">{{ $confirmLabel }}</button>
                 </form>
             </div>
         </div>

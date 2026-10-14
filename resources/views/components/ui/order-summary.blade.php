@@ -10,10 +10,12 @@
     'ctaUrl' => null,
     'dynamicDelivery' => false,
     'dynamicGiftWrap' => false,
+    'showDecimals' => false,
 ])
 
 @php
     $total = $subtotal - $discount - $couponDiscount + $shipping + $tax + ($dynamicGiftWrap ? 0 : $giftWrapCharge);
+    $precision = $showDecimals ? 2 : 0;
 @endphp
 
 <div class="card-luxe p-6">
@@ -29,23 +31,23 @@
     <div class="mt-5 space-y-3 border-t border-line pt-5 text-sm">
         <div class="flex justify-between text-muted">
             <span>Subtotal</span>
-            <span class="text-charcoal">₹{{ number_format($subtotal) }}</span>
+            <span class="text-charcoal">₹{{ number_format($subtotal, $precision) }}</span>
         </div>
         @if ($discount > 0)
             <div class="flex justify-between text-muted">
                 <span>Discount</span>
-                <span class="text-success">&minus;₹{{ number_format($discount) }}</span>
+                <span class="text-success">&minus;₹{{ number_format($discount, $precision) }}</span>
             </div>
         @endif
         @if ($couponDiscount > 0)
             <div class="flex justify-between text-muted">
                 <span>Coupon Applied</span>
-                <span class="text-success">&minus;₹{{ number_format($couponDiscount) }}</span>
+                <span class="text-success">&minus;₹{{ number_format($couponDiscount, $precision) }}</span>
             </div>
         @endif
         <div class="flex justify-between text-muted">
             <span>Shipping</span>
-            <span @if ($dynamicDelivery) x-text="shippingCost > 0 ? formatMoney(shippingCost) : 'Free'" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping) : 'Free' }}</span>
+            <span @if ($dynamicDelivery) x-text="shippingCost > 0 ? formatMoney(shippingCost) : 'Free'" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping, $precision) : 'Free' }}</span>
         </div>
         @if ($dynamicGiftWrap)
             <div x-show="giftWrap" x-cloak class="flex justify-between text-muted">
@@ -55,18 +57,18 @@
         @elseif ($giftWrapCharge > 0)
             <div class="flex justify-between text-muted">
                 <span>Gift Wrap</span>
-                <span class="text-charcoal">₹{{ number_format($giftWrapCharge) }}</span>
+                <span class="text-charcoal">₹{{ number_format($giftWrapCharge, $precision) }}</span>
             </div>
         @endif
         <div class="flex justify-between text-muted">
             <span>Tax (GST incl.)</span>
-            <span class="text-charcoal">₹{{ number_format($tax) }}</span>
+            <span class="text-charcoal">₹{{ number_format($tax, $precision) }}</span>
         </div>
     </div>
 
     <div class="mt-5 flex justify-between border-t border-line pt-5">
         <span class="font-display text-lg text-charcoal">Total</span>
-        <span @if ($dynamicDelivery || $dynamicGiftWrap) x-text="formatMoney(orderTotal)" @endif class="font-display text-lg text-charcoal">₹{{ number_format($total) }}</span>
+        <span @if ($dynamicDelivery || $dynamicGiftWrap) x-text="formatMoney(orderTotal)" @endif class="font-display text-lg text-charcoal">₹{{ number_format($total, $precision) }}</span>
     </div>
 
     @if ($ctaUrl)

@@ -50,6 +50,7 @@ class ProductController extends Controller
             ->when($request->filled('is_featured'), fn ($q) => $q->where('is_featured', $request->boolean('is_featured')))
             ->when($request->filled('is_new_arrival'), fn ($q) => $q->where('is_new_arrival', $request->boolean('is_new_arrival')))
             ->when($request->filled('is_best_seller'), fn ($q) => $q->where('is_best_seller', $request->boolean('is_best_seller')))
+            ->when($request->boolean('on_sale'), fn ($q) => $q->onSale())
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -100,6 +101,7 @@ class ProductController extends Controller
 
                 $this->syncImages($product, $request);
                 $this->syncVariants($product, $request->input('variants', []));
+                $this->syncPurchaseHistories($product, $request->input('purchase_histories', []));
 
                 return $product;
             });
@@ -128,7 +130,7 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
-        $product->load(['category.parent', 'images', 'variants']);
+        $product->load(['category.parent', 'images', 'variants', 'purchaseHistories']);
         $parentCategories = Category::parents()->orderBy('name')->get(['id', 'name']);
         $subcategories = Category::query()->whereNotNull('parent_id')->orderBy('name')->get(['id', 'name', 'parent_id']);
         $jewelleryTypes = JewelleryType::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug']);
@@ -166,6 +168,7 @@ class ProductController extends Controller
 
             $this->syncImages($product, $request);
             $this->syncVariants($product, $request->input('variants', []));
+            $this->syncPurchaseHistories($product, $request->input('purchase_histories', []));
         });
 
         return redirect()->route('admin.products.edit', $product)->with('success', 'Product updated successfully.');
@@ -329,9 +332,8 @@ class ProductController extends Controller
         $data['is_new_arrival'] = $request->boolean('is_new_arrival');
         $data['is_best_seller'] = $request->boolean('is_best_seller');
         $data['is_trending'] = $request->boolean('is_trending');
-        $data['is_on_sale'] = $request->boolean('is_on_sale');
         $data['minimum_stock'] = $this->defaultWhenBlank($data['minimum_stock'] ?? null, 5);
-        $data['gst_percentage'] = $this->defaultWhenBlank($data['gst_percentage'] ?? null, 0);
+        $data['gst_percentage'] = $this->defaultWhenBlank($data['gst_percentage'] ?? null, 3);
         $data['making_charge'] = $this->defaultWhenBlank($data['making_charge'] ?? null, 0);
 
         return $data;
@@ -434,6 +436,19 @@ class ProductController extends Controller
                 'offer_price' => $variant['offer_price'] ?? null,
                 'stock_quantity' => $variant['stock_quantity'] ?? 0,
                 'status' => 'active',
+            ]);
+        }
+    }
+
+    protected function syncPurchaseHistories(Product $product, array $histories): void
+    {
+        $product->purchaseHistories()->delete();
+
+        foreach ($histories as $history) {
+            $product->purchaseHistories()->create([
+                'purchase_date' => $history['purchase_date'],
+                'vendor' => trim($history['vendor']),
+                'price' => $history['price'],
             ]);
         }
     }

@@ -142,7 +142,7 @@ class ShoppingCart
         $discount = max(0, $mrpTotal - $sellingTotal);
         $coupon = self::couponPricing();
         $couponDiscount = (float) ($coupon['discount'] ?? 0);
-        $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03);
+        $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03, 2);
 
         return [
             'subtotal' => $mrpTotal,

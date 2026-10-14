@@ -312,7 +312,7 @@ window.cartPage = (initialItems = [], options = {}) => ({
     },
 
     get tax() {
-        return Math.round(this.sellingTotal * 0.03);
+        return Math.round(this.sellingTotal * 3) / 100;
     },
 
     get total() {
@@ -653,7 +653,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+            minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         }).format(amount);
     },

@@ -18,10 +18,28 @@ class GiftWrapCheckoutTest extends TestCase
         $this->get(route('checkout'))->assertOk()
             ->assertViewHas('giftWrapCharge', 50.0)
             ->assertViewHas('giftMessageLimit', 248)
-            ->assertSee('Add a gift wrap (+₹50)')
+            ->assertSee('Add a gift wrap (+₹50.00)')
             ->assertSee('x-model="giftMessage"', false)
             ->assertSee('x-text="formatMoney(giftWrapCost)"', false)
             ->assertSee('Romantic');
+    }
+
+    public function test_checkout_prices_always_show_two_decimal_places(): void
+    {
+        $product = $this->product();
+        $product->update(['selling_price' => 999.99]);
+
+        $this->postJson(route('cart.store'), [
+            'product_id' => $product->id,
+            'qty' => 1,
+        ])->assertOk();
+
+        $this->get(route('checkout'))->assertOk()
+            ->assertSee('₹999.99')
+            ->assertSee('₹1,200.00')
+            ->assertSee('₹200.01')
+            ->assertSee('₹30.00')
+            ->assertSee('₹1,029.99');
     }
 
     public function test_gift_wrap_details_and_server_calculated_charge_are_saved_with_the_order(): void

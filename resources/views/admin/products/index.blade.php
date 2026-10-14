@@ -65,7 +65,12 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <a href="{{ route('admin.products.show', $product) }}" class="block truncate font-medium text-gray-900 hover:text-champagne-dark" title="{{ $product->name }}">{{ $product->name }}</a>
-                                <span class="mt-1 block truncate text-xs text-gray-400" title="{{ $product->sku }}">{{ $product->sku }}</span>
+                                <div class="mt-1 flex min-w-0 items-center gap-2">
+                                    <span class="truncate text-xs text-gray-400" title="{{ $product->sku }}">{{ $product->sku }}</span>
+                                    @if ($product->discount_offer_id !== null && $product->hasActiveDiscount())
+                                        <span class="admin-badge shrink-0 bg-green-100 text-green-700">Sale</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -78,7 +83,17 @@
                         @endif
                     </td>
                     <td class="whitespace-nowrap">{{ $product->jewellery_type ?: '—' }}</td>
-                    <td class="font-medium text-gray-900">₹{{ number_format($product->selling_price) }}</td>
+                    @php($finalPrice = (float) $product->final_price)
+                    @php($originalPrice = $product->priceBeforeDiscount())
+                    <td class="whitespace-nowrap">
+                        <span class="block font-medium text-gray-900">₹{{ number_format($finalPrice, floor($finalPrice) === $finalPrice ? 0 : 2) }}</span>
+                        @if ($originalPrice > $finalPrice)
+                            <span class="mt-0.5 block text-xs text-gray-400">
+                                <span class="line-through">₹{{ number_format($originalPrice, floor($originalPrice) === $originalPrice ? 0 : 2) }}</span>
+                                <span class="ml-1 font-medium text-success">{{ round((($originalPrice - $finalPrice) / $originalPrice) * 100) }}% off</span>
+                            </span>
+                        @endif
+                    </td>
                     <td>
                         <span class="{{ $product->stock_status === 'out_of_stock' ? 'text-error' : ($product->stock_status === 'low_stock' ? 'text-amber-600' : 'text-gray-700') }}">{{ $product->stock_quantity }}</span>
                     </td>

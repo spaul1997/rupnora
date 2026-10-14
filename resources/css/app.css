@@ -190,6 +190,39 @@
         @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-wider;
     }
 
+    /* SALE badge: flowing violet→coral gradient, a periodic light sweep and a pulsing ring.
+       `isolation` lets the z-index:-1 sweep paint over the background but under the text. */
+    .badge-sale {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        background-image: linear-gradient(110deg, var(--color-champagne-dark), var(--color-champagne) 35%, var(--color-error) 65%, var(--color-champagne-dark));
+        background-size: 250% 100%;
+        animation: sale-gradient 3.2s ease-in-out infinite alternate, sale-pulse 2s ease-out infinite;
+    }
+    .badge-sale::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: linear-gradient(105deg, transparent 25%, rgb(255 255 255 / 0.7) 50%, transparent 75%);
+        transform: translateX(-130%);
+        animation: sale-shine 2.6s ease-in-out infinite;
+        pointer-events: none;
+    }
+    @keyframes sale-gradient {
+        from { background-position: 0% 50%; }
+        to { background-position: 100% 50%; }
+    }
+    @keyframes sale-shine {
+        0%, 35% { transform: translateX(-130%); }
+        75%, 100% { transform: translateX(130%); }
+    }
+    @keyframes sale-pulse {
+        0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-error) 60%, transparent); }
+        70%, 100% { box-shadow: 0 0 0 5px transparent; }
+    }
+
     .section-pad {
         @apply py-16 sm:py-20 lg:py-24;
     }

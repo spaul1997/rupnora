@@ -10,6 +10,45 @@
     $selectedJewelleryType = old('jewellery_type', $product->jewellery_type ?? '');
     $selectedCollections = \App\Models\Product::normalizeCollectionSlugs(old('collection', isset($product) ? $product->collectionSlugs() : []));
     $skuSegments = isset($product) ? $product->skuSegments() : null;
+    $initialGstPercentage = old('gst_percentage', $product->gst_percentage ?? 3);
+    $initialSellingPrice = old('selling_price', $product->selling_price ?? null);
+    $initialGstAmount = $initialSellingPrice !== null && $initialSellingPrice !== ''
+        ? round((float) $initialSellingPrice * ((float) $initialGstPercentage / 100), 2)
+        : null;
+    $initialProductPriceWithGst = $initialSellingPrice !== null && $initialSellingPrice !== ''
+        ? round((float) $initialSellingPrice + (float) $initialGstAmount, 2)
+        : null;
+    $initialSellingPriceDisplay = $initialSellingPrice;
+
+    if ($initialSellingPrice !== null && $initialSellingPrice !== '') {
+        $roundedInitialSellingPrice = round((float) $initialSellingPrice, 2);
+        $initialSellingPriceDisplay = floor($roundedInitialSellingPrice) === $roundedInitialSellingPrice
+            ? (string) (int) $roundedInitialSellingPrice
+            : number_format($roundedInitialSellingPrice, 2, '.', '');
+    }
+
+    $initialGstAmountDisplay = $initialGstAmount === null
+        ? null
+        : number_format((float) $initialGstAmount, 2, '.', '');
+    $initialProductPriceWithGstDisplay = $initialProductPriceWithGst;
+
+    if ($initialProductPriceWithGst !== null) {
+        $initialProductPriceWithGstDisplay = floor($initialProductPriceWithGst) === $initialProductPriceWithGst
+            ? (string) (int) $initialProductPriceWithGst
+            : number_format($initialProductPriceWithGst, 2, '.', '');
+    }
+
+    $purchaseHistories = old('purchase_histories');
+
+    if ($purchaseHistories === null) {
+        $purchaseHistories = isset($product)
+            ? $product->purchaseHistories->map(fn ($history) => [
+                'purchase_date' => $history->purchase_date->format('Y-m-d'),
+                'vendor' => $history->vendor,
+                'price' => $history->price,
+            ])->values()->all()
+            : [];
+    }
 @endphp
 
 <div
@@ -24,7 +63,39 @@
         hasDiamond: {{ old('has_diamond', $product->has_diamond ?? false) ? 'true' : 'false' }},
         hasGemstone: {{ old('has_gemstone', $product->has_gemstone ?? false) ? 'true' : 'false' }},
         hasWarranty: {{ old('has_warranty', $product->has_warranty ?? false) ? 'true' : 'false' }},
+        sellingPrice: {{ Illuminate\Support\Js::from($initialSellingPrice) }},
+        gstPercentage: {{ Illuminate\Support\Js::from($initialGstPercentage) }},
+        purchaseHistories: {{ Illuminate\Support\Js::from(array_values($purchaseHistories)) }},
         variants: {{ Illuminate\Support\Js::from(isset($product) ? $product->variants->map(fn($v) => ['size' => $v->size, 'metal' => $v->metal, 'purity' => $v->purity, 'colour' => $v->colour, 'price' => $v->price, 'offer_price' => $v->offer_price, 'stock_quantity' => $v->stock_quantity])->values() : []) }},
+        gstAmount() {
+            const sellingPrice = Number(this.sellingPrice);
+            const gstPercentage = Number(this.gstPercentage);
+
+            if (this.sellingPrice === '' || this.sellingPrice === null || !Number.isFinite(sellingPrice) || !Number.isFinite(gstPercentage) || gstPercentage < 0 || gstPercentage > 100) {
+                return '';
+            }
+
+            return (sellingPrice * (gstPercentage / 100)).toFixed(2);
+        },
+        productPriceWithGst() {
+            const sellingPrice = Number(this.sellingPrice);
+            const gstAmountValue = this.gstAmount();
+            const gstAmount = Number(gstAmountValue);
+
+            if (gstAmountValue === '' || !Number.isFinite(sellingPrice) || !Number.isFinite(gstAmount)) {
+                return '';
+            }
+
+            const productPriceWithGst = Number((sellingPrice + gstAmount).toFixed(2));
+
+            return Number.isInteger(productPriceWithGst) ? productPriceWithGst.toFixed(0) : productPriceWithGst.toFixed(2);
+        },
+        addPurchaseHistory() {
+            this.purchaseHistories.push({ purchase_date: '', vendor: '', price: '' });
+        },
+        removePurchaseHistory(i) {
+            this.purchaseHistories.splice(i, 1);
+        },
         filteredSubcategories() {
             return this.allSubcategories.filter((category) => category.parent_id === this.selectedParentCategory);
         },
@@ -278,29 +349,55 @@
         {{-- Pricing --}}
         <div id="pricing" class="admin-card space-y-3 p-4 [&_.admin-input]:!py-2 [&_.admin-label]:!mb-1 [&_.admin-select]:!py-2">
             <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
-                    <p class="text-xs text-gray-500">Offer expiry uses {{ config('app.timezone') }}. Leave blank for no expiry.</p>
-                </div>
+                <h3 class="text-sm font-semibold text-gray-900">Pricing</h3>
                 @if (isset($product))
                     <p class="rounded-lg bg-ivory-soft px-3 py-1.5 text-xs text-gray-600">Final Price: <span class="font-semibold text-gray-900">₹{{ number_format($product->final_price, 2) }}</span></p>
                 @endif
             </div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <x-admin.form.input label="MRP (₹)" name="mrp" type="number" step="0.01" required :value="$product->mrp ?? null" />
-                <x-admin.form.input label="Selling Price (₹)" name="selling_price" type="number" step="0.01" required :value="$product->selling_price ?? null" />
-                <x-admin.form.input label="Offer Price (₹)" name="offer_price" type="number" step="0.01" :value="$product->offer_price ?? null" />
-                <div>
-                    <x-admin.form.input label="Offer Expiry Date" name="offer_expiry_date" type="date" :value="isset($product) ? $product->offer_expiry_date?->format('Y-m-d') : null" />
-                    @if (isset($product) && $product->offer_price !== null && $product->offerHasExpired())
-                        <p class="mt-1 text-xs text-error">Offer expired; selling price applies.</p>
-                    @endif
-                </div>
-                <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" step="0.01" :value="$product->gst_percentage ?? 0" />
+                <x-admin.form.input label="Selling Price (₹)" name="selling_price" type="number" min="0" step="0.01" required :value="$initialSellingPriceDisplay" x-model="sellingPrice" />
+                <x-admin.form.input label="GST Percentage (%)" name="gst_percentage" type="number" min="0" max="100" step="0.01" :value="$initialGstPercentage" required x-model="gstPercentage" />
+                <x-admin.form.input label="GST Amount (₹)" name="gst_amount" type="number" step="0.01" :value="$initialGstAmountDisplay" readonly x-bind:value="gstAmount()" class="cursor-not-allowed bg-gray-50 text-gray-500" />
+                <x-admin.form.input label="Product Price (with GST) (₹)" name="product_price_with_gst" type="number" step="0.01" :value="$initialProductPriceWithGstDisplay" readonly x-bind:value="productPriceWithGst()" class="cursor-not-allowed bg-gray-50 text-gray-500" />
             </div>
             @if (isset($product))
                 <x-admin.form.input label="Price Change Note (optional)" name="price_change_note" :value="old('price_change_note')" maxlength="500" placeholder="e.g. Gold rate revision or seasonal promotion" help="Saved with the price history when any pricing value changes." />
             @endif
+
+            <div class="border-t border-gray-200 pt-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-900">Purchase History</h4>
+                        <p class="mt-0.5 text-xs text-gray-400">Record each vendor purchase date and price.</p>
+                    </div>
+                    <button type="button" @click="addPurchaseHistory()" class="admin-btn-secondary !px-3 !py-1.5 text-xs">+ Add Purchase</button>
+                </div>
+
+                <div class="mt-3 space-y-3">
+                    <template x-for="(history, i) in purchaseHistories" :key="i">
+                        <div class="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-[1fr_1.5fr_1fr_auto]">
+                            <div>
+                                <label :for="`purchase_histories_${i}_purchase_date`" class="admin-label">Date <span class="text-error">*</span></label>
+                                <input type="date" :id="`purchase_histories_${i}_purchase_date`" :name="`purchase_histories[${i}][purchase_date]`" x-model="history.purchase_date" required class="admin-input">
+                            </div>
+                            <div>
+                                <label :for="`purchase_histories_${i}_vendor`" class="admin-label">Vendor <span class="text-error">*</span></label>
+                                <input type="text" :id="`purchase_histories_${i}_vendor`" :name="`purchase_histories[${i}][vendor]`" x-model="history.vendor" required maxlength="255" placeholder="Vendor name" class="admin-input">
+                            </div>
+                            <div>
+                                <label :for="`purchase_histories_${i}_price`" class="admin-label">Price (₹) <span class="text-error">*</span></label>
+                                <input type="number" :id="`purchase_histories_${i}_price`" :name="`purchase_histories[${i}][price]`" x-model="history.price" required min="0" step="0.01" placeholder="0.00" class="admin-input">
+                            </div>
+                            <button type="button" @click="removePurchaseHistory(i)" class="mt-5 flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-error transition-colors hover:bg-error/5" aria-label="Remove purchase history" title="Remove">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" /></svg>
+                            </button>
+                        </div>
+                    </template>
+
+                    <p x-show="purchaseHistories.length === 0" class="rounded-lg border border-dashed border-gray-200 px-4 py-3 text-center text-xs text-gray-400">No purchase history added.</p>
+                </div>
+            </div>
         </div>
 
         {{-- Variants --}}
@@ -424,7 +521,6 @@
                 ['name' => 'is_new_arrival', 'label' => 'New Arrival', 'default' => true],
                 ['name' => 'is_best_seller', 'label' => 'Best Seller'],
                 ['name' => 'is_trending', 'label' => 'Trending'],
-                ['name' => 'is_on_sale', 'label' => 'On Sale'],
             ] as $flag)
                 <label class="flex items-center gap-2.5 text-sm text-gray-700">
                     @if ($flag['name'] === 'is_new_arrival')

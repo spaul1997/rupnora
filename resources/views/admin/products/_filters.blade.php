@@ -57,11 +57,15 @@
         <input type="checkbox" name="is_best_seller" value="1" @checked(request('is_best_seller')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
         Best Seller
     </label>
+    <label class="flex items-center gap-1.5 whitespace-nowrap text-sm text-gray-600">
+        <input type="checkbox" name="on_sale" value="1" @checked(request('on_sale')) class="h-4 w-4 rounded border-gray-300 text-champagne-dark">
+        On Sale
+    </label>
 </div>
 
 <div class="flex items-center gap-2">
     <button type="submit" class="admin-btn-secondary">Apply</button>
-    @if (request()->hasAny(['search', 'category_id', 'metal_type', 'stock_status', 'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller']))
+    @if (request()->hasAny(['search', 'category_id', 'metal_type', 'stock_status', 'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller', 'on_sale']))
         <a href="{{ route('admin.products.index') }}" class="admin-btn-ghost">Clear</a>
     @endif
 </div>

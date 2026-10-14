@@ -70,10 +70,10 @@
             </div>
         </a>
 
-        <div class="absolute left-1.5 top-1.5 flex flex-col items-start gap-0.5">
+        <div class="absolute left-1.5 right-12 top-1.5 flex flex-wrap items-center gap-0.5">
             @foreach ($product['badges'] ?? [] as $badge)
                 <x-ui.badge
-                    class="!h-4 !gap-0 !rounded-md !px-1.5 !py-0 !text-[7.5px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20"
+                    class="!h-4 !gap-0 !rounded-md !px-1.5 !py-0 !text-[7.5px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20 {{ $badge === 'Sale' ? 'badge-sale' : '' }}"
                     :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')"
                 >{{ $badge }}</x-ui.badge>
             @endforeach
@@ -186,10 +186,10 @@
                             @endforelse
 
                             @if (! empty($product['badges']))
-                                <div class="absolute left-2.5 top-2.5 flex flex-col items-start gap-1 md:left-3 md:top-3">
+                                <div class="absolute left-2.5 right-12 top-2.5 flex flex-wrap items-center gap-1 md:left-3 md:right-3 md:top-3">
                                     @foreach ($product['badges'] as $badge)
                                         <x-ui.badge
-                                            class="!h-5 !gap-0 !rounded-md !px-2 !py-0 !text-[9px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20"
+                                            class="!h-5 !gap-0 !rounded-md !px-2 !py-0 !text-[9px] !leading-none !tracking-[0.06em] shadow-sm ring-1 ring-white/20 {{ $badge === 'Sale' ? 'badge-sale' : '' }}"
                                             :tone="$badge === 'Limited' ? 'limited' : ($badge === 'New' ? 'charcoal' : 'champagne')"
                                         >{{ $badge }}</x-ui.badge>
                                     @endforeach

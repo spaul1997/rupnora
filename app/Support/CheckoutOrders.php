@@ -163,7 +163,7 @@ class CheckoutOrders
             }
             $coupon = $couponPricing['coupon'] ?? null;
             $couponDiscount = (float) ($couponPricing['discount'] ?? 0);
-            $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03);
+            $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03, 2);
             $attribution = app(AffiliateAttributionService::class)->resolve($customer, $coupon);
 
             $order = $customer->orders()->create([

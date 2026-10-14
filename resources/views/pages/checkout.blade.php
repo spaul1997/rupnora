@@ -157,7 +157,7 @@
                     <div class="mt-6 rounded-2xl border border-line bg-paper p-4 sm:p-5">
                         <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-charcoal">
                             <input type="checkbox" x-model="giftWrap" class="h-5 w-5 rounded border-line accent-champagne-dark focus:ring-champagne-dark/30">
-                            <span>Add a gift wrap (+{{ '₹'.number_format($giftWrapCharge, $giftWrapCharge == floor($giftWrapCharge) ? 0 : 2) }})</span>
+                            <span>Add a gift wrap (+{{ '₹'.number_format($giftWrapCharge, 2) }})</span>
                         </label>
 
                         <div x-show="giftWrap" x-collapse x-cloak class="pt-5">
@@ -225,7 +225,7 @@
                     <div class="mt-5 space-y-3">
                         @foreach ([
                             ['key' => 'online', 'label' => 'Online Payment', 'desc' => 'Pay online.'],
-                            ['key' => 'cod', 'label' => 'Cash on Delivery', 'desc' => $codOrderLimit > 0 ? 'Available on orders below ₹'.number_format($codOrderLimit, $codOrderLimit == floor($codOrderLimit) ? 0 : 2) : 'Cash on Delivery is currently unavailable.'],
+                            ['key' => 'cod', 'label' => 'Cash on Delivery', 'desc' => $codOrderLimit > 0 ? 'Available on orders below ₹'.number_format($codOrderLimit, 2) : 'Cash on Delivery is currently unavailable.'],
                         ] as $method)
                             <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors" :class="payment === '{{ $method['key'] }}' ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line'">
                                 <input type="radio" x-model="payment" value="{{ $method['key'] }}" @if ($method['key'] === 'cod') :disabled="!codAvailable" @endif class="mt-1 h-4 w-4 text-champagne-dark focus:ring-champagne-dark/40">
@@ -285,7 +285,7 @@
                                             <x-ui.product-art :art="$product['art']" class="h-14 w-14 flex-shrink-0 rounded-lg" />
                                         @endif
                                         <span class="min-w-0 flex-1 truncate text-sm text-charcoal">{{ $product['name'] }} &times; {{ $item['qty'] }}</span>
-                                        <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($product['price'] * $item['qty']) }}</span>
+                                        <span class="flex-shrink-0 text-sm font-medium text-charcoal">₹{{ number_format($product['price'] * $item['qty'], 2) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -304,7 +304,7 @@
 
             <div>
                 <div class="lg:sticky lg:top-28">
-                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :couponDiscount="$couponDiscount" :shipping="0" :tax="$tax" :giftWrapCharge="$giftWrapCharge" :showCoupon="false" :dynamicDelivery="true" :dynamicGiftWrap="true" ctaLabel="" />
+                    <x-ui.order-summary :subtotal="$subtotal" :discount="$discount" :couponDiscount="$couponDiscount" :shipping="0" :tax="$tax" :giftWrapCharge="$giftWrapCharge" :showCoupon="false" :dynamicDelivery="true" :dynamicGiftWrap="true" :showDecimals="true" ctaLabel="" />
                 </div>
             </div>
         </div>

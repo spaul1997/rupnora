@@ -575,6 +575,10 @@ class StorefrontCatalog
         $primaryImageUrl = $primaryImage ? self::storageUrl($primaryImage->image_path) : null;
         $badges = [];
 
+        if ($product->discount_offer_id !== null && $product->hasActiveDiscount()) {
+            $badges[] = 'Sale';
+        }
+
         if ($product->is_new_arrival) {
             $badges[] = 'New';
         }

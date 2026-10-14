@@ -108,6 +108,11 @@ class UpdateProductRequest extends FormRequest
             'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'price_change_note' => ['nullable', 'string', 'max:500'],
 
+            'purchase_histories' => ['nullable', 'array'],
+            'purchase_histories.*.purchase_date' => ['required', 'date_format:Y-m-d'],
+            'purchase_histories.*.vendor' => ['required', 'string', 'max:255'],
+            'purchase_histories.*.price' => ['required', 'numeric', 'min:0'],
+
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'minimum_stock' => ['nullable', 'integer', 'min:0'],
 
@@ -116,7 +121,6 @@ class UpdateProductRequest extends FormRequest
             'is_new_arrival' => ['boolean'],
             'is_best_seller' => ['boolean'],
             'is_trending' => ['boolean'],
-            'is_on_sale' => ['boolean'],
 
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],

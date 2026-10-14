@@ -14,7 +14,9 @@ class ProductPriceHistory extends Model
         'offer_expiry_date',
         'discount_type',
         'discount_value',
+        'discount_start_date',
         'discount_expiry_date',
+        'discount_offer_id',
         'making_charge',
         'gst_percentage',
         'final_price',
@@ -23,7 +25,7 @@ class ProductPriceHistory extends Model
     protected $fillable = [
         'product_id', 'changed_by', 'source', 'change_type', 'changed_fields', 'note',
         'mrp', 'selling_price', 'offer_price', 'offer_expiry_date',
-        'discount_type', 'discount_value', 'discount_expiry_date',
+        'discount_type', 'discount_value', 'discount_start_date', 'discount_expiry_date', 'discount_offer_id',
         'making_charge', 'gst_percentage', 'previous_final_price', 'final_price', 'recorded_at',
     ];
 
@@ -36,6 +38,7 @@ class ProductPriceHistory extends Model
             'offer_price' => 'decimal:2',
             'offer_expiry_date' => 'date',
             'discount_value' => 'decimal:2',
+            'discount_start_date' => 'date',
             'discount_expiry_date' => 'date',
             'making_charge' => 'decimal:2',
             'gst_percentage' => 'decimal:2',
