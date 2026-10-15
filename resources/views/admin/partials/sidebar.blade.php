@@ -10,7 +10,6 @@
             'active' => request()->routeIs('admin.orders.*'),
             'items' => [
                 ['label' => 'All Orders', 'url' => route('admin.orders.index')],
-                ['label' => 'Pending Orders', 'url' => route('admin.orders.index', ['status' => 'pending'])],
                 ['label' => 'Processing', 'url' => route('admin.orders.index', ['status' => 'processing'])],
                 ['label' => 'Shipped', 'url' => route('admin.orders.index', ['status' => 'shipped'])],
                 ['label' => 'Delivered', 'url' => route('admin.orders.index', ['status' => 'delivered'])],

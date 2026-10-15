@@ -322,19 +322,19 @@
                     </div>
                 @endif
 
-                <div class="mt-6 flex flex-col gap-3 lg:flex-row lg:items-end">
-                    <div class="lg:w-36 lg:flex-shrink-0">
+                <div class="mt-6 flex items-end gap-3">
+                    <div class="flex-shrink-0 lg:w-36">
                         <p class="label-luxe">Quantity</p>
                         <x-ui.quantity-selector model="qty" :max="$purchaseMaxQty" :disabled-when="$isInStock ? null : 'true'" after-change="pinStatus = null; pinMessage = ''; deliveryResult = null" />
                     </div>
 
                     {{-- Delivery check --}}
-                    <div class="rounded-xl border border-line px-4 py-3 lg:flex-1">
+                    <div class="min-w-0 flex-1 rounded-xl border border-line px-3 py-3 sm:px-4">
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <p class="shrink-0 text-sm font-medium text-charcoal">Delivery Availability</p>
                             <div class="flex min-w-0 flex-1 items-center gap-2">
                                 <input type="text" x-model="pin" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="Enter PIN code" class="input-luxe min-w-0 flex-1 !py-2 text-sm" @input="pin = pin.replace(/[^0-9]/g, '').slice(0, 6); pinStatus = null; pinMessage = ''; deliveryResult = null" @keydown.enter.prevent="checkPin()">
-                                <button type="button" @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px] disabled:cursor-wait disabled:opacity-60" :disabled="pinLoading">
+                                <button type="button" @click="checkPin()" class="btn-secondary flex-shrink-0 !px-3 !py-2 text-[11px] sm:!px-5 disabled:cursor-wait disabled:opacity-60" :disabled="pinLoading">
                                     <span x-show="!pinLoading">Check</span>
                                     <span x-show="pinLoading" x-cloak>...</span>
                                 </button>
