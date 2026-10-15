@@ -16,14 +16,14 @@ class DatabaseSeeder extends Seeder
         $users = [
             [
                 'name' => 'Admin',
-                'email' => 'admin@aurellejewellery.com',
+                'email' => 'admin@rupnora.in',
                 'phone' => '+91 90000 00001',
                 'role' => 'admin',
                 'password' => 'password',
             ],
             [
                 'name' => 'Demo Customer',
-                'email' => 'customer@aurellejewellery.com',
+                'email' => 'customer@rupnora.in',
                 'phone' => '+91 90000 00002',
                 'role' => 'customer',
                 'password' => 'password',

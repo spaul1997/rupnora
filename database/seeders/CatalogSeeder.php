@@ -57,7 +57,7 @@ class CatalogSeeder extends Seeder
                 'sku' => $sku,
                 'barcode' => (string) random_int(1000000000000, 9999999999999),
                 'category_id' => $category->id,
-                'brand' => 'Aurelle',
+                'brand' => 'Rupnora',
                 'short_description' => "A beautifully crafted {$data['type']} finished in {$data['metal']}.",
                 'description' => "The {$data['name']} is hand-finished by our master artisans, combining timeless design with certified quality craftsmanship. Perfect for gifting or everyday elegance.",
                 'jewellery_type' => $data['type'],
@@ -92,7 +92,7 @@ class CatalogSeeder extends Seeder
                 'is_trending' => $i % 5 === 0,
                 'is_on_sale' => $data['mrp'] > $data['price'],
                 'meta_title' => $data['name'],
-                'meta_description' => "Shop the {$data['name']} — certified {$data['metal']} jewellery from Aurelle.",
+                'meta_description' => "Shop the {$data['name']} — certified {$data['metal']} jewellery from Rupnora.",
             ]);
 
             if ($data['sizes']) {
@@ -253,7 +253,7 @@ class CatalogSeeder extends Seeder
                 'phone' => $customer->phone,
                 'type' => $feedbackTypes[array_rand($feedbackTypes)],
                 'subject' => 'Feedback regarding recent experience',
-                'message' => 'I wanted to share some thoughts about my recent shopping experience with Aurelle.',
+                'message' => 'I wanted to share some thoughts about my recent shopping experience with Rupnora.',
                 'status' => ['new', 'in_progress', 'resolved', 'closed'][array_rand(['new', 'in_progress', 'resolved', 'closed'])],
                 'created_at' => now()->subDays(random_int(1, 40)),
             ]);

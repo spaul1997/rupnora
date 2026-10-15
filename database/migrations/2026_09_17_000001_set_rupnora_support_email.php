@@ -21,7 +21,7 @@ return new class extends Migration
         DB::table('website_settings')
             ->where('id', 1)
             ->update([
-                'support_email' => 'care@aurellejewellery.com',
+                'support_email' => 'support@rupnora.in',
                 'updated_at' => now(),
             ]);
     }

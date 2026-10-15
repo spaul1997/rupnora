@@ -209,7 +209,7 @@
                         <x-admin.form.input label="SKU Code (Optional)" name="sku" :value="null" placeholder="e.g. TF" help="Auto-generated as RA-{first 3 category letters}-{code}-01. Without a code: RA-EAR-01." />
                     @endif
                     <x-admin.form.input label="Barcode" name="barcode" :value="$product->barcode ?? null" />
-                    <x-admin.form.input label="Brand" name="brand" :value="$product->brand ?? 'Aurelle'" />
+                    <x-admin.form.input label="Brand" name="brand" :value="$product->brand ?? 'Rupnora'" />
                 </div>
             </div>
             <x-admin.form.textarea label="Short Description" name="short_description" :value="$product->short_description ?? null" :rows="2" />

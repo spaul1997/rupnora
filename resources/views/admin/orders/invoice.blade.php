@@ -18,7 +18,7 @@
     <div class="mx-auto max-w-3xl">
         <div class="flex items-start justify-between border-b border-gray-200 pb-6">
             <div>
-                <span class="font-display text-2xl">Aurelle</span>
+                <span class="font-display text-2xl">Rupnora</span>
                 <p class="mt-1 text-xs text-gray-500">Certified Fine Jewellery</p>
             </div>
             <div class="text-right">
@@ -80,7 +80,7 @@
             </div>
         </div>
 
-        <p class="mt-10 text-center text-xs text-gray-400">Thank you for shopping with Aurelle Jewellery. For queries, contact care@aurellejewellery.com</p>
+        <p class="mt-10 text-center text-xs text-gray-400">Thank you for shopping with Rupnora Jewellery. For queries, contact support@rupnora.in</p>
     </div>
 </body>
 </html>
