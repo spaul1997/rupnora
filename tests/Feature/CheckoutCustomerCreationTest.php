@@ -20,6 +20,21 @@ class CheckoutCustomerCreationTest extends TestCase
 {
     use DatabaseMigrations;
 
+    public function test_order_numbers_use_a_four_digit_yearly_serial_starting_at_1000(): void
+    {
+        Mail::fake();
+        $product = $this->product();
+        $addressId = $this->prepareCheckout($product);
+
+        $firstOrderNumber = $this->placeOrder($addressId)->assertOk()->json('orderId');
+        $this->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 1])->assertOk();
+        $secondOrderNumber = $this->placeOrder($addressId)->assertOk()->json('orderId');
+
+        $prefix = 'RN-'.now()->format('Y').'-';
+        $this->assertSame($prefix.'1000', $firstOrderNumber);
+        $this->assertSame($prefix.'1001', $secondOrderNumber);
+    }
+
     public function test_guest_checkout_creates_a_customer_with_a_hashed_mobile_password_and_persistent_order(): void
     {
         Mail::fake();

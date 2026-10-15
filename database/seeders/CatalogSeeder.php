@@ -159,7 +159,7 @@ class CatalogSeeder extends Seeder
             $paymentStatus = $status === 'cancelled' ? 'refunded' : ($status === 'pending' ? 'pending' : 'paid');
 
             $order = Order::create([
-                'order_number' => 'ORD-'.now()->format('Y').'-'.str_pad((string) (10000 + $n), 5, '0', STR_PAD_LEFT),
+                'order_number' => 'RN-'.now()->format('Y').'-'.str_pad((string) (999 + $n), 4, '0', STR_PAD_LEFT),
                 'user_id' => $customer->id,
                 'customer_name' => $customer->name,
                 'customer_email' => $customer->email,

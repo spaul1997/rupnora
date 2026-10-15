@@ -167,7 +167,7 @@ class CheckoutOrders
             $attribution = app(AffiliateAttributionService::class)->resolve($customer, $coupon);
 
             $order = $customer->orders()->create([
-                'order_number' => 'ORD-'.now()->format('Y').'-'.Str::upper(Str::random(12)),
+                'order_number' => self::nextOrderNumber(),
                 'customer_name' => $guestCheckout ? $address['name'] : $customer->name,
                 'customer_email' => $guestCheckout ? mb_strtolower(trim($address['email'])) : $customer->email,
                 'customer_phone' => $guestCheckout ? $address['phone'] : $customer->phone,
@@ -320,6 +320,26 @@ class CheckoutOrders
             'online' => 'Online Payment',
             'cod' => 'Cash on Delivery',
         ][$payment] ?? 'Online Payment';
+    }
+
+    private static function nextOrderNumber(): string
+    {
+        $prefix = 'RN-'.now()->format('Y').'-';
+        $latestSerial = Order::query()
+            ->where('order_number', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->pluck('order_number')
+            ->map(function (string $orderNumber) use ($prefix): ?int {
+                return preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $orderNumber, $matches)
+                    ? (int) $matches[1]
+                    : null;
+            })
+            ->filter(fn (?int $serial): bool => $serial !== null)
+            ->max();
+
+        $nextSerial = max(1000, ($latestSerial ?? 999) + 1);
+
+        return $prefix.str_pad((string) $nextSerial, 4, '0', STR_PAD_LEFT);
     }
 
     private static function nullableTrimmed(mixed $value): ?string
