@@ -294,6 +294,7 @@ window.cartPage = (initialItems = [], options = {}) => ({
     couponBusy: false,
     couponApplyUrl: options.couponApplyUrl || '',
     couponRemoveUrl: options.couponRemoveUrl || '',
+    tax: Number(options.tax) || 0,
 
     get hasItems() {
         return this.items.some((item) => !item.removed);
@@ -311,12 +312,8 @@ window.cartPage = (initialItems = [], options = {}) => ({
         return Math.max(0, this.mrpTotal - this.sellingTotal);
     },
 
-    get tax() {
-        return Math.round(this.sellingTotal * 3) / 100;
-    },
-
     get total() {
-        return this.sellingTotal - this.couponDiscount + this.tax;
+        return this.sellingTotal - this.couponDiscount;
     },
 
     init() {
@@ -459,6 +456,7 @@ window.cartPage = (initialItems = [], options = {}) => ({
         this.couponCode = summary.coupon_code || '';
         this.couponInput = this.couponCode;
         this.couponDiscount = Number(summary.coupon_discount) || 0;
+        this.tax = Number(summary.tax) || 0;
     },
 
     async request(url, method, payload = null, index = null) {
@@ -569,7 +567,7 @@ const blankCheckoutAddress = () => ({
     email: '',
     phone: '',
     line1: '',
-    district: '',
+    line2: '',
     landmark: '',
     city: '',
     state: '',
@@ -577,14 +575,16 @@ const blankCheckoutAddress = () => ({
     country: 'India',
 });
 
-window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, codOrderLimit = 0, baseTotal = 0, giftWrapCharge = 0, giftMessageLimit = 248, giftMessageTemplates = {} } = {}) => ({
+window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, shippingQuoteUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, freeShippingThreshold = 0, codOrderLimit = 0, baseTotal = 0, giftWrapCharge = 0, giftMessageLimit = 248, giftMessageTemplates = {} } = {}) => ({
     step: 1,
     selectedAddress: selectedAddressId ?? addresses[0]?.id ?? null,
     addresses: addresses.map((address) => ({ ...address })),
     addAddressUrl,
     updateAddressUrl,
+    shippingQuoteUrl,
     placeOrderUrl,
     expressDeliveryCharge: Math.max(0, Number(expressDeliveryCharge) || 0),
+    freeShippingThreshold: Math.max(0, Number(freeShippingThreshold) || 0),
     codOrderLimit: Math.max(0, Number(codOrderLimit) || 0),
     baseTotal: Number(baseTotal) || 0,
     giftWrapCharge: Math.max(0, Number(giftWrapCharge) || 0),
@@ -600,6 +600,10 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     addingAddress: false,
     editingAddressId: null,
     savingAddress: false,
+    shippingLoading: false,
+    shippingError: '',
+    shippingQuote: null,
+    shippingRequestId: 0,
     placingOrder: false,
     addressError: '',
     orderError: '',
@@ -609,8 +613,22 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         return this.addresses.find((address) => address.id === this.selectedAddress) || null;
     },
 
+    init() {
+        this.$watch('payment', () => {
+            if (this.shippingQuote || this.step >= 2) {
+                this.refreshShippingQuote();
+            }
+        });
+    },
+
+    get baseShippingCost() {
+        return Math.max(0, Number(this.shippingQuote?.shipping_charge) || 0);
+    },
+
     get shippingCost() {
-        return this.delivery === 'express' ? this.expressDeliveryCharge : 0;
+        const expressSurcharge = this.delivery === 'express' ? this.expressDeliveryCharge : 0;
+
+        return Math.round((this.baseShippingCost + expressSurcharge) * 100) / 100;
     },
 
     get giftWrapCost() {
@@ -640,11 +658,11 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     },
 
     get deliveryDescription() {
-        const expressPrice = this.expressDeliveryCharge > 0 ? this.formatMoney(this.expressDeliveryCharge) : 'Free';
+        const shippingPrice = this.shippingCost > 0 ? this.formatMoney(this.shippingCost) : 'Free';
 
         return this.delivery === 'express'
-            ? `Express Delivery (${expressPrice}, 2–3 days)`
-            : 'Standard Delivery (Free, 5–7 days)';
+            ? `Express Delivery (${shippingPrice}, 2–3 days)`
+            : `Standard Delivery (${shippingPrice})`;
     },
 
     formatMoney(value) {
@@ -668,7 +686,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     },
 
     get canSaveAddress() {
-        return ['type', 'name', 'email', 'phone', 'line1', 'city', 'district', 'state', 'pincode'].every((field) => {
+        return ['type', 'name', 'email', 'phone', 'line1', 'city', 'state', 'pincode'].every((field) => {
             return String(this.newAddress[field] || '').trim().length > 0;
         });
     },
@@ -676,6 +694,14 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     selectAddress(id) {
         this.selectedAddress = id;
         this.addressError = '';
+        this.invalidateShippingQuote();
+    },
+
+    invalidateShippingQuote() {
+        this.shippingRequestId += 1;
+        this.shippingLoading = false;
+        this.shippingError = '';
+        this.shippingQuote = null;
     },
 
     resetNewAddress() {
@@ -732,7 +758,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
             email: this.newAddress.email.trim(),
             phone: this.newAddress.phone.trim(),
             line1: this.newAddress.line1.trim(),
-            district: this.newAddress.district.trim(),
+            line2: this.newAddress.line2.trim(),
             landmark: this.newAddress.landmark.trim(),
             city: this.newAddress.city.trim(),
             state: this.newAddress.state.trim(),
@@ -801,7 +827,55 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         Alpine.store('ui').notify(editing ? 'Address updated' : 'Address added', 'success');
     },
 
-    continueToDelivery() {
+    async refreshShippingQuote() {
+        if (!this.selectedAddressRecord || !this.shippingQuoteUrl) {
+            this.shippingError = 'Please select a delivery address before checking shipping.';
+            this.shippingQuote = null;
+            return false;
+        }
+
+        const requestId = ++this.shippingRequestId;
+        this.shippingLoading = true;
+        this.shippingError = '';
+
+        try {
+            const response = await fetch(this.shippingQuoteUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({
+                    address_id: this.selectedAddress,
+                    payment: this.payment,
+                }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (requestId !== this.shippingRequestId) {
+                return this.shippingQuote !== null;
+            }
+
+            if (!response.ok || !data.available) {
+                const firstError = Object.values(data.errors || {})[0]?.[0];
+                throw new Error(firstError || data.message || 'Unable to calculate shipping for this address.');
+            }
+
+            this.shippingQuote = data;
+            this.shippingError = '';
+            return true;
+        } catch (error) {
+            if (requestId === this.shippingRequestId) {
+                this.shippingQuote = null;
+                this.shippingError = error.message || 'Unable to calculate shipping. Please try again.';
+            }
+
+            return false;
+        } finally {
+            if (requestId === this.shippingRequestId) {
+                this.shippingLoading = false;
+            }
+        }
+    },
+
+    async continueToDelivery() {
         if (this.addingAddress || this.savingAddress) {
             this.addressError = 'Please save or cancel the address form before continuing.';
             return;
@@ -813,7 +887,25 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         }
 
         this.addressError = '';
-        this.step = 2;
+        if (await this.refreshShippingQuote()) {
+            this.step = 2;
+        }
+    },
+
+    async continueToPayment() {
+        if (!this.shippingQuote && !(await this.refreshShippingQuote())) {
+            return;
+        }
+
+        this.step = 3;
+    },
+
+    async continueToReview() {
+        if (!this.shippingQuote && !(await this.refreshShippingQuote())) {
+            return;
+        }
+
+        this.step = 4;
     },
 
     async placeOrder() {
@@ -831,6 +923,12 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         if (this.payment === 'cod' && !this.codAvailable) {
             this.orderError = `${this.codDescription} Please choose Online Payment.`;
             this.step = 3;
+            return;
+        }
+
+        if (!(await this.refreshShippingQuote())) {
+            this.orderError = this.shippingError || 'Unable to calculate shipping. Please try again.';
+            this.step = 2;
             return;
         }
 
@@ -877,7 +975,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
             return '';
         }
 
-        return [address.name, address.line1, address.city, address.district, address.pincode]
+        return [address.name, address.line1, address.line2, address.city, address.state, address.pincode]
             .filter(Boolean)
             .join(', ');
     },
@@ -888,7 +986,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
         }
 
         const area = [address.line1, address.line2, address.landmark].filter(Boolean).join(', ');
-        const cityLine = [address.city, address.district, address.state, address.pincode].filter(Boolean).join(' ');
+        const cityLine = [address.city, address.state, address.pincode].filter(Boolean).join(' ');
 
         return [area, cityLine, address.country].filter(Boolean).join(' - ');
     },

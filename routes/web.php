@@ -158,6 +158,9 @@ Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('categ
 Route::get('/recipient/{slug}', [CategoryController::class, 'recipient'])->name('recipient.show');
 
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/product/{product:slug}/delivery-availability', [ProductController::class, 'deliveryAvailability'])
+    ->middleware('throttle:10,1')
+    ->name('product.delivery-availability');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/product/{product:slug}/reviews', [ProductReviewController::class, 'store'])
     ->middleware(['storefront.customer', 'throttle:5,1'])
@@ -176,6 +179,9 @@ Route::post('/cart/{key}/wishlist', [CartController::class, 'moveToWishlist'])->
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/addresses', [CheckoutController::class, 'storeAddress'])->name('checkout.addresses.store');
 Route::patch('/checkout/addresses/{address}', [CheckoutController::class, 'updateAddress'])->name('checkout.addresses.update');
+Route::post('/checkout/shipping-quote', [CheckoutController::class, 'shippingQuote'])
+    ->middleware('throttle:20,1')
+    ->name('checkout.shipping-quote');
 Route::post('/checkout/order', [CheckoutController::class, 'placeOrder'])->name('checkout.order.store');
 Route::get('/order-success/{id?}', [CheckoutController::class, 'success'])->name('order.success');
 
@@ -200,6 +206,7 @@ Route::prefix('account')->name('account.')->group(function () {
         Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
         Route::get('/wishlist', [AccountController::class, 'wishlist'])->name('wishlist');
         Route::get('/orders/{id}', [AccountController::class, 'orderShow'])->name('orders.show');
+        Route::post('/orders/{id}/tracking/refresh', [AccountController::class, 'refreshOrderTracking'])->middleware('throttle:6,1')->name('orders.tracking.refresh');
         Route::get('/orders/{id}/invoice', [AccountController::class, 'invoice'])->name('orders.invoice');
         Route::post('/orders/{id}/cancel', [AccountController::class, 'cancelOrder'])->name('orders.cancel');
         Route::post('/orders/{id}/return', [AccountController::class, 'requestReturn'])->name('orders.return');

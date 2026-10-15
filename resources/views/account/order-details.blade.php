@@ -89,7 +89,7 @@
                 <div class="flex justify-between text-muted"><span>Discount</span><span class="text-success">&minus;₹{{ number_format($order['discount']) }}</span></div>
                 <div class="flex justify-between text-muted"><span>Coupon {{ $order['coupon'] }}</span><span class="text-charcoal">{{ $order['coupon_discount'] ? '−₹'.number_format($order['coupon_discount']) : '—' }}</span></div>
                 <div class="flex justify-between text-muted"><span>Shipping</span><span class="text-charcoal">{{ $shipping ? '₹'.number_format($shipping) : 'Free' }}</span></div>
-                <div class="flex justify-between text-muted"><span>Tax (GST incl.)</span><span class="text-charcoal">₹{{ number_format($tax) }}</span></div>
+                <div class="flex justify-between text-muted"><span>GST (included)</span><span class="text-charcoal">₹{{ number_format($tax) }}</span></div>
                 @if (($order['gift_wrap']['enabled'] ?? false))
                     <div class="flex justify-between text-muted"><span>Gift Wrap</span><span class="text-charcoal">₹{{ number_format($order['gift_wrap']['charge']) }}</span></div>
                 @endif
@@ -101,16 +101,37 @@
         </div>
 
         {{-- Actions --}}
+        @error('tracking')
+            <p class="mt-8 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error">{{ $message }}</p>
+        @enderror
         <div class="mt-8 flex flex-wrap gap-3">
-            @if (in_array($order['status'], ['Shipped', 'Out for Delivery']))
-                @if ($order['tracking_url'])
-                    <a href="{{ $order['tracking_url'] }}" target="_blank" rel="noopener noreferrer" class="btn-primary">Track Shipment</a>
-                @endif
+            @if ($order['tracking_number'])
+                <form
+                    method="POST"
+                    action="{{ route('account.orders.tracking.refresh', $order['id']) }}"
+                    data-swal-confirm
+                    data-confirm-title="Refresh live tracking?"
+                    data-confirm-message="This will request the latest delivery status from Shiprocket."
+                    data-confirm-button="Refresh tracking"
+                >
+                    @csrf
+                    <button type="submit" class="btn-primary">Refresh Tracking</button>
+                </form>
+            @endif
+            @if ($order['tracking_url'])
+                <a href="{{ $order['tracking_url'] }}" target="_blank" rel="noopener noreferrer" class="btn-secondary">Open Tracking Page</a>
             @endif
             <a href="{{ route('account.orders.invoice', $order['id']) }}" target="_blank" rel="noopener" class="btn-secondary">Invoice / Save PDF</a>
             <a href="{{ route('account.support') }}" class="btn-secondary">Contact Support</a>
             @if (in_array($order['status'], ['Pending', 'Processing', 'Confirmed']))
-                <form method="POST" action="{{ route('account.orders.cancel', $order['id']) }}">
+                <form
+                    method="POST"
+                    action="{{ route('account.orders.cancel', $order['id']) }}"
+                    data-swal-confirm
+                    data-confirm-title="Cancel this order?"
+                    data-confirm-message="Are you sure you want to cancel order {{ $order['id'] }}? This action cannot be undone."
+                    data-confirm-button="Yes, cancel order"
+                >
                     @csrf
                     <button type="submit" class="btn-ghost text-error border-error/30 hover:bg-error/10">Cancel Order</button>
                 </form>
@@ -123,10 +144,28 @@
             @endif
         </div>
         @if ($order['courier_name'] || $order['tracking_number'] || $order['expected_delivery'])
-            <div class="mt-5 space-y-1 text-sm text-muted">
-                @if ($order['courier_name']) <p>Courier: {{ $order['courier_name'] }}</p> @endif
-                @if ($order['tracking_number']) <p>Tracking number: {{ $order['tracking_number'] }}</p> @endif
+            <div class="mt-5 space-y-1 rounded-2xl border border-line bg-ivory-soft p-4 text-sm text-muted">
+                @if ($order['courier_name']) <p>Courier: <span class="font-semibold text-charcoal">{{ $order['courier_name'] }}</span></p> @endif
+                @if ($order['tracking_number']) <p>Tracking ID / AWB: <span class="font-semibold text-charcoal">{{ $order['tracking_number'] }}</span></p> @endif
+                @if ($order['tracking_status']) <p>Shipment status: <span class="font-semibold text-charcoal">{{ $order['tracking_status'] }}</span></p> @endif
                 @if ($order['expected_delivery']) <p>Expected delivery: {{ $order['expected_delivery'] }}</p> @endif
+                @if ($order['tracking_updated_at']) <p class="pt-1 text-xs">Last refreshed: {{ $order['tracking_updated_at'] }}</p> @endif
+            </div>
+        @endif
+        @if ($order['tracking_activities'])
+            <div class="mt-5 rounded-2xl border border-line p-5 sm:p-6">
+                <h2 class="font-display text-lg text-charcoal">Shipment Updates</h2>
+                <div class="mt-4 space-y-4">
+                    @foreach ($order['tracking_activities'] as $activity)
+                        <div class="border-l-2 border-champagne pl-4">
+                            <p class="text-sm font-semibold text-charcoal">{{ ($activity['activity'] ?? '') ?: ($activity['status'] ?? 'Shipment updated') }}</p>
+                            <p class="mt-1 text-xs text-muted">
+                                {{ ($activity['date'] ?? '') ?: 'Date unavailable' }}
+                                @if ($activity['location'] ?? null) &middot; {{ $activity['location'] }} @endif
+                            </p>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         @endif
     </x-account.shell>

@@ -14,7 +14,7 @@
 ])
 
 @php
-    $total = $subtotal - $discount - $couponDiscount + $shipping + $tax + ($dynamicGiftWrap ? 0 : $giftWrapCharge);
+    $total = $subtotal - $discount - $couponDiscount + $shipping + ($dynamicGiftWrap ? 0 : $giftWrapCharge);
     $precision = $showDecimals ? 2 : 0;
 @endphp
 
@@ -47,7 +47,7 @@
         @endif
         <div class="flex justify-between text-muted">
             <span>Shipping</span>
-            <span @if ($dynamicDelivery) x-text="shippingCost > 0 ? formatMoney(shippingCost) : 'Free'" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping, $precision) : 'Free' }}</span>
+            <span @if ($dynamicDelivery) x-text="shippingLoading ? 'Calculating...' : (shippingCost > 0 ? formatMoney(shippingCost) : 'Free')" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping, $precision) : 'Free' }}</span>
         </div>
         @if ($dynamicGiftWrap)
             <div x-show="giftWrap" x-cloak class="flex justify-between text-muted">
@@ -61,7 +61,7 @@
             </div>
         @endif
         <div class="flex justify-between text-muted">
-            <span>Tax (GST incl.)</span>
+            <span>GST (included)</span>
             <span class="text-charcoal">₹{{ number_format($tax, $precision) }}</span>
         </div>
     </div>
@@ -77,7 +77,7 @@
 
     <div class="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-line pt-5 text-[11px] text-muted">
         <span class="flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-champagne-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z" /></svg> Secure Checkout</span>
-        <span class="flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-champagne-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h13v10H3zM16 10h3l2 3v4h-5z" /><circle cx="7.5" cy="18" r="1.5" /><circle cx="17.5" cy="18" r="1.5" /></svg> Free Shipping</span>
+        <span class="flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-champagne-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h13v10H3zM16 10h3l2 3v4h-5z" /><circle cx="7.5" cy="18" r="1.5" /><circle cx="17.5" cy="18" r="1.5" /></svg> Insured Shipping</span>
         <span class="flex items-center gap-1.5"><svg class="h-3.5 w-3.5 text-champagne-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V4" /></svg> Easy Returns</span>
     </div>
 </div>

@@ -49,7 +49,7 @@
         <p class="text-sm text-muted">Order Total <span class="ml-1 font-semibold text-charcoal">₹{{ number_format($order['total']) }}</span></p>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('account.orders.show', $order['id']) }}" class="btn-ghost !px-4 !py-2 text-[11px]">View Details</a>
-            @if (in_array($order['status'], ['Shipped', 'Out for Delivery']))
+            @if ($order['tracking_number'])
                 <a href="{{ route('account.orders.show', $order['id']) }}" class="btn-secondary !px-4 !py-2 text-[11px]">Track Order</a>
             @endif
             <a href="{{ route('account.orders.invoice', $order['id']) }}" target="_blank" rel="noopener" class="btn-secondary !px-4 !py-2 text-[11px]">Invoice / Save PDF</a>
@@ -64,7 +64,14 @@
                 </form>
             @endif
             @if (in_array($order['status'], ['Pending', 'Processing', 'Confirmed']))
-                <form method="POST" action="{{ route('account.orders.cancel', $order['id']) }}">
+                <form
+                    method="POST"
+                    action="{{ route('account.orders.cancel', $order['id']) }}"
+                    data-swal-confirm
+                    data-confirm-title="Cancel this order?"
+                    data-confirm-message="Are you sure you want to cancel order {{ $order['id'] }}? This action cannot be undone."
+                    data-confirm-button="Yes, cancel order"
+                >
                     @csrf
                     <button type="submit" class="btn-ghost !px-4 !py-2 text-[11px] text-error border-error/30 hover:bg-error/10">Cancel Order</button>
                 </form>

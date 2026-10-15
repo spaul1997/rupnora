@@ -626,6 +626,7 @@ class StorefrontCatalog
             'gallery' => $product->images->map(fn ($image) => self::storageUrl($image->image_path))->values()->all(),
             'price' => $price,
             'mrp' => (float) $product->mrp,
+            'gst_percentage' => (float) $product->gst_percentage,
             'offer_expiry_date' => $product->hasActiveOffer() ? $product->offer_expiry_date?->format('d M Y') : null,
             'discount_expiry_date' => $product->hasActiveDiscount() ? $product->discount_expiry_date?->format('d M Y') : null,
             'rating' => $rating,

@@ -170,6 +170,18 @@ class Product extends Model
         return round(max($base, 0), 2);
     }
 
+    public static function includedGstAmount(float $inclusiveAmount, float $percentage): float
+    {
+        $inclusiveAmount = max(0, $inclusiveAmount);
+        $percentage = max(0, $percentage);
+
+        if ($inclusiveAmount === 0.0 || $percentage === 0.0) {
+            return 0;
+        }
+
+        return round($inclusiveAmount * $percentage / (100 + $percentage), 2);
+    }
+
     public function computeStockStatus(): string
     {
         if ($this->stock_quantity <= 0) {

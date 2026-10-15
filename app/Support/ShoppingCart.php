@@ -142,7 +142,15 @@ class ShoppingCart
         $discount = max(0, $mrpTotal - $sellingTotal);
         $coupon = self::couponPricing();
         $couponDiscount = (float) ($coupon['discount'] ?? 0);
-        $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03, 2);
+        $tax = round((float) $items->sum(function (array $item) use ($coupon): float {
+            $lineTotal = (float) $item['product']['price'] * (int) $item['qty'];
+            $lineDiscount = (float) ($coupon['allocations'][$item['key']] ?? 0);
+
+            return Product::includedGstAmount(
+                max(0, $lineTotal - $lineDiscount),
+                (float) ($item['product']['gst_percentage'] ?? 0),
+            );
+        }), 2);
 
         return [
             'subtotal' => $mrpTotal,
@@ -150,7 +158,7 @@ class ShoppingCart
             'coupon_discount' => $couponDiscount,
             'coupon_code' => $coupon['coupon']->code ?? null,
             'tax' => $tax,
-            'total' => $mrpTotal - $discount - $couponDiscount + $tax,
+            'total' => $mrpTotal - $discount - $couponDiscount,
         ];
     }
 

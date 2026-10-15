@@ -6,6 +6,7 @@ use App\Http\Requests\StorefrontAddressRequest;
 use App\Mail\OrderSuccessMail;
 use App\Models\Order;
 use App\Models\WebsiteSetting;
+use App\Services\CheckoutShippingService;
 use App\Support\CheckoutAddresses;
 use App\Support\CheckoutOrders;
 use App\Support\ShoppingCart;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckoutController extends Controller
 {
@@ -27,11 +29,55 @@ class CheckoutController extends Controller
             'cartSummary' => ShoppingCart::summary(),
             'addresses' => CheckoutAddresses::all(),
             'expressDeliveryCharge' => (float) $settings->express_delivery_charge,
+            'freeShippingThreshold' => (float) $settings->free_shipping_threshold,
             'codOrderLimit' => (float) $settings->cod_order_limit,
             'giftWrapCharge' => (float) config('checkout.gift_wrap.charge', 50),
             'giftMessageLimit' => (int) config('checkout.gift_wrap.message_limit', 248),
             'giftMessageTemplates' => config('checkout.gift_wrap.templates', []),
         ]);
+    }
+
+    public function shippingQuote(Request $request, CheckoutShippingService $shipping): JsonResponse
+    {
+        $data = $request->validate([
+            'address_id' => ['required'],
+            'payment' => ['nullable', 'in:online,cod'],
+        ]);
+        $items = ShoppingCart::items();
+
+        if ($items === []) {
+            throw ValidationException::withMessages(['cart' => 'Your cart is empty.']);
+        }
+
+        $address = $this->selectedAddress($data['address_id']);
+
+        if (! $address) {
+            throw ValidationException::withMessages(['address_id' => 'Please select or add a delivery address.']);
+        }
+
+        try {
+            $quote = $shipping->quote(
+                $items,
+                $address,
+                (float) ShoppingCart::summary()['total'],
+                (string) ($data['payment'] ?? 'online'),
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => 'Shipping rates are temporarily unavailable. Please try again shortly.',
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+
+        if (! $quote['available']) {
+            return response()->json([
+                ...$quote,
+                'errors' => ['shipping' => [$quote['message']]],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return response()->json($quote);
     }
 
     public function storeAddress(StorefrontAddressRequest $request): JsonResponse
@@ -54,7 +100,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function placeOrder(Request $request): JsonResponse
+    public function placeOrder(Request $request, CheckoutShippingService $shipping): JsonResponse
     {
         $data = $request->validate([
             'address_id' => ['required'],
@@ -85,20 +131,41 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $hasAddress = collect(CheckoutAddresses::all())
-            ->contains(fn (array $address) => (string) $address['id'] === (string) $data['address_id']);
+        $address = $this->selectedAddress($data['address_id']);
 
-        if (! $hasAddress) {
+        if (! $address) {
             throw ValidationException::withMessages([
                 'address_id' => 'Please select or add a delivery address.',
             ]);
         }
 
+        try {
+            $shippingQuote = $shipping->quote(
+                ShoppingCart::items(),
+                $address,
+                (float) ShoppingCart::summary()['total'],
+                $data['payment'],
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'shipping' => 'Shipping rates are temporarily unavailable. Please try again shortly.',
+            ]);
+        }
+
+        if (! $shippingQuote['available']) {
+            throw ValidationException::withMessages(['shipping' => $shippingQuote['message']]);
+        }
+
+        $settings = WebsiteSetting::current();
+        $expressSurcharge = $data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0;
+        $data['shipping_charge'] = round((float) $shippingQuote['shipping_charge'] + $expressSurcharge, 2);
+        $data['shipping_quote'] = $shippingQuote;
+
         if ($data['payment'] === 'cod') {
-            $settings = WebsiteSetting::current();
-            $shipping = $data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0;
             $giftWrapCharge = $data['gift_wrap'] ? (float) config('checkout.gift_wrap.charge', 50) : 0;
-            $orderTotal = round(ShoppingCart::summary()['total'] + $shipping + $giftWrapCharge, 2);
+            $orderTotal = round(ShoppingCart::summary()['total'] + $data['shipping_charge'] + $giftWrapCharge, 2);
             $limit = (float) $settings->cod_order_limit;
 
             if ($orderTotal >= $limit) {
@@ -139,6 +206,15 @@ class CheckoutController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
         }
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function selectedAddress(mixed $addressId): ?array
+    {
+        return collect(CheckoutAddresses::all())
+            ->first(fn (array $address): bool => (string) $address['id'] === (string) $addressId);
     }
 
     public function success(?string $id = null)

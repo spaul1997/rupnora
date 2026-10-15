@@ -3,14 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\GenerateShiprocketAwbRequest;
 use App\Http\Requests\Admin\UpdateOrderStatusRequest;
+use App\Http\Requests\Admin\UpdateShiprocketAddressRequest;
+use App\Mail\TrackingGeneratedMail;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\AffiliateCommissionService;
+use App\Services\ShiprocketService;
+use App\Services\ShiprocketTrackingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class OrderController extends Controller
 {
@@ -136,12 +145,12 @@ class OrderController extends Controller
             foreach ($order->items as $item) {
                 $quantity = (int) ($data['returned_quantities'][$item->id] ?? $item->returned_quantity);
                 if ($quantity > $item->quantity) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         "returned_quantities.{$item->id}" => 'Returned quantity cannot exceed the ordered quantity.',
                     ]);
                 }
                 if ($quantity < $item->returned_quantity) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         "returned_quantities.{$item->id}" => 'Returned quantity cannot be reduced after reconciliation.',
                     ]);
                 }
@@ -157,6 +166,250 @@ class OrderController extends Controller
         });
 
         return back()->with('success', 'Returned quantities and affiliate commissions reconciled.');
+    }
+
+    public function createShiprocketOrder(Order $order, ShiprocketService $shiprocket): RedirectResponse
+    {
+        if ($order->shiprocket_order_id) {
+            return back()->with('success', 'This order is already available in Shiprocket.');
+        }
+
+        try {
+            $response = $shiprocket->createOrder($order);
+
+            $order->update([
+                'shiprocket_order_id' => (string) $response['order_id'],
+                'shiprocket_shipment_id' => (string) $response['shipment_id'],
+                'shiprocket_status' => (string) ($response['status'] ?? 'NEW'),
+                'shiprocket_synced_at' => now(),
+                'tracking_number' => filled($response['awb_code'] ?? null)
+                    ? (string) $response['awb_code']
+                    : $order->tracking_number,
+                'courier_name' => filled($response['courier_name'] ?? null)
+                    ? (string) $response['courier_name']
+                    : $order->courier_name,
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Order sent to Shiprocket successfully.');
+    }
+
+    public function listShiprocketCouriers(Order $order, ShiprocketService $shiprocket): RedirectResponse
+    {
+        if (! $order->shiprocket_order_id || ! $order->shiprocket_shipment_id) {
+            return back()->withErrors([
+                'shiprocket_awb' => 'Create the Shiprocket order before generating an AWB.',
+            ]);
+        }
+
+        if ($order->tracking_number) {
+            return back()->with('success', 'Tracking has already been generated for this order.');
+        }
+
+        if ($order->status !== 'shipped') {
+            return back()->withErrors([
+                'shiprocket_awb' => 'Update the order status to Shipped before generating an AWB.',
+            ]);
+        }
+
+        try {
+            $couriers = $shiprocket->serviceableCouriers($order);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket_awb' => $exception->getMessage()]);
+        }
+
+        if ($couriers === []) {
+            return back()->withErrors([
+                'shiprocket_awb' => 'No Shiprocket courier is currently serviceable for this order.',
+            ]);
+        }
+
+        return back()->with('shiprocket_couriers', $couriers);
+    }
+
+    public function generateShiprocketAwb(
+        GenerateShiprocketAwbRequest $request,
+        Order $order,
+        ShiprocketService $shiprocket,
+    ): RedirectResponse {
+        if (! $order->shiprocket_order_id || ! $order->shiprocket_shipment_id) {
+            return back()->withErrors([
+                'shiprocket_awb' => 'Create the Shiprocket order before generating an AWB.',
+            ]);
+        }
+
+        if ($order->tracking_number) {
+            return back()->with('success', 'Tracking has already been generated for this order.');
+        }
+
+        if ($order->status !== 'shipped') {
+            return back()->withErrors([
+                'shiprocket_awb' => 'Update the order status to Shipped before generating an AWB.',
+            ]);
+        }
+
+        try {
+            $awb = $shiprocket->generateAwb($order, (int) $request->validated('courier_id'));
+            $trackingUrl = $shiprocket->trackingUrl($awb['awb_code']);
+            $trackingWasCreated = false;
+            $mailOrder = null;
+
+            DB::transaction(function () use ($order, $awb, $trackingUrl, &$trackingWasCreated, &$mailOrder): void {
+                $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+                if ($lockedOrder->tracking_number) {
+                    return;
+                }
+
+                $lockedOrder->update([
+                    'shiprocket_shipment_id' => $awb['shipment_id'],
+                    'shiprocket_status' => 'AWB ASSIGNED',
+                    'shiprocket_synced_at' => now(),
+                    'courier_name' => $awb['courier_name'],
+                    'tracking_number' => $awb['awb_code'],
+                    'tracking_url' => $trackingUrl,
+                ]);
+                $lockedOrder->statusHistories()->create([
+                    'status' => 'awb_assigned',
+                    'remark' => 'Shiprocket AWB '.$awb['awb_code'].' assigned to '.$awb['courier_name'].'.',
+                    'updated_by' => auth()->id(),
+                ]);
+
+                $trackingWasCreated = true;
+                $mailOrder = $lockedOrder->fresh();
+            });
+
+            if (! $trackingWasCreated || ! $mailOrder) {
+                return back()->with('success', 'Tracking has already been generated for this order.');
+            }
+
+            Mail::to($mailOrder->customer_email)
+                ->queue(new TrackingGeneratedMail($mailOrder));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket_awb' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'AWB generated and the tracking email was queued successfully.');
+    }
+
+    public function refreshShiprocketTracking(
+        Order $order,
+        ShiprocketTrackingService $trackingService,
+    ): RedirectResponse {
+        if (! $order->tracking_number) {
+            return back()->withErrors([
+                'shiprocket_tracking' => 'Generate an AWB before refreshing Shiprocket tracking.',
+            ]);
+        }
+
+        try {
+            $tracking = $trackingService->refresh($order, auth()->id());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket_tracking' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Tracking refreshed successfully: '.$tracking['status'].'.');
+    }
+
+    public function updateShiprocketAddress(
+        UpdateShiprocketAddressRequest $request,
+        Order $order,
+        ShiprocketService $shiprocket,
+    ): RedirectResponse {
+        if (! $order->shiprocket_order_id) {
+            return back()->withErrors([
+                'shiprocket_address' => 'Create the Shiprocket order before changing its delivery address.',
+            ]);
+        }
+
+        $data = $request->validated();
+
+        try {
+            $shiprocket->updateDeliveryAddress($order, $data);
+
+            $order->update([
+                'shipping_address' => [
+                    ...($order->shipping_address ?? []),
+                    'name' => $data['shipping_customer_name'],
+                    'phone' => $data['shipping_phone'],
+                    'line1' => $data['shipping_address'],
+                    'line2' => $data['shipping_address_2'] ?? '',
+                    'landmark' => '',
+                    'city' => $data['shipping_city'],
+                    'district' => '',
+                    'state' => $data['shipping_state'],
+                    'country' => $data['shipping_country'],
+                    'pincode' => $data['shipping_pincode'],
+                ],
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket_address' => $exception->getMessage()])->withInput();
+        }
+
+        return back()->with('success', 'Delivery address updated in Shiprocket successfully.');
+    }
+
+    public function cancelShiprocketOrder(Order $order, ShiprocketService $shiprocket): RedirectResponse
+    {
+        if (! $order->shiprocket_order_id) {
+            return back()->withErrors([
+                'shiprocket_cancel' => 'Create the Shiprocket order before cancelling it.',
+            ]);
+        }
+
+        if ($order->status === 'cancelled') {
+            return back()->with('success', 'This order is already cancelled.');
+        }
+
+        try {
+            $shiprocket->cancelOrder($order);
+
+            DB::transaction(function () use ($order) {
+                $order = Order::query()->with('items')->lockForUpdate()->findOrFail($order->id);
+
+                if ($order->stock_reserved) {
+                    $quantities = $order->items->groupBy('product_id')
+                        ->map(fn ($items) => $items->sum('quantity'));
+                    $products = Product::query()->whereIn('id', $quantities->keys())
+                        ->orderBy('id')->lockForUpdate()->get();
+
+                    foreach ($products as $product) {
+                        $product->stock_quantity += $quantities[$product->id];
+                        $product->save();
+                    }
+                }
+
+                $order->update([
+                    'status' => 'cancelled',
+                    'shiprocket_status' => 'CANCELLED',
+                    'stock_reserved' => false,
+                ]);
+                $order->statusHistories()->create([
+                    'status' => 'cancelled',
+                    'remark' => 'Order cancelled in Shiprocket by admin.',
+                    'updated_by' => auth()->id(),
+                ]);
+                app(AffiliateCommissionService::class)->reconcileReversal($order->refresh());
+            });
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['shiprocket_cancel' => $exception->getMessage()]);
+        }
+
+        return back()->with('success', 'Order cancelled in Shiprocket successfully.');
     }
 
     public function invoice(Order $order): View

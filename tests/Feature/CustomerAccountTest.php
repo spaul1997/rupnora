@@ -137,8 +137,13 @@ class CustomerAccountTest extends TestCase
         $product = $this->product();
         $order = $this->order($owner, $product);
         $product->update(['name' => 'Renamed Product', 'selling_price' => 9999]);
+        $this->actingAs($owner)->get(route('account.orders'))->assertOk()
+            ->assertSee('data-swal-confirm', false)
+            ->assertSee('data-confirm-title="Cancel this order?"', false)
+            ->assertSee('data-confirm-button="Yes, cancel order"', false);
         $this->actingAs($owner)->get(route('account.orders.show', $order->order_number))->assertOk()
             ->assertSee('Original Product')->assertSee('5,499')->assertViewHas('tax', 123.0)
+            ->assertSee('data-swal-confirm', false)
             ->assertViewHas('order', fn ($data) => $data['items'][0]['product']['price'] === 1500.0 && $data['shipping'] === 199.0);
         $this->get(route('account.orders.invoice', $order->order_number))->assertOk()->assertSee('5,499.00')->assertSee('Original Product');
         $product->delete();

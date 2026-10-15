@@ -81,6 +81,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::patch('orders/{order}/payment-status', [OrderController::class, 'updatePaymentStatus'])->name('orders.update-payment-status');
         Route::patch('orders/{order}/returned-items', [OrderController::class, 'updateReturnedItems'])->name('orders.update-returned-items');
+        Route::post('orders/{order}/shiprocket', [OrderController::class, 'createShiprocketOrder'])->name('orders.shiprocket.store');
+        Route::post('orders/{order}/shiprocket/couriers', [OrderController::class, 'listShiprocketCouriers'])->name('orders.shiprocket.couriers');
+        Route::post('orders/{order}/shiprocket/awb', [OrderController::class, 'generateShiprocketAwb'])->name('orders.shiprocket.awb');
+        Route::post('orders/{order}/shiprocket/tracking', [OrderController::class, 'refreshShiprocketTracking'])->name('orders.shiprocket.tracking.refresh');
+        Route::patch('orders/{order}/shiprocket/address', [OrderController::class, 'updateShiprocketAddress'])->name('orders.shiprocket.address.update');
+        Route::post('orders/{order}/shiprocket/cancel', [OrderController::class, 'cancelShiprocketOrder'])->name('orders.shiprocket.cancel');
         Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('orders-export', [OrderController::class, 'export'])->name('orders.export');
 

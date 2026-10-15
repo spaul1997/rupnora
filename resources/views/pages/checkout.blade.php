@@ -31,10 +31,12 @@
             selectedAddressId: {{ Illuminate\Support\Js::from($checkoutAddresses[0]['id'] ?? null) }},
             addAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.store')) }},
             updateAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.update', ['address' => '__ADDRESS__'])) }},
+            shippingQuoteUrl: {{ Illuminate\Support\Js::from(route('checkout.shipping-quote')) }},
             placeOrderUrl: {{ Illuminate\Support\Js::from(route('checkout.order.store')) }},
             expressDeliveryCharge: {{ Illuminate\Support\Js::from($expressDeliveryCharge) }},
+            freeShippingThreshold: {{ Illuminate\Support\Js::from($freeShippingThreshold) }},
             codOrderLimit: {{ Illuminate\Support\Js::from($codOrderLimit) }},
-            baseTotal: {{ Illuminate\Support\Js::from($sellingTotal - $couponDiscount + $tax) }},
+            baseTotal: {{ Illuminate\Support\Js::from($sellingTotal - $couponDiscount) }},
             giftWrapCharge: {{ Illuminate\Support\Js::from($giftWrapCharge) }},
             giftMessageLimit: {{ Illuminate\Support\Js::from($giftMessageLimit) }},
             giftMessageTemplates: {{ Illuminate\Support\Js::from($giftMessageTemplates) }},
@@ -92,7 +94,10 @@
                     </div>
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                         <button type="button" @click="toggleAddressForm()" :disabled="savingAddress" class="text-left text-sm font-medium text-champagne-dark hover:underline disabled:opacity-50" x-text="addingAddress ? (editingAddressId !== null ? 'Cancel Edit Address' : 'Cancel New Address') : '+ Add New Address'">+ Add New Address</button>
-                        <button @click="continueToDelivery()" :disabled="!selectedAddressRecord || addingAddress || savingAddress" class="btn-primary w-full sm:ml-auto sm:w-auto">Continue to Delivery</button>
+                        <button @click="continueToDelivery()" :disabled="!selectedAddressRecord || addingAddress || savingAddress || shippingLoading" class="btn-primary w-full sm:ml-auto sm:w-auto">
+                            <span x-show="!shippingLoading">Continue to Delivery</span>
+                            <span x-show="shippingLoading" x-cloak>Checking delivery...</span>
+                        </button>
                     </div>
                     <form @submit.prevent="saveAddress()" x-show="addingAddress" x-collapse x-cloak class="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line p-5 sm:grid-cols-2">
                         <h3 class="text-sm font-semibold text-charcoal sm:col-span-2" x-text="editingAddressId !== null ? 'Edit Address' : 'Add New Address'"></h3>
@@ -105,7 +110,7 @@
                         <input type="email" x-model.trim="newAddress.email" required maxlength="254" autocomplete="email" placeholder="Email ID *" class="input-luxe">
                         <input type="tel" x-model.trim="newAddress.phone" required maxlength="30" autocomplete="tel" placeholder="Mobile Number *" class="input-luxe">
                         <input type="text" x-model.trim="newAddress.line1" required maxlength="180" autocomplete="address-line1" placeholder="Address *" class="input-luxe">
-                        <input type="text" x-model.trim="newAddress.district" required maxlength="100" autocomplete="address-level2" placeholder="District *" class="input-luxe">
+                        <input type="text" x-model.trim="newAddress.line2" maxlength="180" autocomplete="address-line2" placeholder="Address Line 2 (optional)" class="input-luxe">
                         <input type="text" x-model.trim="newAddress.landmark" maxlength="120" placeholder="Landmark (optional)" class="input-luxe">
                         <input type="text" x-model.trim="newAddress.city" required maxlength="100" autocomplete="address-level3" placeholder="City *" class="input-luxe">
                         <select x-model="newAddress.state" required autocomplete="address-level1" aria-label="State" class="input-luxe">
@@ -136,9 +141,12 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium text-charcoal">Standard Delivery</span>
-                                    <span class="text-sm font-semibold text-success">Free</span>
+                                    <span class="text-sm font-semibold" :class="baseShippingCost > 0 ? 'text-charcoal' : 'text-success'" x-text="shippingLoading ? 'Checking...' : (baseShippingCost > 0 ? formatMoney(baseShippingCost) : 'Free')">Checking...</span>
                                 </div>
-                                <p class="mt-1 text-xs text-muted">Arrives in 5&ndash;7 business days, fully insured.</p>
+                                <p class="mt-1 text-xs text-muted">
+                                    <span x-show="shippingQuote?.estimated_date">Estimated by <span x-text="shippingQuote?.estimated_date"></span>. </span>
+                                    Fully insured.
+                                </p>
                             </div>
                         </label>
                         <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors" :class="delivery === 'express' ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line'">
@@ -146,11 +154,17 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium text-charcoal">Express Delivery</span>
-                                    <span class="text-sm font-semibold text-charcoal" x-text="expressDeliveryCharge > 0 ? formatMoney(expressDeliveryCharge) : 'Free'">{{ $expressDeliveryCharge > 0 ? '₹'.number_format($expressDeliveryCharge, 2) : 'Free' }}</span>
+                                    <span class="text-sm font-semibold text-charcoal" x-text="shippingLoading ? 'Checking...' : (baseShippingCost + expressDeliveryCharge > 0 ? formatMoney(baseShippingCost + expressDeliveryCharge) : 'Free')">Checking...</span>
                                 </div>
                                 <p class="mt-1 text-xs text-muted">Arrives in 2&ndash;3 business days, fully insured.</p>
                             </div>
                         </label>
+                    </div>
+                    <div class="mt-3" aria-live="polite">
+                        <p x-show="shippingLoading" x-cloak class="text-xs text-muted">Checking Shiprocket courier serviceability...</p>
+                        <p x-show="!shippingLoading && shippingQuote?.free_shipping" x-cloak class="text-xs text-success">Free shipping unlocked for orders of <span x-text="formatMoney(freeShippingThreshold)"></span> or more.</p>
+                        <p x-show="!shippingLoading && shippingQuote && !shippingQuote.free_shipping && shippingQuote.amount_to_free_shipping > 0" x-cloak class="text-xs text-muted">Add <span x-text="formatMoney(shippingQuote.amount_to_free_shipping)"></span> more for free standard shipping.</p>
+                        <p x-show="shippingError" x-cloak class="text-xs text-error" x-text="shippingError"></p>
                     </div>
 
                     {{-- Gift wrap --}}
@@ -215,7 +229,7 @@
 
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 1" class="btn-secondary">Back</button>
-                        <button @click="step = 3" class="btn-primary flex-1 sm:flex-initial">Continue to Payment</button>
+                        <button @click="continueToPayment()" :disabled="shippingLoading || !shippingQuote || shippingError" class="btn-primary flex-1 sm:flex-initial">Continue to Payment</button>
                     </div>
                 </div>
 
@@ -238,8 +252,9 @@
                     </div>
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 2" class="btn-secondary">Back</button>
-                        <button @click="step = 4" class="btn-primary flex-1 sm:flex-initial">Review Order</button>
+                        <button @click="continueToReview()" :disabled="shippingLoading || !shippingQuote || shippingError" class="btn-primary flex-1 sm:flex-initial">Review Order</button>
                     </div>
+                    <p x-show="shippingError" x-cloak class="mt-3 text-sm text-error" x-text="shippingError"></p>
                 </div>
 
                 {{-- Step 4: Confirmation --}}

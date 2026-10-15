@@ -2,7 +2,8 @@
     $mrpTotal = collect($items)->sum(fn ($i) => max($i['product']['mrp'], $i['product']['price']) * $i['qty']);
     $sellingTotal = collect($items)->sum(fn ($i) => $i['product']['price'] * $i['qty']);
     $discount = max(0, $mrpTotal - $sellingTotal);
-    $tax = round($sellingTotal * 0.03);
+    $tax = (float) $summary['tax'];
+    $total = (float) $summary['total'];
     $cartStateItems = collect($items)->map(function ($item) {
         $product = $item['product'];
 
@@ -30,6 +31,7 @@
     <div class="container-luxe py-8" x-data="cartPage({{ Illuminate\Support\Js::from($cartStateItems) }}, {{ Illuminate\Support\Js::from([
         'couponCode' => $summary['coupon_code'],
         'couponDiscount' => $summary['coupon_discount'],
+        'tax' => $summary['tax'],
         'couponApplyUrl' => route('cart.coupon.apply'),
         'couponRemoveUrl' => route('cart.coupon.remove'),
     ]) }})">
@@ -86,14 +88,14 @@
                             <span class="text-charcoal">Free</span>
                         </div>
                         <div class="flex justify-between text-muted">
-                            <span>Tax (GST incl.)</span>
+                            <span>GST (included)</span>
                             <span class="text-charcoal" x-text="formatMoney(tax)">₹{{ number_format($tax) }}</span>
                         </div>
                     </div>
 
                     <div class="mt-5 flex justify-between border-t border-line pt-5">
                         <span class="font-display text-lg text-charcoal">Total</span>
-                        <span class="font-display text-lg text-charcoal" x-text="formatMoney(total)">₹{{ number_format($sellingTotal + $tax) }}</span>
+                        <span class="font-display text-lg text-charcoal" x-text="formatMoney(total)">₹{{ number_format($total) }}</span>
                     </div>
 
                     <a href="{{ route('checkout') }}" class="btn-primary mt-6 w-full">Proceed to Checkout</a>

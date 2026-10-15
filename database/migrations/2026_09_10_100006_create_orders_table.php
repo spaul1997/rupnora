@@ -19,10 +19,10 @@ return new class extends Migration
             $table->string('customer_phone')->nullable();
 
             $table->enum('status', [
-                'pending', 'confirmed', 'processing', 'packed', 'shipped',
+                'processing', 'confirmed', 'packed', 'shipped',
                 'out_for_delivery', 'delivered', 'cancelled',
-                'return_requested', 'returned', 'refunded',
-            ])->default('pending');
+                'return_requested', 'return_accepted', 'return_rejected', 'returned', 'refunded',
+            ])->default('processing');
 
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded', 'partial_refund', 'cod'])->default('pending');
             $table->string('payment_method')->nullable();

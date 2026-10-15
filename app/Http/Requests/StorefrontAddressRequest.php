@@ -30,7 +30,7 @@ class StorefrontAddressRequest extends FormRequest
             'line2' => ['nullable', 'string', 'max:180'],
             'landmark' => ['nullable', 'string', 'max:120'],
             'city' => ['required', 'string', 'max:100'],
-            'district' => [$this->routeIs('checkout.addresses.*') ? 'required' : 'nullable', 'string', 'max:100'],
+            'district' => ['nullable', 'string', 'max:100'],
             'state' => [
                 'required', 'string', 'max:100',
                 ...($this->routeIs('checkout.addresses.*') ? [Rule::in(config('checkout.states'))] : []),

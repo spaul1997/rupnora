@@ -12,9 +12,9 @@ class Order extends Model
     use HasFactory;
 
     public const STATUSES = [
-        'pending', 'confirmed', 'processing', 'packed', 'shipped',
+        'processing', 'confirmed', 'packed', 'shipped',
         'out_for_delivery', 'delivered', 'cancelled',
-        'return_requested', 'returned', 'refunded',
+        'return_requested', 'return_accepted', 'return_rejected', 'returned', 'refunded',
     ];
 
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'partial_refund', 'chargeback', 'cod'];
@@ -30,6 +30,8 @@ class Order extends Model
         'grand_total', 'paid_amount', 'refund_amount',
         'shipping_address', 'billing_address',
         'courier_name', 'tracking_number', 'tracking_url', 'estimated_delivery', 'delivered_at', 'stock_reserved',
+        'shiprocket_order_id', 'shiprocket_shipment_id', 'shiprocket_status', 'shiprocket_synced_at',
+        'shiprocket_tracking', 'shiprocket_tracked_at',
     ];
 
     protected function casts(): array
@@ -50,6 +52,9 @@ class Order extends Model
             'paid_at' => 'datetime',
             'estimated_delivery' => 'date',
             'delivered_at' => 'datetime',
+            'shiprocket_synced_at' => 'datetime',
+            'shiprocket_tracking' => 'array',
+            'shiprocket_tracked_at' => 'datetime',
             'stock_reserved' => 'boolean',
             'affiliate_rule_snapshot' => 'array',
             'affiliate_flagged' => 'boolean',

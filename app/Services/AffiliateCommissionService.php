@@ -177,7 +177,7 @@ class AffiliateCommissionService
             return 0;
         }
 
-        $goodsPaid = max(0.01, (float) $order->grand_total - (float) $order->shipping_charge - (float) $order->gst_amount - (float) $order->gift_wrap_charge);
+        $goodsPaid = max(0.01, (float) $order->grand_total - (float) $order->shipping_charge - (float) $order->gift_wrap_charge);
 
         return min(1, (float) $order->refund_amount / $goodsPaid);
     }

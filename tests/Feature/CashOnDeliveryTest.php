@@ -59,7 +59,7 @@ class CashOnDeliveryTest extends TestCase
         $product = $this->product();
         $this->actingAs($customer)->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 2])->assertOk();
 
-        foreach ([2060, 2059.99, 0] as $limit) {
+        foreach ([2000, 1999.99, 0] as $limit) {
             WebsiteSetting::current()->update(['cod_order_limit' => $limit]);
             $this->postJson(route('checkout.order.store'), [
                 'address_id' => $address->id, 'delivery' => 'standard', 'payment' => 'cod', 'cod_order_limit' => 99999999,
@@ -69,13 +69,13 @@ class CashOnDeliveryTest extends TestCase
         $this->assertDatabaseCount('orders', 0);
         $this->assertSame(10, $product->fresh()->stock_quantity);
 
-        WebsiteSetting::current()->update(['cod_order_limit' => '2060.01']);
+        WebsiteSetting::current()->update(['cod_order_limit' => '2000.01']);
         $this->postJson(route('checkout.order.store'), [
             'address_id' => $address->id, 'delivery' => 'standard', 'payment' => 'cod',
         ])->assertOk();
         $order = $customer->orders()->firstOrFail();
         $this->assertSame('Cash on Delivery', $order->payment_method);
-        $this->assertSame(2060.0, (float) $order->grand_total);
+        $this->assertSame(2000.0, (float) $order->grand_total);
 
         WebsiteSetting::current()->update(['cod_order_limit' => 0]);
         $this->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 2])->assertOk();
@@ -87,7 +87,7 @@ class CashOnDeliveryTest extends TestCase
 
     public function test_guest_cod_limit_includes_the_configured_express_delivery_charge(): void
     {
-        WebsiteSetting::current()->update(['cod_order_limit' => '2099.50', 'express_delivery_charge' => '39.50']);
+        WebsiteSetting::current()->update(['cod_order_limit' => '2039.50', 'express_delivery_charge' => '39.50']);
         $product = $this->product();
         $addressId = $this->postJson(route('checkout.addresses.store'), $this->address())->assertOk()->json('address.id');
         $this->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 2])->assertOk();
@@ -97,14 +97,14 @@ class CashOnDeliveryTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('payment');
         $this->assertEmpty(session('checkout.orders', []));
 
-        WebsiteSetting::current()->update(['cod_order_limit' => '2099.51']);
+        WebsiteSetting::current()->update(['cod_order_limit' => '2039.51']);
         $orderId = $this->postJson(route('checkout.order.store'), [
             'address_id' => $addressId, 'delivery' => 'express', 'payment' => 'cod',
         ])->assertOk()->json('orderId');
 
         $this->get(route('order.success', $orderId))->assertOk()
             ->assertViewHas('order', fn ($order) => $order['payment_method'] === 'Cash on Delivery'
-                && $order['shipping'] === 39.50 && $order['total'] === 2099.50);
+                && $order['shipping'] === 39.50 && $order['total'] === 2039.50);
     }
 
     private function product(): Product

@@ -99,7 +99,12 @@ class CheckoutOrders
         $items = ShoppingCart::items();
         $address = self::address((string) $data['address_id']);
         $settings = WebsiteSetting::current();
-        $shipping = $data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0;
+        $shipping = array_key_exists('shipping_charge', $data)
+            ? max(0, (float) $data['shipping_charge'])
+            : ($data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0);
+        $estimatedDeliveryDays = $data['delivery'] === 'express'
+            ? 3
+            : max(1, (int) data_get($data, 'shipping_quote.estimated_delivery_days', 7));
         $returnAllowDays = max(0, (int) $settings->return_allow);
         $giftWrap = (bool) ($data['gift_wrap'] ?? false);
         $giftWrapCharge = $giftWrap ? (float) config('checkout.gift_wrap.charge', 50) : 0;
@@ -110,7 +115,7 @@ class CheckoutOrders
             $address['phone'] = trim($address['phone'] ?? '');
         }
 
-        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $returnAllowDays, $giftWrap, $giftWrapCharge, $guestCheckout) {
+        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $estimatedDeliveryDays, $returnAllowDays, $giftWrap, $giftWrapCharge, $guestCheckout) {
             $products = Product::query()->whereIn('id', array_column(array_column($items, 'product'), 'id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $quantities = collect($items)->groupBy('product.id')->map(fn ($rows) => $rows->sum('qty'));
@@ -163,7 +168,16 @@ class CheckoutOrders
             }
             $coupon = $couponPricing['coupon'] ?? null;
             $couponDiscount = (float) ($couponPricing['discount'] ?? 0);
-            $tax = round(max(0, $sellingTotal - $couponDiscount) * 0.03, 2);
+            $tax = round((float) collect($items)->sum(function (array $item) use ($products, $couponPricing): float {
+                $product = $products->get($item['product']['id']);
+                $lineTotal = (float) $item['product']['price'] * (int) $item['qty'];
+                $lineDiscount = (float) ($couponPricing['allocations'][$item['key']] ?? 0);
+
+                return Product::includedGstAmount(
+                    max(0, $lineTotal - $lineDiscount),
+                    (float) ($product->gst_percentage ?? 0),
+                );
+            }), 2);
             $attribution = app(AffiliateAttributionService::class)->resolve($customer, $coupon);
 
             $order = $customer->orders()->create([
@@ -200,10 +214,10 @@ class CheckoutOrders
                 'gift_message' => $giftWrap ? self::nullableTrimmed($data['gift_message'] ?? null) : null,
                 'gift_to' => $giftWrap ? self::nullableTrimmed($data['gift_to'] ?? null) : null,
                 'gift_from' => $giftWrap ? self::nullableTrimmed($data['gift_from'] ?? null) : null,
-                'grand_total' => $sellingTotal - $couponDiscount + $shipping + $tax + $giftWrapCharge,
+                'grand_total' => $sellingTotal - $couponDiscount + $shipping + $giftWrapCharge,
                 'shipping_address' => $address,
                 'billing_address' => $address,
-                'estimated_delivery' => now()->addDays($data['delivery'] === 'express' ? 3 : 7),
+                'estimated_delivery' => now()->addDays($estimatedDeliveryDays),
                 'stock_reserved' => true,
             ]);
 
@@ -277,6 +291,13 @@ class CheckoutOrders
             }
         }
 
+        $shiprocketTracking = is_array($order->shiprocket_tracking) ? $order->shiprocket_tracking : [];
+        $trackingActivities = collect($shiprocketTracking['activities'] ?? [])
+            ->filter(fn ($activity): bool => is_array($activity))
+            ->take(10)
+            ->values()
+            ->all();
+
         return [
             'id' => $order->order_number, 'date' => $order->created_at->format('d M Y'),
             'status' => $order->status === 'out_for_delivery' ? 'Out for Delivery' : Str::headline($order->status),
@@ -300,6 +321,9 @@ class CheckoutOrders
             'tracking_url' => filter_var($order->tracking_url, FILTER_VALIDATE_URL) && in_array(parse_url($order->tracking_url, PHP_URL_SCHEME), ['http', 'https']) ? $order->tracking_url : null,
             'tracking_number' => $order->tracking_number,
             'courier_name' => $order->courier_name,
+            'tracking_status' => $shiprocketTracking['status'] ?? $order->shiprocket_status,
+            'tracking_updated_at' => $order->shiprocket_tracked_at?->format('d M Y, h:i A'),
+            'tracking_activities' => $trackingActivities,
             'items' => $order->items->map(function (OrderItem $item) {
                 $product = $item->product;
                 $image = $product?->images->firstWhere('is_primary', true) ?? $product?->images->first();

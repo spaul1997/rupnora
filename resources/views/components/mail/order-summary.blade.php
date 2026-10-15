@@ -61,7 +61,7 @@
                     <td align="right" style="padding:2px 0; color:#231535;">&#8377;{{ number_format((float) $order->shipping_charge, 2) }}</td>
                 </tr>
                 <tr>
-                    <td style="padding:2px 0; color:#9e9fa5;">GST</td>
+                    <td style="padding:2px 0; color:#9e9fa5;">GST (included)</td>
                     <td align="right" style="padding:2px 0; color:#231535;">&#8377;{{ number_format((float) $order->gst_amount, 2) }}</td>
                 </tr>
                 @if ($order->gift_wrap)

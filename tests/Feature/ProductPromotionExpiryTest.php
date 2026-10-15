@@ -148,12 +148,12 @@ class ProductPromotionExpiryTest extends TestCase
         $key = $response->json('items.0.key');
 
         $this->travelTo(Carbon::parse('2026-09-18 00:00:00', 'UTC'));
-        $this->patchJson(route('cart.update', $key), ['qty' => 1])->assertOk()->assertJsonPath('items.0.price', 1000)->assertJsonPath('summary.total', 1030);
+        $this->patchJson(route('cart.update', $key), ['qty' => 1])->assertOk()->assertJsonPath('items.0.price', 1000)->assertJsonPath('summary.total', 1000);
         $this->get(route('checkout'))->assertOk()->assertViewHas('items', fn ($items) => $items[0]['product']['price'] === 1000.0);
         $this->postJson(route('checkout.order.store'), ['address_id' => $address->id, 'delivery' => 'standard', 'payment' => 'cod'])->assertOk();
         $latest = $customer->orders()->latest('id')->firstOrFail();
         $this->assertSame(1000.0, (float) $latest->items()->first()->price);
-        $this->assertSame(1030.0, (float) $latest->grand_total);
+        $this->assertSame(1000.0, (float) $latest->grand_total);
         $this->assertSame(720.0, (float) $original->items()->first()->price);
         $this->get(route('account.orders.show', $original->order_number))->assertOk()->assertViewHas('order', fn ($order) => $order['items'][0]['product']['price'] === 720.0);
     }

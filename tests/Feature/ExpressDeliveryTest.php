@@ -50,10 +50,10 @@ class ExpressDeliveryTest extends TestCase
 
         $this->get(route('checkout'))->assertOk()
             ->assertViewHas('expressDeliveryCharge', 275.50)
-            ->assertSee('₹275.50')
+            ->assertSee('baseShippingCost + expressDeliveryCharge', false)
             ->assertSee('x-text="deliveryDescription"', false)
             ->assertSee('x-text="formatMoney(orderTotal)"', false)
-            ->assertSee('x-text="shippingCost > 0 ? formatMoney(shippingCost) : \'Free\'"', false)
+            ->assertSee("shippingLoading ? 'Calculating...'", false)
             ->assertDontSee('₹199');
     }
 
@@ -71,12 +71,12 @@ class ExpressDeliveryTest extends TestCase
 
         $order = $customer->orders()->firstOrFail();
         $this->assertSame(275.50, (float) $order->shipping_charge);
-        $this->assertSame(2335.50, (float) $order->grand_total);
+        $this->assertSame(2275.50, (float) $order->grand_total);
 
         WebsiteSetting::current()->update(['express_delivery_charge' => '499.99']);
 
         $this->get(route('account.orders.show', $order->order_number))->assertOk()
-            ->assertViewHas('order', fn ($data) => $data['shipping'] === 275.50 && $data['total'] === 2335.50);
+            ->assertViewHas('order', fn ($data) => $data['shipping'] === 275.50 && $data['total'] === 2275.50);
     }
 
     public function test_guest_orders_use_the_saved_charge_and_allow_standard_and_zero_cost_express_delivery(): void
@@ -96,11 +96,11 @@ class ExpressDeliveryTest extends TestCase
             $firstOrderId ??= $orderId;
 
             $this->get(route('order.success', $orderId))->assertOk()
-                ->assertViewHas('order', fn ($order) => (float) $order['shipping'] === (float) $shipping && (float) $order['total'] === (float) (2060 + $shipping));
+                ->assertViewHas('order', fn ($order) => (float) $order['shipping'] === (float) $shipping && (float) $order['total'] === (float) (2000 + $shipping));
         }
 
         $this->get(route('order.success', $firstOrderId))->assertOk()
-            ->assertViewHas('order', fn ($order) => $order['shipping'] === 95.75 && $order['total'] === 2155.75);
+            ->assertViewHas('order', fn ($order) => $order['shipping'] === 95.75 && $order['total'] === 2095.75);
     }
 
     private function product(): Product

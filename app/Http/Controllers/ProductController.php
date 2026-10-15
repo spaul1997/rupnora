@@ -2,13 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Review;
+use App\Services\ShiprocketService;
 use App\Support\ProductReviewFallbacks;
 use App\Support\StorefrontCatalog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class ProductController extends Controller
 {
+    public function deliveryAvailability(
+        Request $request,
+        Product $product,
+        ShiprocketService $shiprocket,
+    ): JsonResponse {
+        abort_unless($product->is_active, Response::HTTP_NOT_FOUND);
+
+        $data = $request->validate([
+            'delivery_postcode' => ['required', 'regex:/^[1-9][0-9]{5}$/'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:5'],
+        ]);
+
+        try {
+            $availability = $shiprocket->checkProductServiceability(
+                $product,
+                $data['delivery_postcode'],
+                (int) ($data['quantity'] ?? 1),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => 'Delivery availability is temporarily unavailable. Please try again shortly.',
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+
+        return response()->json($availability);
+    }
+
     public function show(string $slug, ProductReviewFallbacks $fallbackReviews)
     {
         $product = StorefrontCatalog::product($slug);

@@ -38,8 +38,38 @@ class GiftWrapCheckoutTest extends TestCase
             ->assertSee('₹999.99')
             ->assertSee('₹1,200.00')
             ->assertSee('₹200.01')
-            ->assertSee('₹30.00')
-            ->assertSee('₹1,029.99');
+            ->assertSee('₹0.00')
+            ->assertSee('GST (included)');
+    }
+
+    public function test_gst_is_recorded_as_included_without_being_added_to_the_total(): void
+    {
+        Mail::fake();
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $address = $customer->addresses()->create([...$this->address(), 'is_default' => true]);
+        $product = $this->product();
+        $product->update(['selling_price' => 1000, 'mrp' => 1200, 'gst_percentage' => 3]);
+
+        $this->actingAs($customer)->postJson(route('cart.store'), [
+            'product_id' => $product->id,
+            'qty' => 1,
+        ])->assertOk()
+            ->assertJsonPath('summary.tax', 30)
+            ->assertJsonPath('summary.total', 1030);
+
+        $this->get(route('cart'))->assertOk()
+            ->assertSee('GST (included)')
+            ->assertViewHas('summary', fn (array $summary) => $summary['tax'] === 30.0 && $summary['total'] === 1030.0);
+
+        $orderNumber = $this->postJson(route('checkout.order.store'), [
+            'address_id' => $address->id,
+            'delivery' => 'standard',
+            'payment' => 'online',
+        ])->assertOk()->json('orderId');
+        $order = $customer->orders()->where('order_number', $orderNumber)->firstOrFail();
+
+        $this->assertSame(30.0, (float) $order->gst_amount);
+        $this->assertSame(1030.0, (float) $order->grand_total);
     }
 
     public function test_gift_wrap_details_and_server_calculated_charge_are_saved_with_the_order(): void
@@ -74,7 +104,7 @@ class GiftWrapCheckoutTest extends TestCase
         $this->assertSame('Have a wonderful birthday!', $order->gift_message);
         $this->assertSame('Mira', $order->gift_to);
         $this->assertSame('Arjun', $order->gift_from);
-        $this->assertSame(2110.0, (float) $order->grand_total);
+        $this->assertSame(2050.0, (float) $order->grand_total);
 
         $this->get(route('account.orders.show', $orderNumber))->assertOk()
             ->assertSee('Gift Wrap')
@@ -120,7 +150,7 @@ class GiftWrapCheckoutTest extends TestCase
         $this->assertFalse($order->gift_wrap);
         $this->assertSame(0.0, (float) $order->gift_wrap_charge);
         $this->assertNull($order->gift_message);
-        $this->assertSame(1030.0, (float) $order->grand_total);
+        $this->assertSame(1000.0, (float) $order->grand_total);
     }
 
     private function product(): Product

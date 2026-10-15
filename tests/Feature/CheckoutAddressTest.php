@@ -10,7 +10,7 @@ class CheckoutAddressTest extends TestCase
 {
     use DatabaseMigrations;
 
-    public function test_checkout_requires_every_visible_address_field_except_landmark(): void
+    public function test_checkout_requires_every_visible_address_field_except_address_line_two_and_landmark(): void
     {
         foreach (array_keys($this->address()) as $field) {
             $data = $this->address();
@@ -26,7 +26,7 @@ class CheckoutAddressTest extends TestCase
 
     public function test_checkout_rejects_invalid_address_values(): void
     {
-        foreach (['email' => 'invalid-email', 'district' => str_repeat('x', 101), 'state' => 'Invalid State', 'pincode' => '12345'] as $field => $value) {
+        foreach (['email' => 'invalid-email', 'line2' => str_repeat('x', 181), 'state' => 'Invalid State', 'pincode' => '12345'] as $field => $value) {
             $this->postJson(route('checkout.addresses.store'), [...$this->address(), $field => $value])
                 ->assertUnprocessable()
                 ->assertJsonValidationErrors($field);
@@ -40,17 +40,18 @@ class CheckoutAddressTest extends TestCase
         $this->postJson(route('checkout.addresses.store'), $this->address())
             ->assertOk()
             ->assertJsonPath('address.email', 'delivery@example.com')
-            ->assertJsonPath('address.district', 'Kolkata District')
+            ->assertJsonPath('address.district', '')
             ->assertJsonPath('address.country', 'India')
             ->assertJsonPath('address.line2', '')
             ->assertJsonPath('address.landmark', '');
 
         $this->get(route('checkout'))
             ->assertOk()
-            ->assertViewHas('addresses', fn ($addresses) => $addresses[0]['email'] === 'delivery@example.com' && $addresses[0]['district'] === 'Kolkata District')
+            ->assertViewHas('addresses', fn ($addresses) => $addresses[0]['email'] === 'delivery@example.com' && $addresses[0]['line2'] === '')
             ->assertSee('type="email"', false)
-            ->assertSee('placeholder="District *"', false)
-            ->assertDontSee('x-model.trim="newAddress.line2"', false)
+            ->assertSee('placeholder="Address Line 2 (optional)"', false)
+            ->assertSee('x-model.trim="newAddress.line2"', false)
+            ->assertDontSee('placeholder="District *"', false)
             ->assertSee('<option value="West Bengal">West Bengal</option>', false)
             ->assertSee('type="hidden" name="country" value="India"', false)
             ->assertDontSee('placeholder="Country"', false);
@@ -64,13 +65,13 @@ class CheckoutAddressTest extends TestCase
             ->postJson(route('checkout.addresses.store'), [...$this->address(), 'country' => 'Another Country', 'landmark' => ''])
             ->assertOk()
             ->assertJsonPath('address.email', 'delivery@example.com')
-            ->assertJsonPath('address.district', 'Kolkata District')
+            ->assertJsonPath('address.district', '')
             ->assertJsonPath('address.country', 'India');
 
         $this->assertDatabaseHas('customer_addresses', [
             'user_id' => $customer->id,
             'email' => 'delivery@example.com',
-            'district' => 'Kolkata District',
+            'district' => null,
             'country' => 'India',
             'line2' => null,
             'landmark' => null,
@@ -78,9 +79,9 @@ class CheckoutAddressTest extends TestCase
 
         $this->get(route('checkout'))
             ->assertOk()
-            ->assertViewHas('addresses', fn ($addresses) => $addresses[0]['email'] === 'delivery@example.com' && $addresses[0]['district'] === 'Kolkata District');
+            ->assertViewHas('addresses', fn ($addresses) => $addresses[0]['email'] === 'delivery@example.com' && $addresses[0]['line2'] === '');
 
-        $this->get(route('account.addresses'))->assertOk()->assertSee('Kolkata District');
+        $this->get(route('account.addresses'))->assertOk()->assertDontSee('Kolkata District');
     }
 
     public function test_guest_can_edit_an_address_without_creating_a_duplicate_or_changing_its_default_status(): void
@@ -96,7 +97,7 @@ class CheckoutAddressTest extends TestCase
             ...$this->address(),
             'name' => 'Updated Customer',
             'email' => 'updated@example.com',
-            'district' => 'Updated District',
+            'line2' => 'Updated apartment',
             'country' => 'Another Country',
             'default' => false,
         ])
@@ -104,9 +105,8 @@ class CheckoutAddressTest extends TestCase
             ->assertJsonPath('address.id', $original['id'])
             ->assertJsonPath('address.name', 'Updated Customer')
             ->assertJsonPath('address.email', 'updated@example.com')
-            ->assertJsonPath('address.district', 'Updated District')
             ->assertJsonPath('address.country', 'India')
-            ->assertJsonPath('address.line2', 'Existing apartment')
+            ->assertJsonPath('address.line2', 'Updated apartment')
             ->assertJsonPath('address.default', true)
             ->assertJsonCount(2, 'addresses')
             ->assertJsonPath('addresses.1', $other);
@@ -208,7 +208,6 @@ class CheckoutAddressTest extends TestCase
             'phone' => '9876543210',
             'line1' => 'Test Street',
             'city' => 'Kolkata',
-            'district' => 'Kolkata District',
             'state' => 'West Bengal',
             'pincode' => '700001',
         ];

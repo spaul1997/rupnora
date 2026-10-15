@@ -8,12 +8,14 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\WebsiteSetting;
 use App\Notifications\AccountActivity;
+use App\Services\AffiliateCommissionService;
+use App\Services\ShiprocketTrackingService;
 use App\Support\CheckoutAddresses;
 use App\Support\CheckoutOrders;
 use App\Support\ShoppingCart;
 use App\Support\StorefrontCatalog;
-use App\Services\AffiliateCommissionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +25,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class AccountController extends Controller
 {
@@ -91,6 +94,25 @@ class AccountController extends Controller
             'shipping' => $order['shipping'],
             'tax' => $order['tax'],
         ]);
+    }
+
+    public function refreshOrderTracking(string $id, ShiprocketTrackingService $trackingService): RedirectResponse
+    {
+        $order = Auth::user()->orders()->where('order_number', $id)->firstOrFail();
+
+        if (! $order->tracking_number) {
+            return back()->withErrors(['tracking' => 'Tracking has not been generated for this order yet.']);
+        }
+
+        try {
+            $tracking = $trackingService->refresh($order);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors(['tracking' => 'Live tracking is temporarily unavailable. Please try again shortly.']);
+        }
+
+        return back()->with('success', 'Tracking refreshed successfully: '.$tracking['status'].'.');
     }
 
     public function wishlist()

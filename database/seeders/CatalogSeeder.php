@@ -154,8 +154,8 @@ class CatalogSeeder extends Seeder
                 ];
             }
 
-            $gst = round($subtotal * 0.03, 2);
-            $grandTotal = $subtotal + $gst;
+            $gst = 0;
+            $grandTotal = $subtotal;
             $paymentStatus = $status === 'cancelled' ? 'refunded' : ($status === 'pending' ? 'pending' : 'paid');
 
             $order = Order::create([

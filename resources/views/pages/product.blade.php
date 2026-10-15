@@ -9,6 +9,7 @@
     $galleryCount = count($gallery);
     $shareUrl = route('product.show', $product['slug'] ?? $product['id']);
     $productUrlKey = $product['slug'] ?? $product['id'];
+    $deliveryAvailabilityUrl = route('product.delivery-availability', $productUrlKey);
     $customerReview = $customerReview ?? null;
     $canReview = auth()->check() && auth()->user()->role === 'customer' && auth()->user()->is_active;
     $reviewReturnPath = route('product.show', $productUrlKey, false).'?review=1#customer-reviews';
@@ -135,11 +136,46 @@
             selectedMetal: {{ Illuminate\Support\Js::from($selectedMetal) }},
             @if($product['purity']) selectedPurity: {{ Illuminate\Support\Js::from($product['purity']) }}, @endif
             @if($product['sizes']) selectedSize: {{ Illuminate\Support\Js::from($product['sizes'][0]) }}, @endif
-            pin: '', pinStatus: null, pinLoading: false,
-            checkPin() {
-                if (!/^[1-9][0-9]{5}$/.test(this.pin)) { this.pinStatus = 'invalid'; return; }
-                this.pinLoading = true; this.pinStatus = null;
-                setTimeout(() => { this.pinLoading = false; this.pinStatus = 'available'; }, 700);
+            deliveryCheckUrl: {{ Illuminate\Support\Js::from($deliveryAvailabilityUrl) }},
+            pin: '', pinStatus: null, pinLoading: false, pinMessage: '', deliveryResult: null,
+            async checkPin() {
+                this.pin = String(this.pin).replace(/[^0-9]/g, '').slice(0, 6);
+                if (!/^[1-9][0-9]{5}$/.test(this.pin)) {
+                    this.pinStatus = 'invalid';
+                    this.pinMessage = '';
+                    this.deliveryResult = null;
+                    return;
+                }
+
+                this.pinLoading = true;
+                this.pinStatus = null;
+                this.pinMessage = '';
+                this.deliveryResult = null;
+
+                try {
+                    const url = new URL(this.deliveryCheckUrl, window.location.origin);
+                    url.searchParams.set('delivery_postcode', this.pin);
+                    url.searchParams.set('quantity', String(this.qty));
+                    const response = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+                    const result = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(result?.errors?.delivery_postcode?.[0] || result?.message || 'Unable to check delivery availability.');
+                    }
+
+                    this.deliveryResult = result;
+                    this.pinStatus = result.available ? 'available' : 'unavailable';
+                    this.pinMessage = result.message || (result.available
+                        ? 'Delivery is available for this pincode.'
+                        : 'Delivery is not currently available for this pincode.');
+                } catch (error) {
+                    this.pinStatus = 'error';
+                    this.pinMessage = error instanceof Error
+                        ? error.message
+                        : 'Unable to check delivery availability. Please try again.';
+                } finally {
+                    this.pinLoading = false;
+                }
             }
         }"
     >
@@ -289,7 +325,7 @@
                 <div class="mt-6 flex flex-col gap-3 lg:flex-row lg:items-end">
                     <div class="lg:w-36 lg:flex-shrink-0">
                         <p class="label-luxe">Quantity</p>
-                        <x-ui.quantity-selector model="qty" :max="$purchaseMaxQty" :disabled-when="$isInStock ? null : 'true'" />
+                        <x-ui.quantity-selector model="qty" :max="$purchaseMaxQty" :disabled-when="$isInStock ? null : 'true'" after-change="pinStatus = null; pinMessage = ''; deliveryResult = null" />
                     </div>
 
                     {{-- Delivery check --}}
@@ -297,18 +333,30 @@
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <p class="shrink-0 text-sm font-medium text-charcoal">Delivery Availability</p>
                             <div class="flex min-w-0 flex-1 items-center gap-2">
-                                <input type="text" x-model="pin" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="Enter PIN code" class="input-luxe min-w-0 flex-1 !py-2 text-sm" @keydown.enter="checkPin()">
-                                <button type="button" @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px]" :disabled="pinLoading">
+                                <input type="text" x-model="pin" maxlength="6" inputmode="numeric" autocomplete="postal-code" placeholder="Enter PIN code" class="input-luxe min-w-0 flex-1 !py-2 text-sm" @input="pin = pin.replace(/[^0-9]/g, '').slice(0, 6); pinStatus = null; pinMessage = ''; deliveryResult = null" @keydown.enter.prevent="checkPin()">
+                                <button type="button" @click="checkPin()" class="btn-secondary flex-shrink-0 !px-5 !py-2 text-[11px] disabled:cursor-wait disabled:opacity-60" :disabled="pinLoading">
                                     <span x-show="!pinLoading">Check</span>
                                     <span x-show="pinLoading" x-cloak>...</span>
                                 </button>
                             </div>
                         </div>
-                        <p x-show="pinStatus === 'invalid'" x-cloak class="mt-2 text-xs text-error">Please enter a valid 6-digit PIN code.</p>
-                        <p x-show="pinStatus === 'available'" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-success">
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                            Delivery available. Estimated by <strong>{{ now()->addDays(6)->format('d M Y') }}</strong>.
-                        </p>
+                        <div class="mt-2" aria-live="polite">
+                            <p x-show="pinStatus === 'invalid'" x-cloak class="text-xs text-error">Please enter a valid 6-digit PIN code.</p>
+                            <p x-show="pinStatus === 'available'" x-cloak class="flex items-start gap-1.5 text-xs text-success">
+                                <svg class="mt-0.5 h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                <span>
+                                    <span x-text="pinMessage"></span>
+                                    <template x-if="deliveryResult?.estimated_date">
+                                        <span> Estimated by <strong x-text="deliveryResult.estimated_date"></strong>.</span>
+                                    </template>
+                                    <template x-if="deliveryResult?.courier_name">
+                                        <span class="block pt-0.5 text-muted">Via <span x-text="deliveryResult.courier_name"></span><template x-if="deliveryResult.courier_count > 1"><span> and <span x-text="deliveryResult.courier_count - 1"></span> more courier(s)</span></template>.</span>
+                                    </template>
+                                </span>
+                            </p>
+                            <p x-show="pinStatus === 'unavailable'" x-cloak class="text-xs text-error" x-text="pinMessage"></p>
+                            <p x-show="pinStatus === 'error'" x-cloak class="text-xs text-error" x-text="pinMessage"></p>
+                        </div>
                     </div>
                 </div>
 
