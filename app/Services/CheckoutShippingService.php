@@ -10,6 +10,8 @@ use RuntimeException;
 
 class CheckoutShippingService
 {
+    private const DELIVERY_BUFFER_DAYS = 2;
+
     public function __construct(private readonly ShiprocketService $shiprocket) {}
 
     /**
@@ -19,7 +21,7 @@ class CheckoutShippingService
      *     available: bool,
      *     message: string,
      *     shipping_charge: float,
-     *     maximum_freight_charge: float,
+     *     minimum_freight_charge: float,
      *     free_shipping: bool,
      *     free_shipping_threshold: float,
      *     amount_to_free_shipping: float,
@@ -65,16 +67,16 @@ class CheckoutShippingService
         $threshold = max(0, (float) $settings->free_shipping_threshold);
         $freeShipping = $threshold <= 0 || $cartTotal >= $threshold;
         $amountToFreeShipping = $freeShipping ? 0 : round($threshold - $cartTotal, 2);
-        $maximumRateCourier = collect($couriers)
-            ->sortByDesc(fn (array $courier): float => (float) $courier['freight_charge'])
+        $minimumRateCourier = collect($couriers)
+            ->sortBy(fn (array $courier): float => (float) $courier['freight_charge'])
             ->first();
 
-        if (! is_array($maximumRateCourier)) {
+        if (! is_array($minimumRateCourier)) {
             return [
                 'available' => false,
                 'message' => 'Delivery is not currently available for the selected address.',
                 'shipping_charge' => 0,
-                'maximum_freight_charge' => 0,
+                'minimum_freight_charge' => 0,
                 'free_shipping' => $freeShipping,
                 'free_shipping_threshold' => $threshold,
                 'amount_to_free_shipping' => $amountToFreeShipping,
@@ -86,22 +88,22 @@ class CheckoutShippingService
             ];
         }
 
-        $maximumFreightCharge = round(max(0, (float) $maximumRateCourier['freight_charge']), 2);
-        $estimatedDate = $this->estimatedDate($maximumRateCourier);
+        $minimumFreightCharge = round(max(0, (float) $minimumRateCourier['freight_charge']), 2);
+        $estimatedDate = $this->estimatedDate($minimumRateCourier);
 
         return [
             'available' => true,
             'message' => $freeShipping
                 ? 'Free shipping applies to this order.'
                 : 'Shipping calculated from available couriers.',
-            'shipping_charge' => $freeShipping ? 0 : $maximumFreightCharge,
-            'maximum_freight_charge' => $maximumFreightCharge,
+            'shipping_charge' => $freeShipping ? 0 : $minimumFreightCharge,
+            'minimum_freight_charge' => $minimumFreightCharge,
             'free_shipping' => $freeShipping,
             'free_shipping_threshold' => $threshold,
             'amount_to_free_shipping' => $amountToFreeShipping,
             'courier_count' => count($couriers),
-            'courier_name' => (string) $maximumRateCourier['name'],
-            'estimated_delivery_days' => $maximumRateCourier['estimated_delivery_days'] ?: null,
+            'courier_name' => (string) $minimumRateCourier['name'],
+            'estimated_delivery_days' => $minimumRateCourier['estimated_delivery_days'] ?: null,
             'estimated_date' => $estimatedDate,
             'weight' => $weight,
         ];
@@ -132,7 +134,9 @@ class CheckoutShippingService
     {
         try {
             if (filled($courier['etd'] ?? null)) {
-                return Carbon::parse($courier['etd'])->format('d M Y');
+                return Carbon::parse($courier['etd'])
+                    ->addDays(self::DELIVERY_BUFFER_DAYS)
+                    ->format('d M Y');
             }
         } catch (\Throwable) {
             // Fall back to the courier's estimated day count.
@@ -140,6 +144,8 @@ class CheckoutShippingService
 
         $days = (int) ($courier['estimated_delivery_days'] ?? 0);
 
-        return $days > 0 ? now()->addDays($days)->format('d M Y') : null;
+        return $days > 0
+            ? now()->addDays($days + self::DELIVERY_BUFFER_DAYS)->format('d M Y')
+            : null;
     }
 }

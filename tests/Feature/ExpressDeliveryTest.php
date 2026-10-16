@@ -44,16 +44,18 @@ class ExpressDeliveryTest extends TestCase
         $this->assertSame('275.50', WebsiteSetting::current()->express_delivery_charge);
     }
 
-    public function test_checkout_uses_the_saved_price_and_binds_the_order_summary_to_delivery_selection(): void
+    public function test_checkout_shows_one_dynamic_shipping_charge_without_delivery_options(): void
     {
         WebsiteSetting::current()->update(['express_delivery_charge' => '275.50']);
 
         $this->get(route('checkout'))->assertOk()
-            ->assertViewHas('expressDeliveryCharge', 275.50)
-            ->assertSee('baseShippingCost + expressDeliveryCharge', false)
+            ->assertViewMissing('expressDeliveryCharge')
             ->assertSee('x-text="deliveryDescription"', false)
             ->assertSee('x-text="formatMoney(orderTotal)"', false)
             ->assertSee("shippingLoading ? 'Calculating...'", false)
+            ->assertSee('more for free shipping')
+            ->assertDontSee('Standard Delivery')
+            ->assertDontSee('Express Delivery')
             ->assertDontSee('₹199');
     }
 

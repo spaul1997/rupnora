@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\ShiprocketService;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -39,6 +40,7 @@ class ShiprocketOrderTest extends TestCase
         ]);
 
         Cache::flush();
+        Http::swap(new Factory);
         Http::preventStrayRequests();
     }
 

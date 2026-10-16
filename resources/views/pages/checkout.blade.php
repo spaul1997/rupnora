@@ -33,7 +33,6 @@
             updateAddressUrl: {{ Illuminate\Support\Js::from(route('checkout.addresses.update', ['address' => '__ADDRESS__'])) }},
             shippingQuoteUrl: {{ Illuminate\Support\Js::from(route('checkout.shipping-quote')) }},
             placeOrderUrl: {{ Illuminate\Support\Js::from(route('checkout.order.store')) }},
-            expressDeliveryCharge: {{ Illuminate\Support\Js::from($expressDeliveryCharge) }},
             freeShippingThreshold: {{ Illuminate\Support\Js::from($freeShippingThreshold) }},
             codOrderLimit: {{ Illuminate\Support\Js::from($codOrderLimit) }},
             baseTotal: {{ Illuminate\Support\Js::from($sellingTotal - $couponDiscount) }},
@@ -134,36 +133,21 @@
 
                 {{-- Step 2: Delivery --}}
                 <div x-show="step === 2" x-cloak>
-                    <h2 class="font-display text-xl text-charcoal">Choose Delivery Option</h2>
-                    <div class="mt-5 space-y-3">
-                        <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors" :class="delivery === 'standard' ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line'">
-                            <input type="radio" x-model="delivery" value="standard" class="mt-1 h-4 w-4 text-champagne-dark focus:ring-champagne-dark/40">
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-charcoal">Standard Delivery</span>
-                                    <span class="text-sm font-semibold" :class="baseShippingCost > 0 ? 'text-charcoal' : 'text-success'" x-text="shippingLoading ? 'Checking...' : (baseShippingCost > 0 ? formatMoney(baseShippingCost) : 'Free')">Checking...</span>
-                                </div>
-                                <p class="mt-1 text-xs text-muted">
-                                    <span x-show="shippingQuote?.estimated_date">Estimated by <span x-text="shippingQuote?.estimated_date"></span>. </span>
-                                    Fully insured.
-                                </p>
-                            </div>
-                        </label>
-                        <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors" :class="delivery === 'express' ? 'border-champagne-dark ring-1 ring-champagne-dark' : 'border-line'">
-                            <input type="radio" x-model="delivery" value="express" class="mt-1 h-4 w-4 text-champagne-dark focus:ring-champagne-dark/40">
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-medium text-charcoal">Express Delivery</span>
-                                    <span class="text-sm font-semibold text-charcoal" x-text="shippingLoading ? 'Checking...' : (baseShippingCost + expressDeliveryCharge > 0 ? formatMoney(baseShippingCost + expressDeliveryCharge) : 'Free')">Checking...</span>
-                                </div>
-                                <p class="mt-1 text-xs text-muted">Arrives in 2&ndash;3 business days, fully insured.</p>
-                            </div>
-                        </label>
+                    <h2 class="font-display text-xl text-charcoal">Delivery</h2>
+                    <div class="mt-5 rounded-xl border border-line p-4">
+                        <div class="flex items-center justify-between gap-4">
+                            <span class="text-sm font-medium text-charcoal">Shipping</span>
+                            <span class="text-sm font-semibold" :class="baseShippingCost > 0 ? 'text-charcoal' : 'text-success'" x-text="shippingLoading ? 'Checking...' : (baseShippingCost > 0 ? formatMoney(baseShippingCost) : 'Free')">Checking...</span>
+                        </div>
+                        <p class="mt-1 text-xs text-muted">
+                            <span x-show="shippingQuote?.estimated_date">Estimated by <span x-text="shippingQuote?.estimated_date"></span>. </span>
+                            Fully insured.
+                        </p>
                     </div>
                     <div class="mt-3" aria-live="polite">
                         <p x-show="shippingLoading" x-cloak class="text-xs text-muted">Checking Shiprocket courier serviceability...</p>
                         <p x-show="!shippingLoading && shippingQuote?.free_shipping" x-cloak class="text-xs text-success">Free shipping unlocked for orders of <span x-text="formatMoney(freeShippingThreshold)"></span> or more.</p>
-                        <p x-show="!shippingLoading && shippingQuote && !shippingQuote.free_shipping && shippingQuote.amount_to_free_shipping > 0" x-cloak class="text-xs text-muted">Add <span x-text="formatMoney(shippingQuote.amount_to_free_shipping)"></span> more for free standard shipping.</p>
+                        <p x-show="!shippingLoading && shippingQuote && !shippingQuote.free_shipping && shippingQuote.amount_to_free_shipping > 0" x-cloak class="text-xs text-muted">Add <span x-text="formatMoney(shippingQuote.amount_to_free_shipping)"></span> more for free shipping.</p>
                         <p x-show="shippingError" x-cloak class="text-xs text-error" x-text="shippingError"></p>
                     </div>
 
@@ -229,7 +213,7 @@
 
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 1" class="btn-secondary">Back</button>
-                        <button @click="continueToPayment()" :disabled="shippingLoading || !shippingQuote || shippingError" class="btn-primary flex-1 sm:flex-initial">Continue to Payment</button>
+                        <button @click="continueToPayment()" :disabled="shippingLoading || !shippingQuote || shippingError.length > 0" class="btn-primary flex-1 sm:flex-initial">Continue to Payment</button>
                     </div>
                 </div>
 
@@ -252,7 +236,7 @@
                     </div>
                     <div class="mt-6 flex gap-3">
                         <button @click="step = 2" class="btn-secondary">Back</button>
-                        <button @click="continueToReview()" :disabled="shippingLoading || !shippingQuote || shippingError" class="btn-primary flex-1 sm:flex-initial">Review Order</button>
+                        <button @click="continueToReview()" :disabled="shippingLoading || !shippingQuote || shippingError.length > 0" class="btn-primary flex-1 sm:flex-initial">Review Order</button>
                     </div>
                     <p x-show="shippingError" x-cloak class="mt-3 text-sm text-error" x-text="shippingError"></p>
                 </div>
@@ -267,8 +251,9 @@
                             <p class="mt-1 text-xs text-muted" x-text="selectedAddressRecord?.phone || ''"></p>
                         </div>
                         <div class="rounded-xl border border-line p-4">
-                            <p class="text-xs font-medium uppercase tracking-wide text-muted">Delivery Option</p>
+                            <p class="text-xs font-medium uppercase tracking-wide text-muted">Shipping</p>
                             <p class="mt-1.5 text-sm text-charcoal" x-text="deliveryDescription"></p>
+                            <p x-show="shippingQuote?.estimated_date" x-cloak class="mt-1 text-xs text-muted">Expected delivery by <span x-text="shippingQuote?.estimated_date"></span></p>
                         </div>
                         <div class="rounded-xl border border-line p-4">
                             <p class="text-xs font-medium uppercase tracking-wide text-muted">Payment Method</p>

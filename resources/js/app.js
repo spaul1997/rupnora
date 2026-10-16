@@ -575,7 +575,7 @@ const blankCheckoutAddress = () => ({
     country: 'India',
 });
 
-window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, shippingQuoteUrl = null, placeOrderUrl = null, expressDeliveryCharge = 0, freeShippingThreshold = 0, codOrderLimit = 0, baseTotal = 0, giftWrapCharge = 0, giftMessageLimit = 248, giftMessageTemplates = {} } = {}) => ({
+window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl = null, updateAddressUrl = null, shippingQuoteUrl = null, placeOrderUrl = null, freeShippingThreshold = 0, codOrderLimit = 0, baseTotal = 0, giftWrapCharge = 0, giftMessageLimit = 248, giftMessageTemplates = {} } = {}) => ({
     step: 1,
     selectedAddress: selectedAddressId ?? addresses[0]?.id ?? null,
     addresses: addresses.map((address) => ({ ...address })),
@@ -583,7 +583,6 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     updateAddressUrl,
     shippingQuoteUrl,
     placeOrderUrl,
-    expressDeliveryCharge: Math.max(0, Number(expressDeliveryCharge) || 0),
     freeShippingThreshold: Math.max(0, Number(freeShippingThreshold) || 0),
     codOrderLimit: Math.max(0, Number(codOrderLimit) || 0),
     baseTotal: Number(baseTotal) || 0,
@@ -626,9 +625,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     },
 
     get shippingCost() {
-        const expressSurcharge = this.delivery === 'express' ? this.expressDeliveryCharge : 0;
-
-        return Math.round((this.baseShippingCost + expressSurcharge) * 100) / 100;
+        return Math.round(this.baseShippingCost * 100) / 100;
     },
 
     get giftWrapCost() {
@@ -660,9 +657,7 @@ window.checkoutPage = ({ addresses = [], selectedAddressId = null, addAddressUrl
     get deliveryDescription() {
         const shippingPrice = this.shippingCost > 0 ? this.formatMoney(this.shippingCost) : 'Free';
 
-        return this.delivery === 'express'
-            ? `Express Delivery (${shippingPrice}, 2–3 days)`
-            : `Standard Delivery (${shippingPrice})`;
+        return `Shipping (${shippingPrice})`;
     },
 
     formatMoney(value) {

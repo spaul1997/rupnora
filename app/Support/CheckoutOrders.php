@@ -11,6 +11,7 @@ use App\Services\AffiliateAttributionService;
 use App\Services\AffiliateCommissionRuleResolver;
 use App\Services\CartCouponService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -102,9 +103,7 @@ class CheckoutOrders
         $shipping = array_key_exists('shipping_charge', $data)
             ? max(0, (float) $data['shipping_charge'])
             : ($data['delivery'] === 'express' ? (float) $settings->express_delivery_charge : 0);
-        $estimatedDeliveryDays = $data['delivery'] === 'express'
-            ? 3
-            : max(1, (int) data_get($data, 'shipping_quote.estimated_delivery_days', 7));
+        $estimatedDelivery = self::estimatedDelivery($data);
         $returnAllowDays = max(0, (int) $settings->return_allow);
         $giftWrap = (bool) ($data['gift_wrap'] ?? false);
         $giftWrapCharge = $giftWrap ? (float) config('checkout.gift_wrap.charge', 50) : 0;
@@ -115,7 +114,7 @@ class CheckoutOrders
             $address['phone'] = trim($address['phone'] ?? '');
         }
 
-        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $estimatedDeliveryDays, $returnAllowDays, $giftWrap, $giftWrapCharge, $guestCheckout) {
+        $order = DB::transaction(function () use ($data, $items, $address, $shipping, $estimatedDelivery, $returnAllowDays, $giftWrap, $giftWrapCharge, $guestCheckout) {
             $products = Product::query()->whereIn('id', array_column(array_column($items, 'product'), 'id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $quantities = collect($items)->groupBy('product.id')->map(fn ($rows) => $rows->sum('qty'));
@@ -217,7 +216,7 @@ class CheckoutOrders
                 'grand_total' => $sellingTotal - $couponDiscount + $shipping + $giftWrapCharge,
                 'shipping_address' => $address,
                 'billing_address' => $address,
-                'estimated_delivery' => now()->addDays($estimatedDeliveryDays),
+                'estimated_delivery' => $estimatedDelivery,
                 'stock_reserved' => true,
             ]);
 
@@ -271,6 +270,25 @@ class CheckoutOrders
         session()->put(self::LATEST_ORDER_KEY, $order->order_number);
 
         return self::mapOrder($order->load(['items.product.images', 'statusHistories']));
+    }
+
+    private static function estimatedDelivery(array $data): Carbon
+    {
+        $quotedDate = trim((string) data_get($data, 'shipping_quote.estimated_date', ''));
+
+        if ($quotedDate !== '') {
+            try {
+                return Carbon::createFromFormat('d M Y', $quotedDate)->startOfDay();
+            } catch (\Throwable) {
+                // Fall back to the quoted delivery-day count.
+            }
+        }
+
+        $days = $data['delivery'] === 'express'
+            ? 3
+            : max(1, (int) data_get($data, 'shipping_quote.estimated_delivery_days', 7));
+
+        return now()->addDays($days)->startOfDay();
     }
 
     private static function mapOrder(Order $order): array

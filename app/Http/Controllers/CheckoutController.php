@@ -28,7 +28,6 @@ class CheckoutController extends Controller
             'items' => ShoppingCart::items(),
             'cartSummary' => ShoppingCart::summary(),
             'addresses' => CheckoutAddresses::all(),
-            'expressDeliveryCharge' => (float) $settings->express_delivery_charge,
             'freeShippingThreshold' => (float) $settings->free_shipping_threshold,
             'codOrderLimit' => (float) $settings->cod_order_limit,
             'giftWrapCharge' => (float) config('checkout.gift_wrap.charge', 50),

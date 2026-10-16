@@ -45,7 +45,7 @@
                 <span class="text-success">&minus;₹{{ number_format($couponDiscount, $precision) }}</span>
             </div>
         @endif
-        <div class="flex justify-between text-muted">
+        <div @if ($dynamicDelivery) x-show="step >= 2" x-cloak @endif class="flex justify-between text-muted">
             <span>Shipping</span>
             <span @if ($dynamicDelivery) x-text="shippingLoading ? 'Calculating...' : (shippingCost > 0 ? formatMoney(shippingCost) : 'Free')" @endif class="text-charcoal">{{ $shipping > 0 ? '₹' . number_format($shipping, $precision) : 'Free' }}</span>
         </div>

@@ -349,9 +349,6 @@
                                     <template x-if="deliveryResult?.estimated_date">
                                         <span> Estimated by <strong x-text="deliveryResult.estimated_date"></strong>.</span>
                                     </template>
-                                    <template x-if="deliveryResult?.courier_name">
-                                        <span class="block pt-0.5 text-muted">Via <span x-text="deliveryResult.courier_name"></span><template x-if="deliveryResult.courier_count > 1"><span> and <span x-text="deliveryResult.courier_count - 1"></span> more courier(s)</span></template>.</span>
-                                    </template>
                                 </span>
                             </p>
                             <p x-show="pinStatus === 'unavailable'" x-cloak class="text-xs text-error" x-text="pinMessage"></p>

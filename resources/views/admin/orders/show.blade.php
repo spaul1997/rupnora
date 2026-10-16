@@ -36,6 +36,12 @@
                         <a href="tel:{{ $order->customer_phone }}" class="mt-0.5 block whitespace-nowrap font-medium leading-snug text-gray-900 hover:text-champagne-dark">{{ $order->customer_phone }}</a>
                     </div>
                 </div>
+                @if ($order->estimated_delivery)
+                    <div class="mt-4 flex items-center justify-between gap-4 rounded-lg bg-gray-50 px-4 py-3 text-sm">
+                        <span class="text-gray-500">Expected Delivery</span>
+                        <span class="font-semibold text-gray-900">{{ $order->estimated_delivery->format('d M Y') }}</span>
+                    </div>
+                @endif
             </div>
 
             {{-- Addresses --}}

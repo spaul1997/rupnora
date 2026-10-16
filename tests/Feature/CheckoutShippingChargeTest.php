@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\WebsiteSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -35,11 +36,12 @@ class CheckoutShippingChargeTest extends TestCase
         ]);
 
         Cache::flush();
+        Http::swap(new Factory);
         Http::preventStrayRequests();
         Mail::fake();
     }
 
-    public function test_checkout_uses_the_highest_active_serviceable_courier_rate_below_the_free_shipping_threshold(): void
+    public function test_checkout_uses_the_lowest_active_serviceable_courier_rate_below_the_free_shipping_threshold(): void
     {
         WebsiteSetting::current()->update([
             'free_shipping_threshold' => 3000,
@@ -57,12 +59,13 @@ class CheckoutShippingChargeTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('available', true)
-            ->assertJsonPath('shipping_charge', 135)
-            ->assertJsonPath('maximum_freight_charge', 135)
+            ->assertJsonPath('shipping_charge', 85)
+            ->assertJsonPath('minimum_freight_charge', 85)
             ->assertJsonPath('free_shipping', false)
             ->assertJsonPath('amount_to_free_shipping', 2000)
             ->assertJsonPath('courier_count', 2)
-            ->assertJsonPath('courier_name', 'Premium Courier')
+            ->assertJsonPath('courier_name', 'Economy Courier')
+            ->assertJsonPath('estimated_date', '24 Oct 2026')
             ->assertJsonPath('weight', 0.75);
 
         $orderNumber = $this->postJson(route('checkout.order.store'), [
@@ -72,8 +75,16 @@ class CheckoutShippingChargeTest extends TestCase
         ])->assertOk()->json('orderId');
 
         $order = Order::query()->where('order_number', $orderNumber)->firstOrFail();
-        $this->assertSame(135.0, (float) $order->shipping_charge);
-        $this->assertSame(1135.0, (float) $order->grand_total);
+        $this->assertSame(85.0, (float) $order->shipping_charge);
+        $this->assertSame(1085.0, (float) $order->grand_total);
+        $this->assertSame('2026-10-24', $order->estimated_delivery->format('Y-m-d'));
+
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $this->actingAs($admin)
+            ->get(route('admin.orders.show', $order))
+            ->assertOk()
+            ->assertSee('Expected Delivery')
+            ->assertSee('24 Oct 2026');
         Http::assertSentCount(3);
     }
 
@@ -95,7 +106,7 @@ class CheckoutShippingChargeTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('shipping_charge', 0)
-            ->assertJsonPath('maximum_freight_charge', 135)
+            ->assertJsonPath('minimum_freight_charge', 85)
             ->assertJsonPath('free_shipping', true)
             ->assertJsonPath('amount_to_free_shipping', 0);
 
@@ -120,6 +131,12 @@ class CheckoutShippingChargeTest extends TestCase
             ->assertViewHas('freeShippingThreshold', 4321.0)
             ->assertSee('shippingQuoteUrl')
             ->assertSee('Checking Shiprocket courier serviceability')
+            ->assertSee('x-show="step >= 2"', false)
+            ->assertSee('shippingError.length > 0', false)
+            ->assertSee('more for free shipping')
+            ->assertSee('Expected delivery by')
+            ->assertDontSee('Standard Delivery')
+            ->assertDontSee('Express Delivery')
             ->assertSee('Insured Shipping');
     }
 
