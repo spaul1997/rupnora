@@ -151,6 +151,7 @@ Route::get('/collections', [CollectionController::class, 'index'])->name('collec
 Route::get('/collections/{slug}', [CollectionController::class, 'show'])->name('collection.show');
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/all-designs', [CategoryController::class, 'allDesigns'])->name('all-designs');
 Route::get('/new-arrivals', [CategoryController::class, 'newArrivals'])->name('new-arrivals');
 Route::get('/best-sellers', [CategoryController::class, 'bestSellers'])->name('best-sellers');
 Route::get('/jewellery-type/{slug}', [CategoryController::class, 'jewelleryType'])->name('jewellery-type.show');

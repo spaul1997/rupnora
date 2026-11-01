@@ -19,6 +19,21 @@ class CategoryController extends Controller
         ]);
     }
 
+    public function allDesigns(Request $request)
+    {
+        return $this->renderCategory(
+            $request,
+            'all-designs',
+            [
+                'name' => 'All Designs',
+                'blurb' => 'Explore every Rupnora design and find your next favourite, from everyday essentials to statement jewellery.',
+                'art' => 'diamond',
+            ],
+            StorefrontCatalog::products(),
+            false,
+        );
+    }
+
     public function show(Request $request, string $slug)
     {
         $special = [

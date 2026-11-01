@@ -172,28 +172,63 @@
         </div>
     </section>
 
-    {{-- E. Shop by Jewellery Type --}}
-    <section class="section-pad bg-charcoal" aria-labelledby="home-jewellery-type-title">
+    {{-- E. Model Style Edit --}}
+    @php
+        $styleModels = [
+            ['image' => 'images/her.png', 'alt' => 'Model styling a pendant necklace and drop earrings'],
+            ['image' => 'images/inf1.png', 'alt' => 'Model wearing jewellery with an everyday look'],
+            ['image' => 'images/inf2.png', 'alt' => 'Model exploring statement earrings and bracelets'],
+        ];
+    @endphp
+    <section class="section-pad bg-charcoal" aria-labelledby="home-style-edit-title">
         <div class="container-luxe">
             <div class="mb-8 text-center sm:mb-10">
                 <span class="eyebrow text-champagne-light">Find Your Style</span>
-                <h2 id="home-jewellery-type-title" class="font-display mt-2 text-2xl text-ivory sm:text-3xl lg:text-4xl">Shop by Jewellery Type</h2>
+                <h2 id="home-style-edit-title" class="font-display mt-2 text-2xl text-ivory sm:text-3xl lg:text-4xl">The Style Edit</h2>
+                <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-ivory/70">A little inspiration for your next look. Discover jewellery to make it your own.</p>
             </div>
-            @php
-                $typeIcons = ['ring', 'necklace', 'earring', 'bangle', 'diamond'];
-            @endphp
-            {{-- Flex-wrap + centering keeps an odd last card centred instead of hanging left. --}}
-            <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
-                @foreach ($jewelleryTypes as $type)
-                    <a href="{{ route('jewellery-type.show', $type['slug']) }}" class="group flex w-[calc(50%-0.375rem)] flex-col items-center gap-3 rounded-2xl border border-ivory/10 bg-ivory/5 p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-champagne-light/40 hover:bg-ivory/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light sm:w-[calc(33.333%-0.667rem)] sm:gap-4 sm:p-6 lg:w-[calc(20%-0.8rem)]">
-                        <x-ui.product-art :art="$typeIcons[$loop->index % count($typeIcons)]" class="h-20 w-20 rounded-full transition-transform duration-500 group-hover:scale-105 sm:h-24 sm:w-24" icon-class="text-charcoal" stroke-width="2.2" />
-                        <span class="font-display text-sm text-ivory sm:text-base">{{ $type['name'] }}</span>
-                        <span class="inline-flex items-center gap-1 text-xs text-ivory/60 transition-colors group-hover:text-champagne-light">
-                            {{ $type['tag'] }}
-                            <svg class="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        </span>
-                    </a>
+            <div class="grid gap-5 sm:grid-cols-3 sm:gap-4 lg:gap-6">
+                @foreach ($styleModels as $model)
+                    @php
+                        $styleProduct = $randomInStockProducts[$loop->index] ?? null;
+                    @endphp
+                    <article class="group relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl border border-ivory/10 bg-ivory/5 sm:max-w-none">
+                        <x-ui.optimized-image
+                            :src="asset($model['image'])"
+                            :alt="$model['alt']"
+                            sizes="(min-width: 1440px) 432px, (min-width: 640px) 33vw, 384px"
+                            class="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/75 via-transparent to-transparent" aria-hidden="true"></div>
+                        <div class="absolute inset-x-0 bottom-0 p-4 lg:p-5">
+                            @if ($styleProduct)
+                                <a href="{{ route('product.show', $styleProduct['slug'] ?? $styleProduct['id']) }}" class="flex items-center gap-3 rounded-xl border border-ivory/20 bg-paper/95 p-3 text-charcoal shadow-soft backdrop-blur-sm transition-colors hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                    <span class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-ivory-soft">
+                                        @if (! empty($styleProduct['image']))
+                                            <x-ui.optimized-image :src="$styleProduct['image']" alt="" sizes="56px" class="h-full w-full object-cover" />
+                                        @else
+                                            <x-ui.product-art :art="$styleProduct['art']" class="h-full w-full" />
+                                        @endif
+                                    </span>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block text-[9px] font-semibold uppercase tracking-[0.16em] text-champagne-dark">Discover a Design</span>
+                                        <span class="font-display mt-1 block truncate text-sm">{{ $styleProduct['name'] }}</span>
+                                        <span class="mt-1 block text-xs font-semibold">₹{{ number_format($styleProduct['price']) }}</span>
+                                    </span>
+                                    <svg class="hidden h-4 w-4 shrink-0 lg:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                </a>
+                            @else
+                                <a href="{{ route('all-designs') }}" class="btn-light w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">Explore Designs</a>
+                            @endif
+                        </div>
+                    </article>
                 @endforeach
+            </div>
+            <div class="mt-8 text-center sm:mt-10">
+                <a href="{{ route('all-designs') }}" class="btn-light group w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal sm:w-auto">
+                    All Designs
+                    <svg class="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </a>
             </div>
         </div>
     </section>

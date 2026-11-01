@@ -35,7 +35,6 @@ class HomeController extends Controller
             'topSubcategories' => StorefrontCatalog::topSubcategories(),
             'categories' => StorefrontCatalog::categories(),
             'collections' => StorefrontCatalog::collections(),
-            'jewelleryTypes' => StorefrontCatalog::topJewelleryTypes(),
             'newArrivals' => StorefrontCatalog::newArrivals(inStockOnly: true),
             'bestSellers' => StorefrontCatalog::bestSellers(),
             'randomInStockProducts' => StorefrontCatalog::randomInStockProducts(),
