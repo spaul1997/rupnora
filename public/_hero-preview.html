@@ -1,0 +1,285 @@
+<!DOCTYPE html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/build/assets/app-GneDjF6S.css"><link rel="stylesheet" href="/build/assets/app-U0Zsyrl3.css">
+<script>window.rupnoraInitialState = {};</script>
+<script type="module" src="/build/assets/app-O2MI4ZXY.js"></script></head>
+<body class="storefront flex min-h-screen flex-col bg-ivory font-sans text-charcoal antialiased" x-data>
+<div class="h-[133px] border-b border-line bg-ivory text-center text-xs text-muted">(header placeholder)</div>
+<main><section
+    x-data="{
+        active: 0,
+        total: 3,
+        timer: null,
+        touchX: 0,
+        touchY: 0,
+        go(i) { this.active = (i + this.total) % this.total },
+        start() {
+            this.stop();
+            if (this.total > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) this.timer = setInterval(() => this.go(this.active + 1), 6000);
+        },
+        stop() { clearInterval(this.timer) },
+        swipe(e) {
+            const dx = e.changedTouches[0].clientX - this.touchX, dy = e.changedTouches[0].clientY - this.touchY;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { this.stop(); this.go(this.active + (dx < 0 ? 1 : -1)) }
+        },
+    }"
+    x-init="start()"
+    @mouseenter="stop()" @mouseleave="start()" @focusin="stop()" @focusout="start()"
+    class="relative isolate overflow-hidden bg-gradient-to-br from-charcoal via-charcoal-soft to-champagne-dark"
+>
+    <div class="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,var(--color-champagne)_0%,transparent_65%)] opacity-30" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-[radial-gradient(circle,var(--color-champagne-light)_0%,transparent_65%)] opacity-15" aria-hidden="true"></div>
+
+    <div class="container-luxe relative grid items-center gap-8 py-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto] lg:gap-10 lg:py-10 xl:gap-14">
+
+        
+        <div class="hidden min-h-0 flex-col gap-4 lg:flex lg:self-stretch">
+            <div class="relative min-h-64 flex-1 overflow-hidden rounded-3xl border border-ivory/15 shadow-lift">
+                <img
+        src="/images/her.png"
+        alt="Woman wearing Rupnora jewellery"
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="absolute inset-0 h-full w-full object-cover object-top"
+    >
+                <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent" aria-hidden="true"></div>
+            </div>
+
+                            <div class="overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
+                    
+                    <div class="flex w-max animate-marquee hover:[animation-play-state:paused] focus-within:[animation-play-state:paused]" style="animation-duration: 20s">
+                                                    <div class="flex" >
+                                                                    <a href="/product/p-1" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf1.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">AD Stone Pendant Necklace Set</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹1,299</span>
+                                    </a>
+                                                                    <a href="/product/p-2" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf2.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Elegant Bridal Gold Choker</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹2,149</span>
+                                    </a>
+                                                                    <a href="/product/p-3" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/her.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Minimal Star Charm Bracelet</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹2,999</span>
+                                    </a>
+                                                                    <a href="/product/p-4" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/him.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Eternal Bloom Diamond Ring</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹3,849</span>
+                                    </a>
+                                                                    <a href="/product/p-5" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf1.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Rose Quartz Drop Earrings</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹4,699</span>
+                                    </a>
+                                                            </div>
+                                                    <div class="flex"  inert aria-hidden="true" >
+                                                                    <a href="/product/p-1" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf1.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">AD Stone Pendant Necklace Set</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹1,299</span>
+                                    </a>
+                                                                    <a href="/product/p-2" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf2.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Elegant Bridal Gold Choker</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹2,149</span>
+                                    </a>
+                                                                    <a href="/product/p-3" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/her.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Minimal Star Charm Bracelet</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹2,999</span>
+                                    </a>
+                                                                    <a href="/product/p-4" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/him.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Eternal Bloom Diamond Ring</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹3,849</span>
+                                    </a>
+                                                                    <a href="/product/p-5" class="group/tile mr-3 block w-24 shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne-light focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal">
+                                        <span class="block aspect-square overflow-hidden rounded-xl border border-ivory/20 bg-ivory/10">
+                                                                                            <img
+        src="/images/inf1.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover/tile:scale-110"
+    >
+                                                                                    </span>
+                                        <span class="mt-1.5 block truncate text-[11px] leading-tight text-ivory/85">Rose Quartz Drop Earrings</span>
+                                        <span class="block text-[11px] font-semibold text-champagne-light">₹4,699</span>
+                                    </a>
+                                                            </div>
+                                            </div>
+                </div>
+                    </div>
+
+        
+        <div class="mx-auto hidden w-full max-w-md lg:grid">
+                            <div class="col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out " :class="{ 'invisible translate-y-4 opacity-0': active !== 0 }">
+                                            <span class="eyebrow text-champagne-light">Festive Edit</span>
+                                        <h1 class="font-display mt-4 text-3xl leading-[1.12] text-ivory xl:text-5xl">Everyday Elegance</h1>
+                                            <p class="mt-5 text-[15px] leading-relaxed text-ivory/75">Discover contemporary pieces designed for everyday expression, memorable gifts and every celebration in between.</p>
+                                                                <div class="mt-8 flex flex-wrap justify-center gap-3">
+                                                            <a href="/collections" class="btn-light">Shop Collections</a>
+                                                                                        <a href="/new-arrivals" class="btn-ghost border-ivory/40 text-ivory hover:border-ivory hover:bg-ivory/10">Explore New Arrivals</a>
+                                                    </div>
+                                    </div>
+                            <div class="col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out  invisible translate-y-4 opacity-0 " :class="{ 'invisible translate-y-4 opacity-0': active !== 1 }">
+                                            <span class="eyebrow text-champagne-light">The Celebration Edit</span>
+                                        <h1 class="font-display mt-4 text-3xl leading-[1.12] text-ivory xl:text-5xl">Statement Style for Every Celebration</h1>
+                                            <p class="mt-5 text-[15px] leading-relaxed text-ivory/75">Explore wedding and occasion jewellery designed to bring colour, confidence and sparkle to every look.</p>
+                                                                <div class="mt-8 flex flex-wrap justify-center gap-3">
+                                                            <a href="/bridal" class="btn-light">Shop Occasion Styles</a>
+                                                                                </div>
+                                    </div>
+                            <div class="col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out  invisible translate-y-4 opacity-0 " :class="{ 'invisible translate-y-4 opacity-0': active !== 2 }">
+                                        <h1 class="font-display mt-4 text-3xl leading-[1.12] text-ivory xl:text-5xl">Fresh Looks, Endless Possibilities</h1>
+                                                                <div class="mt-8 flex flex-wrap justify-center gap-3">
+                                                            <a href="/best-sellers" class="btn-light">Shop Best Sellers</a>
+                                                                                </div>
+                                    </div>
+                    </div>
+
+        
+        <div class="relative mx-auto w-72 max-w-full" role="region" aria-roledescription="carousel" aria-label="Featured offers">
+            <div class="pointer-events-none absolute -inset-6 rounded-full bg-[radial-gradient(circle,var(--color-champagne)_0%,transparent_70%)] opacity-40" aria-hidden="true"></div>
+            <div class="relative rounded-[2rem] border border-ivory/25 bg-ivory/10 p-2 shadow-lift backdrop-blur-sm" @touchstart.passive="touchX = $event.touches[0].clientX; touchY = $event.touches[0].clientY" @touchend="swipe($event)">
+                <div class="relative aspect-[9/16] overflow-hidden rounded-3xl bg-charcoal">
+                                                                    <div class="absolute inset-0 transition-opacity duration-700 " :class="{ 'invisible opacity-0': active !== 0 }">
+                                                            <img
+        src="/images/inf1.png"
+        alt="Everyday Elegance"
+        loading="eager"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+         fetchpriority="high"         class="h-full w-full object-cover"
+    >
+                                                                    <a href="/collections" class="absolute inset-0" aria-label="Shop Collections"></a>
+                                                                                    </div>
+                                                                    <div class="absolute inset-0 transition-opacity duration-700  invisible opacity-0 " :class="{ 'invisible opacity-0': active !== 1 }">
+                                                            <img
+        src="/images/inf2.png"
+        alt="Statement Style for Every Celebration"
+        loading="lazy"
+        decoding="async"
+        data-image-fallback-src="/images/image-placeholder.svg"
+                class="h-full w-full object-cover"
+    >
+                                                                    <a href="/bridal" class="absolute inset-0" aria-label="Shop Occasion Styles"></a>
+                                                                                    </div>
+                                                                    <div class="absolute inset-0 transition-opacity duration-700  invisible opacity-0 " :class="{ 'invisible opacity-0': active !== 2 }">
+                                                            
+                                <div class="flex h-full flex-col items-center justify-center bg-gradient-to-b from-champagne-dark via-charcoal-soft to-charcoal px-6 text-center">
+                                                                        <h2 class="font-display mt-3 text-2xl leading-tight text-ivory">Fresh Looks, Endless Possibilities</h2>
+                                                                            <a href="/best-sellers" class="btn-light mt-6 !px-5 !py-3 !text-[11px]">Shop Best Sellers</a>
+                                                                    </div>
+                                                    </div>
+                    
+                                            <button type="button" @click="stop(); go(active - 1)" class="absolute left-2 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-paper/85 text-charcoal shadow-card backdrop-blur transition hover:bg-paper sm:flex" aria-label="Previous slide">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </button>
+                        <button type="button" @click="stop(); go(active + 1)" class="absolute right-2 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-paper/85 text-charcoal shadow-card backdrop-blur transition hover:bg-paper sm:flex" aria-label="Next slide">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </button>
+
+                        
+                        <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center bg-gradient-to-t from-charcoal/50 to-transparent pb-1.5 pt-8">
+                                                            <button type="button" @click="stop(); go(0)" class="pointer-events-auto flex h-6 items-center px-1" aria-label="Go to slide 1" :aria-current="active === 0">
+                                    <span class="block h-1.5 rounded-full transition-all duration-300" :class="active === 0 ? 'w-6 bg-ivory' : 'w-1.5 bg-ivory/50'"></span>
+                                </button>
+                                                            <button type="button" @click="stop(); go(1)" class="pointer-events-auto flex h-6 items-center px-1" aria-label="Go to slide 2" :aria-current="active === 1">
+                                    <span class="block h-1.5 rounded-full transition-all duration-300" :class="active === 1 ? 'w-6 bg-ivory' : 'w-1.5 bg-ivory/50'"></span>
+                                </button>
+                                                            <button type="button" @click="stop(); go(2)" class="pointer-events-auto flex h-6 items-center px-1" aria-label="Go to slide 3" :aria-current="active === 2">
+                                    <span class="block h-1.5 rounded-full transition-all duration-300" :class="active === 2 ? 'w-6 bg-ivory' : 'w-1.5 bg-ivory/50'"></span>
+                                </button>
+                                                    </div>
+                                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="h-40 bg-ivory-soft p-6 text-center">next section</div></main></body></html>

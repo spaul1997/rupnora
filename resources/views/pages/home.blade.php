@@ -100,7 +100,7 @@
     </div>
 
     <!-- A. Hero Banner -->
-    <x-ui.hero-slider :slides="$heroSlides" />
+    <x-ui.hero-slider :slides="$heroSlides" :products="$newArrivals ?: $bestSellers ?: $randomInStockProducts" />
 
     <!-- C. Featured Collections -->
     <?php $featuredCollectionsMobileCount = 6; ?>
