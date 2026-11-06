@@ -234,6 +234,78 @@
         @apply relative text-charcoal after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-champagne-dark after:transition-all after:duration-300 hover:after:w-full;
     }
 
+    .hero-card-ring {
+        border: 1px solid color-mix(in srgb, var(--color-champagne-light) 28%, transparent);
+        border-top-color: color-mix(in srgb, var(--color-champagne-light) 75%, transparent);
+    }
+
+    .hero-card-ring::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        width: 9px;
+        height: 9px;
+        translate: -50% 0;
+        border-radius: 50%;
+        background: var(--color-champagne-light);
+        box-shadow: 0 0 16px color-mix(in srgb, var(--color-champagne-light) 70%, transparent);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .hero-card-ring {
+            animation: hero-ring-spin 18s linear infinite;
+        }
+
+        .hero-card {
+            animation: hero-card-float 7s ease-in-out infinite;
+        }
+
+        .hero-glow {
+            animation: hero-glow-drift 14s ease-in-out infinite;
+        }
+
+        .hero-model-slide[aria-hidden='false'] img {
+            transform-origin: center top;
+            animation: hero-model-zoom 4s ease-out both;
+        }
+
+        .hero-card-media::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.16) 50%, transparent 70%);
+            animation: hero-card-shine 9s ease-in-out infinite;
+        }
+
+        @keyframes hero-ring-spin {
+            from { rotate: 0deg; }
+            to { rotate: 360deg; }
+        }
+
+        @keyframes hero-card-float {
+            0%, 100% { translate: 0 0; }
+            50% { translate: 0 -10px; }
+        }
+
+        @keyframes hero-glow-drift {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(16px, -12px, 0) scale(1.08); }
+        }
+
+        @keyframes hero-model-zoom {
+            from { transform: scale(1); }
+            to { transform: scale(1.045); }
+        }
+
+        @keyframes hero-card-shine {
+            0%, 65% { transform: translateX(-150%) skewX(-18deg); }
+            100% { transform: translateX(150%) skewX(-18deg); }
+        }
+    }
+
     /* Storefront motion system. Motion is enabled by JS only after elements are prepared. */
     /* Fill `backwards` only: a fill that persists after the animation keeps <main> as its own
        stacking context, which traps fixed modals inside it beneath the sticky header. */

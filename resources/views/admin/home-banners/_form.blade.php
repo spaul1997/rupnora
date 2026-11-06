@@ -54,7 +54,7 @@
             <div>
                 <label class="admin-label">Mobile Banner</label>
                 <input type="file" name="mobile_image" accept="image/jpeg,image/png,image/webp,image/avif" class="admin-input">
-                <p class="mt-1 text-xs text-gray-400">Optional portrait image for phones. Desktop image is used when empty.</p>
+                <p class="mt-1 text-xs text-gray-400">Optional portrait image for the hero card on desktop and mobile. Banners with mobile images appear in the card slider.</p>
             </div>
         </div>
 
