@@ -89,6 +89,8 @@ class CheckoutShippingService
         }
 
         $minimumFreightCharge = round(max(0, (float) $minimumRateCourier['freight_charge']), 2);
+        $shippingPercentage = max(0, min(100, (float) $settings->shipping_per_limit));
+        $shippingCharge = round($minimumFreightCharge * $shippingPercentage / 100, 2);
         $estimatedDate = $this->estimatedDate($minimumRateCourier);
 
         return [
@@ -96,7 +98,7 @@ class CheckoutShippingService
             'message' => $freeShipping
                 ? 'Free shipping applies to this order.'
                 : 'Shipping calculated from available couriers.',
-            'shipping_charge' => $freeShipping ? 0 : $minimumFreightCharge,
+            'shipping_charge' => $freeShipping ? 0 : $shippingCharge,
             'minimum_freight_charge' => $minimumFreightCharge,
             'free_shipping' => $freeShipping,
             'free_shipping_threshold' => $threshold,

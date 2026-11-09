@@ -192,7 +192,7 @@
                                     >
                                     <span class="flex self-stretch shrink-0 items-center whitespace-nowrap border-l border-gray-200 bg-gray-50 px-2.5 text-sm text-gray-500" x-text="(skuCode ? '-' : '') + {{ Illuminate\Support\Js::from($skuSegments['serial']) }}" title="SKU serial is read-only">{{ ($editableSkuCode ? '-' : '').$skuSegments['serial'] }}</span>
                                 </div>
-                                <p id="sku-help" class="mt-1 text-xs text-gray-400">Only the middle SKU code can be edited. The prefix and serial number are read-only.</p>
+                                <p id="sku-help" class="mt-1 text-xs text-gray-400">Only the middle SKU code can be edited. Changing the category generates a new prefix and serial when you save.</p>
                                 @error('sku_code')
                                     <p class="mt-1 text-xs text-error">{{ $message }}</p>
                                 @enderror
@@ -201,7 +201,7 @@
                             <div>
                                 <label for="sku_readonly" class="admin-label">SKU</label>
                                 <input type="text" id="sku_readonly" value="{{ $product->sku }}" readonly class="admin-input cursor-not-allowed bg-gray-50 text-gray-500">
-                                <p class="mt-1 text-xs text-gray-400">This SKU does not contain an editable middle code.</p>
+                                <p class="mt-1 text-xs text-gray-400">This SKU does not contain an editable middle code. Changing the category generates a new SKU when you save.</p>
                             </div>
                         @endif
                     @else

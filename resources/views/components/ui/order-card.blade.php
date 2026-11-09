@@ -46,7 +46,7 @@
     </div>
 
     <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-        <p class="text-sm text-muted">Order Total <span class="ml-1 font-semibold text-charcoal">₹{{ number_format($order['total']) }}</span></p>
+        <p class="text-sm text-muted">Order Total <span class="ml-1 font-semibold text-charcoal">₹{{ number_format($order['total'], 2) }}</span></p>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('account.orders.show', $order['id']) }}" class="btn-ghost !px-4 !py-2 text-[11px]">View Details</a>
             @if ($order['tracking_number'])

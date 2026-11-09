@@ -14,6 +14,7 @@ use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CheckoutShippingChargeTest extends TestCase
@@ -45,6 +46,7 @@ class CheckoutShippingChargeTest extends TestCase
     {
         WebsiteSetting::current()->update([
             'free_shipping_threshold' => 3000,
+            'shipping_per_limit' => 100,
             'express_delivery_charge' => 100,
         ]);
         [$customer, $address, $product] = $this->checkoutData(1000, 750);
@@ -85,6 +87,84 @@ class CheckoutShippingChargeTest extends TestCase
             ->assertOk()
             ->assertSee('Expected Delivery')
             ->assertSee('24 Oct 2026');
+        Http::assertSentCount(3);
+    }
+
+    #[DataProvider('shippingPercentages')]
+    public function test_checkout_quotes_and_saves_only_the_configured_share_of_the_courier_rate(float $percentage, float $charge): void
+    {
+        WebsiteSetting::current()->update(['shipping_per_limit' => $percentage]);
+        [$customer, $address, $product] = $this->checkoutData(1000, 750);
+        $this->actingAs($customer)
+            ->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 1])
+            ->assertOk();
+        $this->fakeShiprocketRates();
+
+        $this->postJson(route('checkout.shipping-quote'), [
+            'address_id' => $address->id,
+            'payment' => 'online',
+        ])
+            ->assertOk()
+            ->assertJsonPath('shipping_charge', fn (int|float $value): bool => (float) $value === $charge)
+            ->assertJsonPath('minimum_freight_charge', 85)
+            ->assertJsonMissingPath('shipping_per_limit');
+
+        $this->get(route('checkout'))->assertOk()
+            ->assertDontSee('shipping_per_limit')
+            ->assertDontSee('Customer Shipping Share');
+
+        $orderNumber = $this->postJson(route('checkout.order.store'), [
+            'address_id' => $address->id,
+            'delivery' => 'standard',
+            'payment' => 'online',
+            'shipping_charge' => 999,
+            'shipping_per_limit' => 100,
+        ])->assertOk()->json('orderId');
+
+        $order = Order::query()->where('order_number', $orderNumber)->firstOrFail();
+        $this->assertSame($charge, (float) $order->shipping_charge);
+        $this->assertSame(1000 + $charge, (float) $order->grand_total);
+
+        $this->get(route('order.success', $orderNumber))->assertOk()
+            ->assertViewHas('order', fn (array $data): bool => $data['shipping'] === $charge)
+            ->assertSee('₹'.number_format(1000 + $charge, 2));
+
+        $this->get(route('account.orders.show', $orderNumber))->assertOk()
+            ->assertSee($charge > 0 ? '₹'.number_format($charge, 2) : 'Free')
+            ->assertSee('₹'.number_format(1000 + $charge, 2));
+
+        $this->get(route('account.orders'))->assertOk()
+            ->assertSee('₹'.number_format(1000 + $charge, 2));
+    }
+
+    public static function shippingPercentages(): array
+    {
+        return [
+            'ten percent' => [10.0, 8.5],
+            'fractional percentage' => [12.5, 10.63],
+            'rounded to paise' => [33.33, 28.33],
+            'free shipping' => [0.0, 0.0],
+            'full freight' => [100.0, 85.0],
+        ];
+    }
+
+    public function test_percentage_changes_apply_immediately_to_cached_courier_rates(): void
+    {
+        $settings = WebsiteSetting::current();
+        $this->assertSame('10.00', $settings->shipping_per_limit);
+        [$customer, $address, $product] = $this->checkoutData(1000, 750);
+        $this->actingAs($customer)
+            ->postJson(route('cart.store'), ['product_id' => $product->id, 'qty' => 1])
+            ->assertOk();
+        $this->fakeShiprocketRates();
+
+        $this->postJson(route('checkout.shipping-quote'), ['address_id' => $address->id])
+            ->assertOk()->assertJsonPath('shipping_charge', 8.5);
+
+        $settings->update(['shipping_per_limit' => 25]);
+
+        $this->postJson(route('checkout.shipping-quote'), ['address_id' => $address->id])
+            ->assertOk()->assertJsonPath('shipping_charge', 21.25);
         Http::assertSentCount(3);
     }
 
@@ -138,6 +218,40 @@ class CheckoutShippingChargeTest extends TestCase
             ->assertDontSee('Standard Delivery')
             ->assertDontSee('Express Delivery')
             ->assertSee('Insured Shipping');
+    }
+
+    public function test_admin_can_update_the_customer_shipping_percentage(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));
+
+        $this->get(route('admin.settings.edit'))->assertOk()
+            ->assertSee('Customer Shipping Share (%)')
+            ->assertSee('name="shipping_per_limit"', false);
+
+        foreach (['0', '10', '12.50', '100'] as $percentage) {
+            $this->put(route('admin.settings.update'), [
+                'shipping_per_limit' => $percentage,
+                'express_delivery_charge' => 199,
+                'cod_order_limit' => 100000,
+            ])->assertRedirect()->assertSessionHasNoErrors();
+
+            $this->assertSame((float) $percentage, (float) WebsiteSetting::current()->shipping_per_limit);
+        }
+    }
+
+    public function test_invalid_shipping_percentages_do_not_overwrite_the_saved_setting(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin', 'is_active' => true]));
+
+        foreach ([null, -1, 100.01, 'invalid', '1.234'] as $percentage) {
+            $this->put(route('admin.settings.update'), [
+                'shipping_per_limit' => $percentage,
+                'express_delivery_charge' => 199,
+                'cod_order_limit' => 100000,
+            ])->assertSessionHasErrors('shipping_per_limit');
+        }
+
+        $this->assertSame('10.00', WebsiteSetting::current()->shipping_per_limit);
     }
 
     private function fakeShiprocketRates(): void

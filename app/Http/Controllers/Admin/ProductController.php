@@ -159,7 +159,14 @@ class ProductController extends Controller
             $data = $this->prepareData($request);
             unset($data['slug'], $data['sku']);
 
-            if ($request->has('sku_code')) {
+            if ($request->changesSkuCategory()) {
+                $data['sku'] = $this->generateSku(
+                    (int) $request->input('parent_category_id'),
+                    $request->has('sku_code')
+                        ? (string) $request->input('sku_code')
+                        : ($product->skuSegments()['code'] ?? '')
+                );
+            } elseif ($request->has('sku_code')) {
                 $data['sku'] = $product->skuWithCode($request->input('sku_code'));
             }
 

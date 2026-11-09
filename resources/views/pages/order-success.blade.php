@@ -87,7 +87,7 @@
                 </div>
                 <div class="mt-3 flex justify-between border-t border-line pt-3">
                     <span class="font-display text-base text-charcoal">Total Paid</span>
-                    <span class="font-display text-base text-charcoal">₹{{ number_format($totalPaid) }}</span>
+                    <span class="font-display text-base text-charcoal">₹{{ number_format($totalPaid, 2) }}</span>
                 </div>
             </div>
         </div>

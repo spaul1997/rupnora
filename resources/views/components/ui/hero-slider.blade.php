@@ -73,7 +73,7 @@
     <div class="hero-glow pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,var(--color-champagne)_0%,transparent_65%)] opacity-30" aria-hidden="true"></div>
     <div class="hero-glow pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-[radial-gradient(circle,var(--color-champagne-light)_0%,transparent_65%)] opacity-15" style="animation-delay: -7s" aria-hidden="true"></div>
 
-    <div class="container-luxe relative grid items-center gap-8 py-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto] lg:gap-10 lg:py-10 xl:gap-14">
+    <div class="container-luxe relative grid items-center gap-3 py-4 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto] lg:gap-10 lg:py-10 xl:gap-14">
 
         {{-- Left (desktop only): rotating model photos with an animated jewellery strip underneath. --}}
         <div class="hidden min-h-0 flex-col gap-4 lg:flex lg:self-stretch">
@@ -112,24 +112,24 @@
             @endif
         </div>
 
-        {{-- Center (desktop only): taglines. Slides share one grid cell so the block never changes height. --}}
-        <div class="mx-auto hidden w-full max-w-md lg:grid">
+        {{-- Taglines appear above the banner on mobile and in the center on desktop. Slides share one grid cell so the block never changes height. --}}
+        <div class="mx-auto grid w-full max-w-md">
             @foreach ($slides as $i => $slide)
                 <div class="col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-700 ease-out @if ($i > 0) invisible translate-y-4 opacity-0 @endif" :class="{ 'invisible translate-y-4 opacity-0': active !== {{ $i }} }">
                     @if ($slide['eyebrow'])
-                        <span class="eyebrow text-champagne-light">{{ $slide['eyebrow'] }}</span>
+                        <span class="eyebrow text-champagne-light max-sm:text-[10px] max-sm:tracking-[0.16em]">{{ $slide['eyebrow'] }}</span>
                     @endif
-                    <h1 class="font-display mt-4 text-3xl leading-[1.12] text-ivory xl:text-5xl">{{ $slide['heading'] }}</h1>
+                    <h1 class="font-display mt-2 text-2xl leading-[1.12] text-ivory sm:mt-4 sm:text-3xl xl:text-5xl">{{ $slide['heading'] }}</h1>
                     @if ($slide['subheading'])
-                        <p class="mt-5 text-[15px] leading-relaxed text-ivory/75">{{ $slide['subheading'] }}</p>
+                        <p class="mt-2 text-[13px] leading-snug text-ivory/75 sm:mt-5 sm:text-[15px] sm:leading-relaxed">{{ $slide['subheading'] }}</p>
                     @endif
                     @if (($slide['primaryLabel'] && $slide['primaryUrl']) || ($slide['secondaryLabel'] && $slide['secondaryUrl']))
-                        <div class="mt-8 flex flex-wrap justify-center gap-3">
+                        <div class="mt-4 flex flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3">
                             @if ($slide['primaryLabel'] && $slide['primaryUrl'])
-                                <a href="{{ $slide['primaryUrl'] }}" class="btn-light">{{ $slide['primaryLabel'] }}</a>
+                                <a href="{{ $slide['primaryUrl'] }}" class="btn-light max-sm:min-h-11 max-sm:px-4 max-sm:py-2.5 max-sm:text-[11px] max-sm:tracking-[0.08em]">{{ $slide['primaryLabel'] }}</a>
                             @endif
                             @if ($slide['secondaryLabel'] && $slide['secondaryUrl'])
-                                <a href="{{ $slide['secondaryUrl'] }}" class="btn-ghost border-ivory/40 text-ivory hover:border-ivory hover:bg-ivory/10">{{ $slide['secondaryLabel'] }}</a>
+                                <a href="{{ $slide['secondaryUrl'] }}" class="btn-ghost border-ivory/40 text-ivory hover:border-ivory hover:bg-ivory/10 max-sm:min-h-11 max-sm:px-4 max-sm:py-2.5 max-sm:text-[11px] max-sm:tracking-[0.08em]">{{ $slide['secondaryLabel'] }}</a>
                             @endif
                         </div>
                     @endif
@@ -137,15 +137,15 @@
             @endforeach
         </div>
 
-        {{-- Right (the only column on mobile): image-only mobile banners, with room for the tilted card. --}}
-        <div class="relative mx-auto w-full max-w-[26rem] py-10 lg:w-[23rem] xl:w-[26rem]" role="region" aria-roledescription="carousel" aria-label="Featured offers">
+        {{-- Banner images sit below the taglines on mobile and on the right on desktop, with room for the tilted card. --}}
+        <div class="relative mx-auto w-full max-w-[15rem] py-6 sm:max-w-[26rem] sm:py-10 lg:w-[23rem] xl:w-[26rem]" role="region" aria-roledescription="carousel" aria-label="Featured offers">
             <div class="hero-glow pointer-events-none absolute -inset-6 rounded-full bg-[radial-gradient(circle,var(--color-champagne)_0%,transparent_70%)] opacity-40" aria-hidden="true"></div>
             <div class="hero-card-ring pointer-events-none absolute inset-x-1.5 top-1/2 aspect-square -translate-y-1/2 rounded-full" aria-hidden="true"></div>
             <div class="hero-card relative mx-auto w-3/5 rotate-[25deg] rounded-[2rem] border border-ivory/25 bg-ivory/10 p-2 shadow-lift backdrop-blur-sm" @touchstart.passive="touchX = $event.touches[0].clientX; touchY = $event.touches[0].clientY" @touchend="swipe($event)">
                 <div class="hero-card-media relative aspect-[9/16] overflow-hidden rounded-3xl bg-charcoal">
                     @foreach ($cardSlides as $i => $slide)
                         <div class="absolute inset-0 transition-opacity duration-700 @if ($i > 0) opacity-0 @endif" :class="{ 'opacity-0': cardActive !== {{ $i }} }" aria-hidden="{{ $i > 0 ? 'true' : 'false' }}" :aria-hidden="cardActive !== {{ $i }} ? 'true' : 'false'">
-                            <x-ui.optimized-image :src="$slide['mobileImage']" :alt="$slide['heading']" sizes="(min-width: 1024px) 250px, 60vw" :loading="$i === 0 ? 'eager' : 'lazy'" :fetchpriority="$i === 0 ? 'high' : null" class="h-full w-full object-cover" />
+                            <x-ui.optimized-image :src="$slide['mobileImage']" :alt="$slide['heading']" sizes="(min-width: 640px) 250px, 144px" :loading="$i === 0 ? 'eager' : 'lazy'" :fetchpriority="$i === 0 ? 'high' : null" class="h-full w-full object-cover" />
                         </div>
                     @endforeach
                 </div>

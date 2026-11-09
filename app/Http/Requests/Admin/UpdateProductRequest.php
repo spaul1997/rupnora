@@ -141,11 +141,20 @@ class UpdateProductRequest extends FormRequest
         ];
     }
 
+    public function changesSkuCategory(): bool
+    {
+        /** @var Product $product */
+        $product = $this->route('product');
+        $currentParentId = $product->category?->parent_id ?? $product->category_id;
+
+        return (int) $this->input('parent_category_id') !== (int) $currentParentId;
+    }
+
     public function after(): array
     {
         return [
             function (Validator $validator): void {
-                if (! $this->has('sku_code') || $validator->errors()->has('sku_code')) {
+                if (! $this->has('sku_code') || $validator->errors()->has('sku_code') || $this->changesSkuCategory()) {
                     return;
                 }
 

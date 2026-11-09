@@ -88,7 +88,7 @@
                 <div class="flex justify-between text-muted"><span>Subtotal</span><span class="text-charcoal">₹{{ number_format($subtotal) }}</span></div>
                 <div class="flex justify-between text-muted"><span>Discount</span><span class="text-success">&minus;₹{{ number_format($order['discount']) }}</span></div>
                 <div class="flex justify-between text-muted"><span>Coupon {{ $order['coupon'] }}</span><span class="text-charcoal">{{ $order['coupon_discount'] ? '−₹'.number_format($order['coupon_discount']) : '—' }}</span></div>
-                <div class="flex justify-between text-muted"><span>Shipping</span><span class="text-charcoal">{{ $shipping ? '₹'.number_format($shipping) : 'Free' }}</span></div>
+                <div class="flex justify-between text-muted"><span>Shipping</span><span class="text-charcoal">{{ $shipping ? '₹'.number_format($shipping, 2) : 'Free' }}</span></div>
                 <div class="flex justify-between text-muted"><span>GST (included)</span><span class="text-charcoal">₹{{ number_format($tax) }}</span></div>
                 @if (($order['gift_wrap']['enabled'] ?? false))
                     <div class="flex justify-between text-muted"><span>Gift Wrap</span><span class="text-charcoal">₹{{ number_format($order['gift_wrap']['charge']) }}</span></div>
@@ -96,7 +96,7 @@
             </div>
             <div class="mt-4 flex justify-between border-t border-line pt-4">
                 <span class="font-display text-lg text-charcoal">Grand Total</span>
-                <span class="font-display text-lg text-charcoal">₹{{ number_format($order['total']) }}</span>
+                <span class="font-display text-lg text-charcoal">₹{{ number_format($order['total'], 2) }}</span>
             </div>
         </div>
 
